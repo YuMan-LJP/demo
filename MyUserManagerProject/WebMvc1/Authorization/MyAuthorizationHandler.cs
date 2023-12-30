@@ -31,6 +31,12 @@ namespace WebMvc1.Authorization
             var user = await _userManager.GetUserAsync(context.User);
             if (user == null)
             {
+                return;//用户没有登录需要登录
+            }
+
+            if (requirement.Permissions.Length == 0)
+            {
+                context.Succeed(requirement);//当没有标记权限时，只要验证登录即可访问
                 return;
             }
 
