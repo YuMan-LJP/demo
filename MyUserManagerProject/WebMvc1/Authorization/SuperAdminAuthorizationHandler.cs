@@ -4,6 +4,7 @@ using WebMvc1.Data;
 
 namespace WebMvc1.Authorization
 {
+    [Obsolete("作废，改用特性校验")]
     public class SuperAdminAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, string>
     {
         private readonly ILogger<MyAuthorizationHandler> _logger;

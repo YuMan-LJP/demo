@@ -7,64 +7,19 @@ namespace WebMvc1.Authorization
 {
     public class MyAuthorizationHandler : AuthorizationHandler<MyAuthorizeAttribute>
     {
-        ILogger<MyAuthorizationHandler> _logger;
-        UserManager<ApplicationUser> _userManager;
         PermissionManager _permissionManager;
 
-        public MyAuthorizationHandler(
-            ILogger<MyAuthorizationHandler> logger,
-            UserManager<ApplicationUser> userManager,
-            PermissionManager permissionManager)
+        public MyAuthorizationHandler(PermissionManager permissionManager)
         {
-            _logger = logger;
-            _userManager = userManager;
             _permissionManager = permissionManager;
         }
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, MyAuthorizeAttribute requirement)
         {
-            if (context.User == null)
+            var isHasPermission = await _permissionManager.IsHasPermissionAsync(context.User, requirement.Permissions, requirement.RequireAllPermissions);
+            if (isHasPermission)
             {
-                return;
-            }
-
-            var user = await _userManager.GetUserAsync(context.User);
-            if (user == null)
-            {
-                return;//用户没有登录需要登录
-            }
-
-            if (requirement.Permissions.Length == 0)
-            {
-                context.Succeed(requirement);//当没有标记权限时，只要验证登录即可访问
-                return;
-            }
-
-            var permissions = await _permissionManager.GetAllPermissionByUserId(user);
-            if (permissions.Count == 0)
-            {
-                return;
-            }
-
-            _logger.LogInformation($"当前用户拥有的权限：{string.Join("|", permissions)}");
-
-            var isRequireAll = requirement.RequireAllPermissions;
-            var intersectList = requirement.Permissions.Intersect(permissions).ToList();//接口要求的权限和用户拥有的权限交集
-            if (isRequireAll)
-            {
-                //要满足标记的全部权限才能通过
-                if (intersectList.Count == requirement.Permissions.Length)
-                {
-                    context.Succeed(requirement);
-                }
-            }
-            else
-            {
-                //只要满足至少一个权限即可通过
-                if (intersectList.Count > 0)
-                {
-                    context.Succeed(requirement);
-                }
+                context.Succeed(requirement);
             }
         }
 

@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using WebMvc1.Authorization;
 using WebMvc1.Data;
+using WebMvc1.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,9 +54,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Authorization handlers.
-builder.Services.AddScoped<IAuthorizationHandler, NormalUserAuthorizationHandler>();//引入普通用户授权校验
-builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();//引入管理员用户授权校验
-builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminAuthorizationHandler>();//引入超级管理员授权校验
+//builder.Services.AddScoped<IAuthorizationHandler, NormalUserAuthorizationHandler>();//引入普通用户授权校验
+//builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();//引入管理员用户授权校验
+//builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminAuthorizationHandler>();//引入超级管理员授权校验
+builder.Services.AddScoped<IAuthorizationHandler, MyViewAuthorizationHandler>();//引入视图授权校验
 builder.Services.AddScoped<IAuthorizationHandler, MyAuthorizationHandler>();//有连接数据库相关方法注入改用AddScoped，不能用AddSingleton
 builder.Services.AddTransient(typeof(PermissionManager));//引入权限管理类
 

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace WebMvc1.Authorization
 {
+    [Obsolete("作废，改用特性校验")]
     public class NormalUserAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, string>
     {
         private readonly ILogger<MyAuthorizationHandler> _logger;

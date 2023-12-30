@@ -9,7 +9,7 @@ using WebMvc1.Models;
 
 namespace WebMvc1.Controllers
 {
-    [Authorize]
+    
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -23,63 +23,76 @@ namespace WebMvc1.Controllers
             _authorizationService = authorizationService;
         }
 
-        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();
         }
 
+        [Authorize]
         public IActionResult Privacy()
         {
             return View();
         }
 
-        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        #region 自定义特性授权校验
+        [MyAuthorize(Constants.OperationName.Create)]
         public async Task<IActionResult> TestCreate()
         {
-            var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Create });
-            if (!isAuthorized.Succeeded)
-            {
-                return Forbid();
-            }
-            return Content("测试创建数据");
+            //var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Create });
+            //if (!isAuthorized.Succeeded)
+            //{
+            //    return Forbid();
+            //}
+            return await Task.FromResult(Content("测试创建数据"));
         }
 
+        [MyAuthorize(Constants.OperationName.Update)]
         public async Task<IActionResult> TestUpdate()
         {
-            var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Update });
-            if (!isAuthorized.Succeeded)
-            {
-                return Forbid();
-            }
-            return Content("测试修改数据");
+            //var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Update });
+            //if (!isAuthorized.Succeeded)
+            //{
+            //    return Forbid();
+            //}
+            return await Task.FromResult(Content("测试修改数据"));
         }
 
+        [MyAuthorize(Constants.OperationName.Delete)]
         public async Task<IActionResult> TestDelete()
         {
-            var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Delete });
-            if (!isAuthorized.Succeeded)
-            {
-                return Forbid();
-            }
-            return Content("测试删除数据");
+            //var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Delete });
+            //if (!isAuthorized.Succeeded)
+            //{
+            //    return Forbid();
+            //}
+            return await Task.FromResult(Content("测试删除数据"));
         }
 
         [MyAuthorize(Constants.OperationName.Approve)]
         public async Task<IActionResult> TestApprove()
         {
+            //var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Approve });
+            //if (!isAuthorized.Succeeded)
+            //{
+            //    return Forbid();
+            //}
             return await Task.FromResult(Content("测试审批数据"));
         }
 
         [MyAuthorize(Constants.OperationName.Reject)]
         public async Task<IActionResult> TestReject()
         {
+            //var isAuthorized = await _authorizationService.AuthorizeAsync(User, "测试", new OperationAuthorizationRequirement { Name = Constants.OperationName.Reject });
+            //if (!isAuthorized.Succeeded)
+            //{
+            //    return Forbid();
+            //}
             return await Task.FromResult(Content("测试拒绝数据"));
         }
 
@@ -93,8 +106,10 @@ namespace WebMvc1.Controllers
         public async Task<IActionResult> TestReadV2()
         {
             return await Task.FromResult(Content("测试读取数据V2"));
-        }
+        } 
+        #endregion
 
+        #region 角色授权校验
         [Authorize(Roles = Constants.NormalUserRole)]
         public async Task<IActionResult> TestNormalUserRole()
         {
@@ -123,6 +138,7 @@ namespace WebMvc1.Controllers
         public async Task<IActionResult> TestMoreAdminRoleV2()
         {
             return await Task.FromResult(Content("测试按角色请求-AdminRole个SuperAdminRole V2"));
-        }
+        } 
+        #endregion
     }
 }
