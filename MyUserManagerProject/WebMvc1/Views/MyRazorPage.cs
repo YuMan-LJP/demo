@@ -10,11 +10,6 @@ namespace WebMvc1.Views
         [RazorInject]
         public IAuthorizationService AuthorizationService { get; set; }
 
-        public override Task ExecuteAsync()
-        {
-            return Task.CompletedTask;
-        }
-
         protected virtual async Task<bool> IsHasPermissionAsync(params string[] permissions)
         {
             var isAuthorized = await AuthorizationService.AuthorizeAsync(User, false, new OperationAuthorizationRequirement { Name = string.Join(",", permissions) });
