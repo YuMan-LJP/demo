@@ -7,9 +7,9 @@ namespace WebMvc1.Authorization
     [Obsolete("作废，改用特性校验")]
     public class SuperAdminAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, string>
     {
-        private readonly ILogger<MyAuthorizationHandler> _logger;
+        private readonly ILogger<SuperAdminAuthorizationHandler> _logger;
 
-        public SuperAdminAuthorizationHandler(ILogger<MyAuthorizationHandler> logger)
+        public SuperAdminAuthorizationHandler(ILogger<SuperAdminAuthorizationHandler> logger)
         {
             _logger = logger;
         }

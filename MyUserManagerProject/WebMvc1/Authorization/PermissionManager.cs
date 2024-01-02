@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using WebMvc1.Data;
 
@@ -9,27 +10,42 @@ namespace WebMvc1.Authorization
 {
     public class PermissionManager
     {
-        ILogger<MyAuthorizationHandler> _logger;
+        ILogger<PermissionManager> _logger;
         ApplicationDbContext _context;
         UserManager<ApplicationUser> _userManager;
+        IMemoryCache _memoryCache;
 
         public PermissionManager(
-            ILogger<MyAuthorizationHandler> logger,
+            ILogger<PermissionManager> logger,
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IMemoryCache memoryCache)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         public async Task<IList<string>> GetAllPermissionByUserIdAsync(ApplicationUser user)
         {
             try
             {
+                var list = _memoryCache.Get<IList<string>>($"UserPermission:{user.Id}");
+                if (list != null && list.Count > 0)
+                {
+                    return list;
+                }
+
                 var roles = await _userManager.GetRolesAsync(user);
                 var queryRoleId = _context.Set<IdentityRole>().Where(w => roles.Any(a => a == w.Name)).Select(s => s.Id);
-                return await _context.Set<MyPermission>().Where(w => queryRoleId.Any(a => a == w.RoleId)).Select(s => s.Name).ToListAsync();
+                list = await _context.Set<MyPermission>().Where(w => queryRoleId.Any(a => a == w.RoleId)).Select(s => s.Name).ToListAsync();
+
+                DateTime expireTime = DateTime.Now.AddMinutes(5);//设置缓存有效期
+                _memoryCache.Set($"UserPermission:{user.Id}", list, expireTime);
+                //_memoryCache.Remove($"UserPermission:{user.Id}");//若以后开发了可以在前端配置用户角色和权限信息时，配置以后记得清除缓存
+
+                return list;
             }
             catch (Exception ex)
             {

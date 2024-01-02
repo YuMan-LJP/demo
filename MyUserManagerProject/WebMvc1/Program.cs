@@ -45,7 +45,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
     options.Cookie.Name = "WebMcv1";
     options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(1);
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
     options.LoginPath = "/Identity/Account/Login";
     // ReturnUrlParameter requires 
     //using Microsoft.AspNetCore.Authentication.Cookies;
@@ -60,6 +60,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IAuthorizationHandler, MyViewAuthorizationHandler>();//引入视图授权校验
 builder.Services.AddScoped<IAuthorizationHandler, MyAuthorizationHandler>();//有连接数据库相关方法注入改用AddScoped，不能用AddSingleton
 builder.Services.AddTransient(typeof(PermissionManager));//引入权限管理类
+
+builder.Services.AddMemoryCache();//引入内存缓存
 
 var app = builder.Build();
 

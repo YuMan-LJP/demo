@@ -45,6 +45,10 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @* 引入后端生成的权限校验方法 minify=true表示生成压缩版本的js*@
+    <script src="~/JavaScripts/GetAllScripts?minify=true&v=@(DateTime.Now.Ticks)" type="text/javascript"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

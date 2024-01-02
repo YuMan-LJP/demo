@@ -8,9 +8,9 @@ namespace WebMvc1.Authorization
     [Obsolete("作废，改用特性校验")]
     public class NormalUserAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, string>
     {
-        private readonly ILogger<MyAuthorizationHandler> _logger;
+        private readonly ILogger<NormalUserAuthorizationHandler> _logger;
 
-        public NormalUserAuthorizationHandler(ILogger<MyAuthorizationHandler> logger)
+        public NormalUserAuthorizationHandler(ILogger<NormalUserAuthorizationHandler> logger)
         {
             _logger = logger;
         }
