@@ -8,7 +8,7 @@ using WebMvc1.Data;
 
 namespace WebMvc1.Authorization
 {
-    public class PermissionManager
+    public class PermissionManager : IPermissionManager
     {
         ILogger<PermissionManager> _logger;
         ApplicationDbContext _context;

@@ -11,12 +11,12 @@ namespace WebMvc1.Controllers
     public class JavaScriptsController : Controller
     {
         ILogger<JavaScriptsController> _logger;
-        PermissionManager _permissionManager;
+        IPermissionManager _permissionManager;
         UserManager<ApplicationUser> _userManager;
 
         public JavaScriptsController(
             ILogger<JavaScriptsController> logger,
-            PermissionManager permissionManager,
+            IPermissionManager permissionManager,
             UserManager<ApplicationUser> userManager)
         {
             _logger = logger;

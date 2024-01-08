@@ -2,14 +2,15 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using WebMvc1.Data;
+using WebMvc1.Dependency;
 
 namespace WebMvc1.Authorization
 {
-    public class MyAuthorizationHandler : AuthorizationHandler<MyAuthorizeAttribute>
+    public class MyAuthorizationHandler : AuthorizationHandler<MyAuthorizeAttribute>, IScopeDependency
     {
-        PermissionManager _permissionManager;
+        IPermissionManager _permissionManager;
 
-        public MyAuthorizationHandler(PermissionManager permissionManager)
+        public MyAuthorizationHandler(IPermissionManager permissionManager)
         {
             _permissionManager = permissionManager;
         }

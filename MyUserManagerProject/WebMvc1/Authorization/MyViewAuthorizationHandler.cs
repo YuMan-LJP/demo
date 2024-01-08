@@ -2,14 +2,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using WebMvc1.Data;
+using WebMvc1.Dependency;
 
 namespace WebMvc1.Authorization
 {
-    public class MyViewAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, bool>
+    public class MyViewAuthorizationHandler : AuthorizationHandler<OperationAuthorizationRequirement, bool>, IScopeDependency
     {
-        PermissionManager _permissionManager;
+        IPermissionManager _permissionManager;
 
-        public MyViewAuthorizationHandler(PermissionManager permissionManager)
+        public MyViewAuthorizationHandler(IPermissionManager permissionManager)
         {
             _permissionManager = permissionManager;
         }
