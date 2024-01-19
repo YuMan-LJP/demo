@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import {request} from "@/request/request"
 import {oidc} from '@/request/odic.js'//引入odic方法
 
 export default {
@@ -21,9 +22,8 @@ export default {
   methods:{
     test(){
       //测试跨域访问
-      this.$http.get('/weatherforecast').then(response=>{
-        console.log(response);
-        console.log(response.data);
+      request('/weatherforecast').then(data=>{
+        console.log(data);
       }).catch(error=>{
         console.log(error)
       })

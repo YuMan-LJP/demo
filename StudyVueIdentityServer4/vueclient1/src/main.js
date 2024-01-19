@@ -1,12 +1,5 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router/router'
-import axios from 'axios'
+import router from './router/router'//引入路由js
 
-const app = createApp(App)
-
-axios.defaults.baseURL = "https://localhost:5001/"
-//axios.defaults.withCredentials = true;
-app.config.globalProperties.$http = axios; // 挂载全局自定义方法
-
-app.use(router).mount('#app')
+createApp(App).use(router).mount('#app')
