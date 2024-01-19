@@ -28,7 +28,15 @@ namespace IdentityServer
         {
             //services.AddControllers();
             services.AddControllersWithViews();//补充
-            services.AddIdentityServer()
+            services.AddIdentityServer(options =>
+            {
+                options.UserInteraction = new IdentityServer4.Configuration.UserInteractionOptions
+                {
+                    LoginUrl = "http://localhost:5003/#/Login",
+                    LogoutUrl = "http://localhost:5003/#/Logout",
+
+                };
+            })
                 .AddDeveloperSigningCredential()
                 .AddInMemoryIdentityResources(IdentityConfig.IdentityResources)//声明可以获得的资源
                 .AddInMemoryApiScopes(IdentityConfig.ApiScopes)//声明API范围

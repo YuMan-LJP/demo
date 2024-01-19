@@ -47,7 +47,7 @@ namespace IdentityServer
                     AllowAccessTokensViaBrowser = true,
 
                     RedirectUris = { "http://localhost:5003/CallBack" },//登录成功后返回的客户端地址
-                    PostLogoutRedirectUris = { "http://localhost:5003/ " },//注销登录后返回的客户端地址
+                    PostLogoutRedirectUris = { "http://localhost:5003/#/" },//注销登录后返回的客户端地址
                     AllowedCorsOrigins = { "http://localhost:5003" },
 
                     AllowedScopes =

@@ -173,7 +173,91 @@ namespace IdentityServerHost.Quickstart.UI
             return View(vm);
         }
 
-        
+        /// <summary>
+        /// 复制Login方法，改为提供给Vue前端使用
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="button"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        [HttpPost]
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginApi(LoginInputModel model)
+        {
+            // check if we are in the context of an authorization request
+            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+
+            if (ModelState.IsValid)
+            {
+                // validate username/password against in-memory store
+                if (_users.ValidateCredentials(model.Username, model.Password))
+                {
+                    var user = _users.FindByUsername(model.Username);
+                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username, clientId: context?.Client.ClientId));
+
+                    // only set explicit expiration here if user chooses "remember me". 
+                    // otherwise we rely upon expiration configured in cookie middleware.
+                    AuthenticationProperties props = null;
+                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                    {
+                        props = new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                        };
+                    };
+
+                    // issue authentication cookie with subject ID and username
+                    var isuser = new IdentityServerUser(user.SubjectId)
+                    {
+                        DisplayName = user.Username
+                    };
+
+                    await HttpContext.SignInAsync(isuser, props);
+
+                    if (context != null)
+                    {
+                        if (context.IsNativeClient())
+                        {
+                            // The client is native, so this change in how to
+                            // return the response is for better UX for the end user.
+                            return this.LoadingPage("Redirect", model.ReturnUrl);
+                        }
+
+                        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                        //return Redirect(model.ReturnUrl);
+                        return Content(model.ReturnUrl);
+                    }
+
+                    // request for a local page
+                    if (Url.IsLocalUrl(model.ReturnUrl))
+                    {
+                        //return Redirect(model.ReturnUrl);
+                        return Content(model.ReturnUrl);
+                    }
+                    else if (string.IsNullOrEmpty(model.ReturnUrl))
+                    {
+                        //return Redirect("~/");
+                        return Content("");
+                    }
+                    else
+                    {
+                        // user might have clicked on a malicious link - should be logged
+                        //throw new Exception("invalid return URL");
+                        return Content("");
+                    }
+                }
+
+                await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
+                ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
+            }
+
+            // something went wrong, show form with error
+            //var vm = await BuildLoginViewModelAsync(model);
+            //return View(vm);
+            return Content("");
+        }
+
         /// <summary>
         /// Show logout page
         /// </summary>
@@ -225,6 +309,22 @@ namespace IdentityServerHost.Quickstart.UI
             }
 
             return View("LoggedOut", vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LogoutApi()
+        {
+            if (User?.Identity.IsAuthenticated == true)
+            {
+                // delete local authentication cookie
+                await HttpContext.SignOutAsync();
+
+                // raise the logout event
+                await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
+
+                return Content("OK");
+            }
+            return Content("");
         }
 
         [HttpGet]
