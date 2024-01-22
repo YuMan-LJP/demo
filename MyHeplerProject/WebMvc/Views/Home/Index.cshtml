@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Excel导入导出测试</h1>
+    <div>
+        <p>
+            <button onclick="ExcelRead(1)">测试文件导入1</button>
+            <button onclick="ExcelRead(2)">测试文件导入2</button>
+            <button onclick="ExcelRead(3)">测试文件导入3</button>
+        </p>
+        <p>
+            <button onclick="ExcelOutput(1)">测试文件导出1</button>
+            <button onclick="ExcelOutput(2)">测试文件导出2</button>
+            <button onclick="ExcelOutput(3)">测试文件导出3</button>
+        </p>
+    </div>
+    <pre id="showDiv">
+
+    </pre>
+</div>
+
+<script>
+    function ExcelRead(way) {
+        $('#showDiv').html('')
+        $.ajax({
+            url: '/Home/ExcelRead' + way,
+            type: 'get',
+            data: {},
+            success: function (res) {
+                console.log(res);
+                $('#showDiv').html(JSON.stringify(JSON.parse(res), null, 4))
+            }
+        });
+    }
+    function ExcelOutput(way) {
+        if (way == 1) {
+            //后端简单导出一个Sheet页内容
+            //返回二进制流，在前端构造文件下载链接
+            $.ajax({
+                url: '/Home/ExcelOutput1',
+                type: 'get',
+                data: {},
+                success: function (res) {
+                    var fileName = "File" + GetDateNow() + ".xlsx";
+                    exportFileByBlob(res, fileName, "application/vnd.ms-excel");
+                }
+            });
+        } else if (way == 2) {
+            //后端简单导出多个Sheet页内容
+            //返回文件流
+            location.href = "/Home/ExcelOutput2"
+        } else if (way == 3) {
+            //大数据导出
+            $.ajax({
+                url: '/Home/ExcelOutput3',
+                type: 'get',
+                data: {},
+                success: function (res) {
+                    var fileName = "File" + GetDateNow() + ".xlsx";
+                    location.href = "/Home/DownloadFile?key=" + res + "&contentType=application/vnd.ms-excel&fileName=" + fileName
+                }
+            });
+        }
+    }
+
+    function GetDateNow() {
+        const now = new Date();
+
+        const year = now.getFullYear();
+        const month = ('0' + (now.getMonth() + 1)).slice(-2);
+        const day = ('0' + now.getDate()).slice(-2);
+        const hours = ('0' + now.getHours()).slice(-2);
+        const minutes = ('0' + now.getMinutes()).slice(-2);
+        const seconds = ('0' + now.getSeconds()).slice(-2);
+
+        const formattedTime = year + month + day + hours + minutes + seconds;
+        return formattedTime;
+    }
+</script>
