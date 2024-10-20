@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <!--引入jq，如何网络不好请换其他的方法引入即可-->
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>测试</h1>
+    <input type="text" id="inputText" />
+    <button onclick="showMessageBox()">点击弹窗</button>
+
+    <p>获取模拟器当前正在运行的app名称：<span id="appName"></span></p>
+    <button onclick="GetCurrentRunningApp()">获取当前app</button>
+
+    <p>需要识别图片文字：<input type="text" id="inputImageText" /><span id="imageText"></span></p>
+    <button onclick="SearchTextByOcr()">识别图片文字</button>
+
+    <script>
+        function showMessageBox() {
+            var value = $("#inputText").val();
+            $.ajax({ url: "/api/home/showMessageBox?msg=" + value, async: false })
+                .done(function (data) {
+                    console.log(data);
+                })
+        }
+
+        function GetCurrentRunningApp() {
+            $.ajax({ url: "/api/home/getCurrentRunningApp" })
+                .done(function (data) {
+                    console.log(data);
+                    $("#appName").html(data);
+                })
+        }
+
+        function SearchTextByOcr() {
+            var value = $("#inputImageText").val();
+            $.ajax({ url: "/api/home/searchTextByOcr?text=" + value })
+                .done(function (data) {
+                    console.log(data);
+                    $("#imageText").html(data);
+                })
+        }
+    </script>
+</body>
+</html>
