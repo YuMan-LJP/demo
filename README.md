@@ -14,3 +14,5 @@ Vue CLI使用文档 https://cli.vuejs.org/zh/guide/
 
 ## 《MyHeplerProject》经验总结-Excel导入导出
 ## 《MyHeplerProject》经验总结-属性相等比较
+
+## 《WinFormsApp1》AutoPaly 自动挂机项目
