@@ -1,0 +1,11 @@
+﻿
+npm install -g @vue/cli
+vue create 【你的项目名称】（如果创建不了，打开powershell，执行set-executionpolicy remotesigned）
+npm install axios --save
+前端项目引入import axios from 'axios'
+
+https://code.z01.com/bootstrap-vue/docs/
+npm install vue bootstrap-vue bootstrap
+
+
+右键 Git Bash Here执行rm -rf .git 可以清除原项目的git版本信息
