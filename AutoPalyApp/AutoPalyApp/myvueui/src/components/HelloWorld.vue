@@ -7,7 +7,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 export default {
   name: 'HelloWorld',
   props: {
@@ -22,7 +21,7 @@ export default {
     showMessage() {
       var text = this._data.messageText;
       console.group(text);
-      axios.get("http://localhost:5000/api/home/ShowMessageBox?msg="+text).then((data)=>{
+      this.$axios.get("/api/home/ShowMessageBox?msg="+text).then((data)=>{
         console.log(data)
       }).catch((err)=>{
         console.log(err)

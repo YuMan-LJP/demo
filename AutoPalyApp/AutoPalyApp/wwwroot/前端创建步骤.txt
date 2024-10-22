@@ -1,11 +1,28 @@
 ﻿
 npm install -g @vue/cli
 vue create 【你的项目名称】（如果创建不了，打开powershell，执行set-executionpolicy remotesigned）
+
+右键 Git Bash Here执行rm -rf .git 可以清除原项目的git版本信息
+
 npm install axios --save
-前端项目引入import axios from 'axios'
+项目引入，可以设置为全局引用：
+import axios from 'axios'
+// 将 axios 绑定到 Vue 原型上，方便全局使用
+Vue.prototype.$axios = axios;
+// 配置 axios 默认的根路径
+axios.defaults.baseURL = 'http://localhost:5000';
 
 https://code.z01.com/bootstrap-vue/docs/
 npm install vue bootstrap-vue bootstrap
+项目引入：
+// Install BootstrapVue
+Vue.use(BootstrapVue)
+// Optionally install the BootstrapVue icon components plugin
+Vue.use(IconsPlugin)
 
+npm install node-sass --save
+npm install sass-loader --save
+npm install scss --save
+npm install scss-loader --save
 
-右键 Git Bash Here执行rm -rf .git 可以清除原项目的git版本信息
+npm install --save sass-loader@7.0.1

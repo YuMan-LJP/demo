@@ -9,8 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="App_Data\Log\" />
-    <Folder Include="App_Data\Temp\" />
     <Folder Include="wwwroot\image\" />
   </ItemGroup>
 
@@ -39,9 +37,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="App_Data\File\text.txt">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	  <None Update="log4net.xml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

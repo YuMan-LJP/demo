@@ -122,6 +122,12 @@ namespace AutoPalyApp.Helper
 
         public async Task<string> ScreencapAsync()
         {
+            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\Temp";
+            if (!Directory.Exists(rootPath))
+            {
+                Directory.CreateDirectory(rootPath);
+            }
+
             var receiver = new ConsoleOutputReceiver
             {
                 ParsesErrors = false
@@ -132,7 +138,7 @@ namespace AutoPalyApp.Helper
             await GetDeviceClientInstance().AdbClient.ExecuteShellCommandAsync(GetDeviceClientInstance().Device, $"screencap -p /sdcard/{imageName}", receiver).ConfigureAwait(continueOnCapturedContext: false);
             var result = receiver.ToString().Trim();
 
-            var outputPath = $"{Environment.CurrentDirectory}\\App_Data\\Temp\\{imageName}";
+            var outputPath = $"{rootPath}\\{imageName}";
             var fileStream = new FileStream(outputPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             await GetAdbClientInstance().PullAsync(GetDeviceClientInstance().Device, $"/sdcard/{imageName}", fileStream);
             fileStream.Close();
@@ -249,11 +255,17 @@ namespace AutoPalyApp.Helper
 
         public async Task<System.Drawing.Point?> GetPointByImageAsync(string imageName, bool isShowMat = false)
         {
+            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\Temp";
+            if (!Directory.Exists(rootPath))
+            {
+                Directory.CreateDirectory(rootPath);
+            }
+
             var tempImagePath = await ScreencapAsync();
 
             //识别目标图片在原图片中的位置
             Mat source = new Mat(tempImagePath, ImreadModes.AnyColor);
-            Mat target = new Mat($"{Environment.CurrentDirectory}\\App_Data\\Temp\\{imageName}", ImreadModes.AnyColor);
+            Mat target = new Mat($"{rootPath}\\{imageName}", ImreadModes.AnyColor);
             //Cv2.Resize(target, target, new Size(55, 45));//分辨率不一样时，一定要转换到一样的比例在来比较，不然很难匹配到，图片大小比例影响很大
 
             Mat result = new Mat();
