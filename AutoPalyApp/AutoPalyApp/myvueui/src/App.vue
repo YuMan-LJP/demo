@@ -8,7 +8,11 @@
  
         <b-collapse id="nav-collapse" is-nav>
           <b-navbar-nav>
-            <b-nav-item href="#">Link</b-nav-item>
+            <!-- Vue中借助router-link标签实现路由的切换 -->
+            <b-nav-item href="#"><router-link :to="{path:'/helloworld',params:{username:'LJP Home App'}}">HelloWorld</router-link></b-nav-item>
+            <b-nav-item href="#"><router-link to="/myhome">Home</router-link></b-nav-item>
+            <b-nav-item href="#"><router-link :to="{name:'myhome',params:{username:'LJP Home App'}}">Home2</router-link></b-nav-item>
+            <b-nav-item href="#"><router-link to="/myabout">About</router-link></b-nav-item>
             <b-nav-item href="#" disabled>Disabled</b-nav-item>
           </b-navbar-nav>
  
@@ -44,19 +48,21 @@
         </b-collapse>
       </b-navbar>
     </div>
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <!-- <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+     <!-- 指定组件的呈现位置 -->
+     <router-view></router-view>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+// import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+  // components: {
+  //   HelloWorld
+  // }
 }
 </script>
 

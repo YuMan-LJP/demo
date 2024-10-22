@@ -1,6 +1,8 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
+    <p>UserName: {{ $route.params.username}}</p>
+
     <input type="text" v-model="messageText">
     <button v-on:click="showMessage">Test</button>
   </div>

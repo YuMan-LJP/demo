@@ -20,9 +20,37 @@ Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin)
 
+//配置sass
 npm install node-sass --save
 npm install sass-loader --save
-npm install scss --save
 npm install scss-loader --save
+（特别注意bootstrap不能安装5版本以上的，npm install bootstrap@4.5.3）
 
-npm install --save sass-loader@7.0.1
+增加一个scss文件，公共引入，路径：/src/styles/custom.scss
+// Define variable defaults
+$body-bg: #000;
+$body-color: #111;
+
+// Then import Bootstrap and BootstrapVue SCSS files (order is important)
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+@import 'node_modules/bootstrap-vue/src/index.scss';
+
+以上安装好之后，有两种方式引入：
+（1）方法1：main.js里面引入 import '../src/styles/custom.scss'
+
+（2）方法2：vue.config.js里面引入
+css: {
+    loaderOptions: {
+      sass: {
+        additionalData: `@import "@/styles/custom.scss";`
+      }
+    }
+//cass-locader的版本不同，additionalData也会不同，
+//sass-loader:v10以上就用：additionalData
+//sass-loader:v8以上就用：prependData
+//sass-loader:v8-以下就用：data
+
+
+https://www.jianshu.com/p/514c7588e877
+引入vue-router
+npm install vue-router@3.5.1

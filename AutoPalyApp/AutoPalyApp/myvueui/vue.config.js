@@ -1,11 +1,12 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true,
-  css: {
-    loaderOptions: {
-      sass: {
-        prependData: `@import "@/styles/custom.scss";`
-      }
-    }
-  }
+  lintOnSave: false,//避免出现Component name “xxx” should always be multi-word.
+  // css: {
+  //   loaderOptions: {
+  //     sass: {// 配置scss全局变量，或者在main.js里面引入
+  //       additionalData: `@import "@/styles/custom.scss";`// @为目录src的别名
+  //     }
+  //   }
+  // }
 })
