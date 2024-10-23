@@ -1,4 +1,5 @@
 ﻿
+vue2版本创建步骤
 npm install -g @vue/cli
 vue create 【你的项目名称】（如果创建不了，打开powershell，执行set-executionpolicy remotesigned）
 
@@ -54,3 +55,29 @@ css: {
 https://www.jianshu.com/p/514c7588e877
 引入vue-router
 npm install vue-router@3.5.1
+
+import VueRouter from "vue-router";
+import router from './router'//引入路由器，自己建一个router文件夹，下面可以建一个index.js，里面存放路径规则
+
+new Vue({
+  render: h => h(App),
+  router: router //这里绑定
+}).$mount('#app')
+
+
+https://blog.csdn.net/weixin_51220466/article/details/123889240
+引入npm install vue-i18n@8 --save
+import VueI18n from 'vue-i18n'
+Vue.use(VueI18n);
+const i18n = new VueI18n({
+  locale: localStorage.getItem('lang') || 'zh',
+  messages: {
+      'zh': require('./i18n/zh'),
+      'en': require('./i18n/en')
+  }
+})
+new Vue({
+  render: h => h(App),
+  router: router,
+  i18n: i18n,//这里配置
+}).$mount('#app')

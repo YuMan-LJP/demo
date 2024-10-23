@@ -1,8 +1,6 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <p>UserName: {{ $route.params.username}}</p>
-
     <input type="text" v-model="messageText">
     <button v-on:click="showMessage">Test</button>
   </div>
@@ -22,7 +20,7 @@ export default {
   methods:{
     showMessage() {
       var text = this._data.messageText;
-      console.group(text);
+      console.log(text);
       this.$axios.get("/api/home/ShowMessageBox?msg="+text).then((data)=>{
         console.log(data)
       }).catch((err)=>{
