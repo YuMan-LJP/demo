@@ -26,15 +26,6 @@
               <b-dropdown-item href="#" v-for="curLang in languagelist"
                 @click="selectlang(curLang.key)">{{ curLang.value }}</b-dropdown-item>
             </b-nav-item-dropdown>
-
-            <b-nav-item-dropdown right>
-              <!-- Using 'button-content' slot -->
-              <template v-slot:button-content>
-                <em>{{ $t("app.user") }}</em>
-              </template>
-              <b-dropdown-item href="#">{{ $t("app.profile") }}</b-dropdown-item>
-              <b-dropdown-item href="#">{{ $t("app.signOut") }}</b-dropdown-item>
-            </b-nav-item-dropdown>
           </b-navbar-nav>
         </b-collapse>
       </b-navbar>
