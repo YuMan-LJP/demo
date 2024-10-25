@@ -17,3 +17,5 @@ Vue CLI使用文档 https://cli.vuejs.org/zh/guide/
 
 ## 《WinFormsApp1》自动化测试相关技术举例
 ## 《AutoPaly》 自动挂机项目
+
+## 《myvueui》前端vue学习框架
