@@ -124,8 +124,8 @@
 
             <template v-slot:modal-footer>
                 <b-button-group size="sm" class="float-right">
-                    <b-button type="submit" variant="primary">Submit</b-button>
-                    <b-button type="reset" variant="info">Reset</b-button>
+                    <b-button type="submit" variant="primary" @click="onSubmit">Submit</b-button>
+                    <b-button type="reset" variant="info" @click="onReset">Reset</b-button>
                     <b-button type="button" variant="danger" @click="hideCreateModal">Close</b-button>
                 </b-button-group>
             </template>
