@@ -1,0 +1,83 @@
+﻿
+vue2版本创建步骤
+npm install -g @vue/cli
+vue create 【你的项目名称】（如果创建不了，打开powershell，执行set-executionpolicy remotesigned）
+
+右键 Git Bash Here执行rm -rf .git 可以清除原项目的git版本信息
+
+npm install axios --save
+项目引入，可以设置为全局引用：
+import axios from 'axios'
+// 将 axios 绑定到 Vue 原型上，方便全局使用
+Vue.prototype.$axios = axios;
+// 配置 axios 默认的根路径
+axios.defaults.baseURL = 'http://localhost:5000';
+
+https://code.z01.com/bootstrap-vue/docs/
+npm install vue bootstrap-vue bootstrap
+项目引入：
+// Install BootstrapVue
+Vue.use(BootstrapVue)
+// Optionally install the BootstrapVue icon components plugin
+Vue.use(IconsPlugin)
+
+//配置sass
+npm install node-sass --save
+npm install sass-loader --save
+npm install scss-loader --save
+（特别注意bootstrap不能安装5版本以上的，npm install bootstrap@4.5.3）
+
+增加一个scss文件，公共引入，路径：/src/styles/custom.scss
+// Define variable defaults
+$body-bg: #000;
+$body-color: #111;
+
+// Then import Bootstrap and BootstrapVue SCSS files (order is important)
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+@import 'node_modules/bootstrap-vue/src/index.scss';
+
+以上安装好之后，有两种方式引入：
+（1）方法1：main.js里面引入 import '../src/styles/custom.scss'
+
+（2）方法2：vue.config.js里面引入
+css: {
+    loaderOptions: {
+      sass: {
+        additionalData: `@import "@/styles/custom.scss";`
+      }
+    }
+//cass-locader的版本不同，additionalData也会不同，
+//sass-loader:v10以上就用：additionalData
+//sass-loader:v8以上就用：prependData
+//sass-loader:v8-以下就用：data
+
+
+https://www.jianshu.com/p/514c7588e877
+引入vue-router
+npm install vue-router@3.5.1
+
+import VueRouter from "vue-router";
+import router from './router'//引入路由器，自己建一个router文件夹，下面可以建一个index.js，里面存放路径规则
+
+new Vue({
+  render: h => h(App),
+  router: router //这里绑定
+}).$mount('#app')
+
+
+https://blog.csdn.net/weixin_51220466/article/details/123889240
+引入npm install vue-i18n@8 --save
+import VueI18n from 'vue-i18n'
+Vue.use(VueI18n);
+const i18n = new VueI18n({
+  locale: localStorage.getItem('lang') || 'zh',
+  messages: {
+      'zh': require('./i18n/zh'),
+      'en': require('./i18n/en')
+  }
+})
+new Vue({
+  render: h => h(App),
+  router: router,
+  i18n: i18n,//这里配置
+}).$mount('#app')
