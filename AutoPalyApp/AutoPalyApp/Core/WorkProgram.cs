@@ -13,7 +13,7 @@ namespace AutoPalyApp.Core
         {
             _name = name;
 
-            var json = FileHelper.ReadJsonFile<JsonObject>(name);
+            var json = FileHelper.ReadJsonFile<CommandGroup>(name);
             if (json == null)
             {
                 LogHelper.Log($"【{_name}】未找到命令");
@@ -23,7 +23,7 @@ namespace AutoPalyApp.Core
             var fileName = Path.GetFileNameWithoutExtension(name);
             var ext = Path.GetExtension(name);
             var recordFileName = $"{fileName}.records{ext}";
-            var recordJson = FileHelper.ReadJsonFile<JsonObject>(recordFileName);
+            var recordJson = FileHelper.ReadJsonFile<CommandGroup>(recordFileName);
             if (recordJson != null)
             {
                 json = recordJson;

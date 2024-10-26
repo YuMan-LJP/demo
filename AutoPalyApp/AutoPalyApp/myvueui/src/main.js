@@ -8,6 +8,7 @@ import axios from 'axios'
 import VueRouter from "vue-router";
 import router from './router'//引入路由器
 import VueI18n from 'vue-i18n'
+import common from './utils/common'
 
 
 // Install BootstrapVue
@@ -42,6 +43,8 @@ const i18n = new VueI18n({
       'en': require('./i18n/en')
   }
 })
+
+Vue.prototype.$common = common;//挂一个全局公共方法
 
 Vue.config.productionTip = false//关闭Vue的生产提示
 

@@ -17,5 +17,9 @@ module.exports = {
     selectall: 'Select all',
     unselectall: 'Clear selected',
     switch: 'Switch',
+  },
+
+  commandGroup:{
+    title: 'Command Group'
   }
 }

@@ -24,9 +24,6 @@
                 <template v-slot:cell(index)="data">
                     {{ data.index + 1 }}
                 </template>
-                <template v-slot:cell(isActive)="data">
-                    {{ data.value ? "已激活" : "未激活" }}
-                </template>
                 <template v-slot:cell(action)="data">
                     <b-button-group class="mx-1">
                         <b-button variant="info" @click="showEditModal(data.item.id)">{{ $t("app.edit") }}</b-button>
@@ -34,9 +31,6 @@
                     <b-button-group class="mx-1">
                         <b-button variant="danger" @click="deleteRow(data.item.id)">{{ $t("app.delete") }}</b-button>
                     </b-button-group>
-                </template>
-                <template v-slot:cell(sex)="data">
-                    {{ data.value === "Men" ? "男" : "女" }}
                 </template>
                 <template v-slot:cell(htmlCol)="data">
                     <span v-html="data.value"></span>
@@ -89,53 +83,20 @@
             </p>
         </div>
 
-        <b-modal ref="createmodal" title="Create New Data" id="createModal" header-bg-variant="dark"
-            header-text-variant="light" body-bg-variant="light" body-text-variant="dark" footer-bg-variant="dark"
-            footer-text-variant="light">
-            <div>
-                <b-form @submit="onSubmit" @reset="onReset" v-if="isshowform">
-                    <b-form-group id="input-group-1" label="First Name:" label-for="input-1" description="请输入您的姓">
-                        <b-form-input id="input-1" v-model="form1.first_name" required
-                            placeholder="Enter First Name"></b-form-input>
-                    </b-form-group>
-
-                    <b-form-group id="input-group-2" label="Last Name:" label-for="input-2" description="请输入您的名">
-                        <b-form-input id="input-2" v-model="form1.last_name" required
-                            placeholder="Enter Last Name"></b-form-input>
-                    </b-form-group>
-
-                    <b-form-group id="input-group-2" label="Age:" label-for="input-2" description="请输入您的年龄">
-                        <b-form-input id="input-2" v-model="form1.age" required type="number"
-                            placeholder="Enter Age"></b-form-input>
-                    </b-form-group>
-
-                    <b-form-group id="input-group-3" label="Sex:" label-for="input-3">
-                        <b-form-select id="input-3" v-model="form1.sex" :options="sexSelectList" value-field="id"
-                            text-field="text" required ref="sexSelect"></b-form-select>
-                    </b-form-group>
-
-                    <b-form-group id="input-group-4">
-                        <b-form-checkbox v-model="form1.isActive" id="checkbox-4">
-                            Is Active
-                        </b-form-checkbox>
-                    </b-form-group>
-                </b-form>
-            </div>
-
-            <template v-slot:modal-footer>
-                <b-button-group size="sm" class="float-right">
-                    <b-button type="submit" variant="primary" @click="onSubmit">Submit</b-button>
-                    <b-button type="reset" variant="info" @click="onReset">Reset</b-button>
-                    <b-button type="button" variant="danger" @click="hideCreateModal">Close</b-button>
-                </b-button-group>
-            </template>
-        </b-modal>
+        <div>
+            <MyForm ref="myForm" title="Create New Data" :myTagForm="form1" v-on:onsubmit="onSubmit" v-on:onreset="onReset" />
+        </div>
     </div>
 </template>
 
 <script>
+import MyForm from './Common/MyTagForm.vue'
+
 export default {
     name: 'Home',
+    components: {
+        MyForm
+    },
     data: function () {
         return {
             currentPage: 1,
@@ -154,6 +115,9 @@ export default {
                 {
                     key: 'isActive',
                     label: 'Active',
+                    formatter: (value, key, item) => {
+                        return value ? "已激活" : "未激活"
+                    }
                 },
                 {
                     key: 'id',
@@ -186,6 +150,13 @@ export default {
                 {
                     key: 'sex',
                     label: 'Sex',
+                    formatter: (value, key, item) => {
+                        var sexItem = this.sexList.filter(f => f.id === value)
+                        if (sexItem) {
+                            return sexItem[0].text
+                        }
+                        return value
+                    }
                 },
                 {
                     key: 'htmlCol',
@@ -206,16 +177,28 @@ export default {
                 { isActive: false, id: 11, age: 89, first_name: 'ghj', last_name: 'wer', sex: 'Men', htmlCol: 'This is <i>raw <strong>HTML</strong></i> <span style="color:green">content</span>' },
                 { isActive: true, id: 12, age: 38, first_name: 'cvbcb', last_name: 'erte', sex: 'Women', htmlCol: 'This is <i>raw <strong>HTML</strong></i> <span style="color:black">content</span>' },
             ],
-            form1: {
-                id: -1,
-                first_name: '',
-                last_name: '',
-                age: 0,
-                sex: '',
-                isActive: false,
-            },
-            sexSelectList: [{ text: '请选择', id: '', disabled: true }, { text: '男', id: 'Men' }, { text: '女', id: 'Women' }],
-            isshowform: true,
+            form1: [
+                {
+                    title: '请填写表单',
+                    form: [
+                        { field: 'id', value: 0, type: 'number', label: '', placeholder: '', isShow: false, isRequired: false },
+                        { field: 'first_name', value: '', type: 'text', label: 'First Name', placeholder: '请输入您的姓', description: '必填', isShow: true, isRequired: true },
+                        { field: 'last_name', value: '', type: 'text', label: 'Last Name', placeholder: '请输入您的名', description: '必填', isShow: true, isRequired: true },
+                        { field: 'age', value: 0, type: 'number', label: 'Age', placeholder: '请输入您的年龄', description: '必填，数字', isShow: true, isRequired: true },
+                        {
+                            field: 'sex', value: '', type: 'select', label: 'Sex', description: '必填', isShow: true, isRequired: true,
+                            options: [],
+                            valuefield: 'id', textfield: 'text', NullValue: '',
+                        },
+                        { field: 'isActive', value: false, type: 'checkbox', label: 'Is Active', description: '是否激活', isShow: true },
+                    ]
+                }
+            ],
+
+            sexList: [
+                { text: '男', id: 'Men' },
+                { text: '女', id: 'Women' }
+            ]
         }
     },
     methods: {
@@ -239,65 +222,40 @@ export default {
         },
 
         showCreateModal() {
-            this.$refs['createmodal'].show()
+            this.$refs.myForm.showMyModal();
         },
-        hideCreateModal() {
-            this.$refs['createmodal'].hide()
-        },
-        onSubmit(evt) {
-            evt.preventDefault()
-
-            if (this.form1.id !== -1) {
-                var index = this.tableRows.findIndex(f => f.id === this.form1.id);
+        onSubmit(data) {
+            console.log(data)
+            if (data.id !== 0) {
+                var index = this.tableRows.findIndex(f => f.id === data.id);
                 var row = this.tableRows[index];
-                row.id = this.form1.id
-                row.first_name = this.form1.first_name
-                row.last_name = this.form1.last_name
-                row.age = this.form1.age
-                row.sex = this.form1.sex
-                row.isActive = this.form1.isActive
+                row.id = data.id
+                row.first_name = data.first_name
+                row.last_name = data.last_name
+                row.age = data.age
+                row.sex = data.sex
+                row.isActive = data.isActive
             } else {
                 this.tableRows.push({
                     id: this.tableRows.length + 1,
-                    isActive: this.form1.isActive,
-                    age: this.form1.age,
-                    first_name: this.form1.first_name,
-                    last_name: this.form1.last_name,
-                    sex: this.form1.sex,
+                    isActive: data.isActive,
+                    age: data.age,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    sex: data.sex,
                     htmlCol: 'This is <i>raw <strong>HTML</strong></i> <span style="color:red">content</span>'
                 })
             }
-
-            this.hideCreateModal();
         },
-        onReset(evt) {
-            if (evt) {
-                evt.preventDefault()
-            }
-
-            this.form1.id = -1
-            this.form1.first_name = ""
-            this.form1.last_name = ""
-            this.form1.age = 0
-            this.form1.sex = ''
-            this.form1.isActive = false
-            this.isshowform = false
-            this.$nextTick(() => {
-                this.isshowform = true
-            })
+        onReset() {
+            //暂时不需要事项，组件里面自动重置了
         },
 
         showEditModal(id) {
             var index = this.tableRows.findIndex(f => f.id === id);
             if (index !== -1) {
                 var row = this.tableRows[index];
-                this.form1.id = row.id
-                this.form1.first_name = row.first_name
-                this.form1.last_name = row.last_name
-                this.form1.age = row.age
-                this.form1.sex = row.sex
-                this.form1.isActive = row.isActive
-                this.isshowform = true
+                this.$refs.myForm.setFormValue(row);
                 this.showCreateModal()
             } else {
                 alert('NoFound')
@@ -312,21 +270,17 @@ export default {
             }
         },
 
-
+        initSelectData() {
+            var firstForm = this.form1[0].form;
+            var index = firstForm.findIndex(f => f.field === "sex")
+            firstForm[index].options = [
+                { text: '请选择', id: '', disabled: true },
+            ]
+            this.sexList.forEach(f => firstForm[index].options.push(f))
+        }
     },
     mounted() {
-        this.$root.$on('bv::modal::show', (bvEvent, modalId) => {
-            console.log('Modal Show', modalId)
-            if (modalId === "createModal") {
-                //TODO...
-            }
-        })
-        this.$root.$on('bv::modal::hide', (bvEvent, modalId) => {
-            console.log('Modal Hide', modalId)
-            if (modalId === "createModal") {
-                this.onReset();
-            }
-        })
+        this.initSelectData();
     }
 }
 </script>

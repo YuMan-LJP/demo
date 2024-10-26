@@ -1,6 +1,6 @@
 ﻿namespace AutoPalyApp.Core.Dto
 {
-    public class JsonObject
+    public class CommandGroup
     {
         /// <summary>
         /// 【唯一Id】可以用GUID，对应定时任务
