@@ -21,8 +21,8 @@ export default {
     showMessage() {
       var text = this._data.messageText;
       console.log(text);
-      this.$axios.get("/api/home/ShowMessageBox?msg="+text).then((data)=>{
-        console.log(data)
+      this.$axios.get("/api/home/ShowMessageBox?msg="+text).then((response)=>{
+        console.log(response)
       }).catch((err)=>{
         console.log(err)
       })

@@ -15,6 +15,8 @@
     "node-sass": "^9.0.0",
     "sass-loader": "^16.0.2",
     "scss-loader": "^0.0.1",
+    "stylus": "^0.64.0",
+    "stylus-loader": "^8.1.1",
     "vue": "^2.7.16",
     "vue-i18n": "^8.28.2",
     "vue-router": "^3.5.1"

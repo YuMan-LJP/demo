@@ -9,6 +9,7 @@ import VueRouter from "vue-router";
 import router from './router'//引入路由器
 import VueI18n from 'vue-i18n'
 import common from './utils/common'
+import alert from './components/Common/alert'
 
 
 // Install BootstrapVue
@@ -44,6 +45,7 @@ const i18n = new VueI18n({
   }
 })
 
+Vue.use(alert);//挂一个全局弹窗提示插件（alert、confirm、msg）
 Vue.prototype.$common = common;//挂一个全局公共方法
 
 Vue.config.productionTip = false//关闭Vue的生产提示

@@ -6,6 +6,7 @@
             <b-button-toolbar key-nav aria-label="Toolbar with button groups">
                 <b-button-group class="mx-1">
                     <b-button variant="success" @click="newMainModal">{{ $t("app.create") }}</b-button>
+                    <b-button variant="success" @click="getMainTable">{{ $t("app.refresh") }}</b-button>
                 </b-button-group>
             </b-button-toolbar>
 
@@ -23,23 +24,27 @@
                         <b-button variant="info" @click="editMainModal(data.item.id)">{{ $t("app.edit") }}</b-button>
                     </b-button-group>
                     <b-button-group class="mx-1">
-                        <b-button variant="danger" @click="deleteMainRow(data.item.id)">{{ $t("app.delete") }}</b-button>
+                        <b-button variant="danger" @click="deleteMainRow(data.item.id)">{{ $t("app.delete")
+                            }}</b-button>
+                    </b-button-group>
+                    <b-button-group>
+                        <b-button variant="primary" @click="saveMainodal(data.item.id)">{{ $t("app.save") }}</b-button>
                     </b-button-group>
                 </template>
 
                 <template v-slot:row-details="row">
                     <b-card>
                         <b-row class="mb-2">
-                            <b-col sm="1" class="text-sm-right"><b>主表行序号:</b></b-col>
-                            <b-col sm="4">{{ row.index }}</b-col>
+                            <b-col sm="1" class="text-sm-right"><b>Index:</b></b-col>
+                            <b-col sm="3" class="text-sm-left">{{ row.index + 1 }}</b-col>
                             <b-col sm="1" class="text-sm-right"><b>GUID:</b></b-col>
-                            <b-col sm="4">{{ row.item.id }}</b-col>
+                            <b-col sm="3" class="text-sm-left">{{ row.item.id }}</b-col>
+                            <b-col sm="1" class="text-sm-right"><b>Name:</b></b-col>
+                            <b-col sm="3" class="text-sm-left">{{ row.item.name }}</b-col>
                         </b-row>
                         <b-row class="mb-2">
-                            <b-col sm="1" class="text-sm-right"><b>Name:</b></b-col>
-                            <b-col sm="4">{{ row.item.name }}</b-col>
                             <b-col sm="1" class="text-sm-right"><b>Remark:</b></b-col>
-                            <b-col sm="4">{{ row.item.remark }}</b-col>
+                            <b-col sm="11" class="text-sm-left">{{ row.item.remark }}</b-col>
                         </b-row>
 
 
@@ -51,17 +56,17 @@
                         </b-button-toolbar>
 
                         <div>
-                            <b-table striped hover :ref="'itemTable' + row.index" :fields="itemTableColumns"
+                            <b-table striped small hover :ref="'itemTable' + row.index" :fields="itemTableColumns"
                                 :items="row.item.commands">
                                 <template v-slot:cell(index)="data">
                                     {{ data.index + 1 }}
                                 </template>
                                 <template v-slot:cell(action)="data">
-                                    <b-button-group class="mx-1">
+                                    <b-button-group size="sm">
                                         <b-button variant="info" @click="editItemModal(row.item.id, data.item.id)">{{
                                             $t("app.edit") }}</b-button>
                                     </b-button-group>
-                                    <b-button-group class="mx-1">
+                                    <b-button-group size="sm">
                                         <b-button variant="danger" @click="deleteItemRow(row.item.id, data.item.id)">{{
                                             $t("app.delete") }}</b-button>
                                     </b-button-group>
@@ -76,7 +81,8 @@
         </div>
 
         <div id="MainForm">
-            <MyForm ref="mainForm" title="Create New Command Group" :myTagForm="mainForm" v-on:onsubmit="onMainSubmit" />
+            <MyForm ref="mainForm" title="Create New Command Group" :myTagForm="mainForm"
+                v-on:onsubmit="onMainSubmit" />
         </div>
 
         <div id="ItemForm">
@@ -97,10 +103,16 @@ export default {
     data() {
         return {
             mainForm: [
-                { field: 'id', value: '', type: 'text', label: 'GUID', isShow: true, isDisabled: true },//自动生成，禁止输入
-                { field: 'name', value: '', type: 'text', label: 'Name', placeholder: '请输入名称', description: '必填', isShow: true, isRequired: true },
-                { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
-                { field: 'total', value: 0, type: 'number', label: 'Total', isShow: false },
+                {
+                    title: '请填写表单',
+                    form: [
+                        { field: 'id', value: '', type: 'text', label: 'GUID', isShow: true, isDisabled: true },//自动生成，禁止输入
+                        { field: 'name', value: '', type: 'text', label: 'Name', placeholder: '请输入命令组名称', description: '必填', isShow: true, isRequired: true },
+                        { field: 'fileName', value: '', type: 'text', label: 'File Name', placeholder: '请输入文件名称', description: '必填', isShow: true, isRequired: true },
+                        { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
+                        { field: 'total', value: 0, type: 'number', label: 'Total', isShow: false },
+                    ]
+                }
             ],
             mainTableColumns: [
                 {
@@ -118,6 +130,10 @@ export default {
                     label: 'Name',
                 },
                 {
+                    key: 'fileName',
+                    label: 'File Name',
+                },
+                {
                     key: 'remark',
                     label: 'Remark',
                 },
@@ -127,12 +143,12 @@ export default {
                 },
             ],
             mainTableRows: [
-                { id: '202410261450', name: 'Test', remark: '测试数据', total: 0, commands: [] },//测试数据
+                //{ id: '202410261450', name: 'Test', fileName: 'TestFile', remark: '测试数据', total: 0, commands: [] },//测试数据
             ],
 
             itemForm: [
                 {
-                    title: '一般设置', 
+                    title: '一般设置',
                     form: [
                         { field: 'mainId', value: 0, type: 'number', isShow: false },//主表Id
                         { field: 'id', value: '', type: 'text', label: 'GUID', isShow: false, isDisabled: true },//自动生成，禁止输入
@@ -140,16 +156,26 @@ export default {
                         { field: 'parentIndex', value: null, type: 'number', label: 'Parent Index', isShow: false, isDisabled: true },//自动生成，禁止输入
                         { field: 'name', value: '', type: 'text', label: 'Name', placeholder: '请输入名称', description: '必填', isShow: true, isRequired: true, },
                         {
-                            field: 'type', value: -1, type: 'select', label: 'Type', description: '必填', isShow: true, isRequired: true,
-                            options: [],
-                            valuefield: 'id', textfield: 'text', NullValue: -1,
-                        },
-                        {
                             field: 'operate', value: -1, type: 'select', label: 'Operate', description: '必填', isShow: true, isRequired: true,
                             options: [],
                             valuefield: 'id', textfield: 'text', NullValue: -1,
                         },
+                        {
+                            field: 'type', value: -1, type: 'select', label: 'Type', description: '必填', isShow: true, isRequired: true,
+                            options: [],
+                            valuefield: 'id', textfield: 'text', NullValue: -1, change: (selectedValue, vm) => {
+                                //如果选择图片，显示Image，否则显示Content
+                                if (selectedValue === 1) {
+                                    vm.updateFormItem('content', false, false);
+                                    vm.updateFormItem('image', true, true);
+                                } else {
+                                    vm.updateFormItem('image', false, false);
+                                    vm.updateFormItem('content', true, true);
+                                }
+                            }
+                        },
                         { field: 'content', value: '', type: 'textarea', label: 'Content', placeholder: '请输入内容', description: '必填', isShow: true, isRequired: true, },
+                        { field: 'image', value: '', type: 'uploadimage', label: 'Image', placeholder: '请上传图片', description: '必填', isShow: false, isRequired: false, },
                         { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
                     ]
                 },
@@ -243,6 +269,15 @@ export default {
         }
     },
     methods: {
+        getMainTable() {
+            this.$axios.get("/api/home/getAllJsonList").then((response) => {
+                console.log(response);
+               this.mainTableRows = response.data;
+            }).catch((err) => {
+                console.log(err)
+                this.$alert('System Tip', err)
+            })
+        },
         newMainModal() {
             var data = {
                 id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
@@ -260,7 +295,7 @@ export default {
                 this.$refs.mainForm.setFormValue(row);
                 this.$refs.mainForm.showMyModal();
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
             }
         },
         deleteMainRow(mainId) {
@@ -269,7 +304,39 @@ export default {
                 //调用后端接口
                 this.mainTableRows.splice(index, 1);
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
+            }
+        },
+        saveMainodal(mainId) {
+            var index = this.mainTableRows.findIndex(f => f.id === mainId);
+            if (index !== -1) {
+                var row = this.mainTableRows[index];
+
+                let formData = new FormData();
+                for (var command of row.commands) {
+                    if (command.image) {
+                        formData.append('files', command.image)
+                    }
+                }
+                formData.append('groupData', JSON.stringify(row))
+
+                this.$axios.post("/api/home/SaveJsonFile", formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then((response) => {
+                    console.log(response)
+                    if (response.data === true) {
+                        this.$alert('System Tip', 'Save Success')
+                    } else {
+                        this.$alert('System Tip', 'Save Fail')
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    this.$alert('System Tip', 'Save Fail')
+                })
+            } else {
+                this.$alert('System Tip', 'NoFound')
             }
         },
         onMainSubmit(data) {
@@ -277,6 +344,7 @@ export default {
             if (index !== -1) {
                 var row = this.mainTableRows[index];
                 row.name = data.name
+                row.fileName = data.fileName
                 row.remark = data.remark
                 row.total = data.total
                 //调用后端接口
@@ -284,6 +352,7 @@ export default {
                 this.mainTableRows.push({
                     id: data.id,
                     name: data.name,
+                    fileName: data.fileName,
                     remark: data.remark,
                     total: data.total,
                     commands: [],//初始化子表集合
@@ -313,7 +382,7 @@ export default {
                 this.$refs.itemForm.setFormValue(itemRow);
                 this.$refs.itemForm.showMyModal();
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
             }
         },
         deleteItemRow(mainId, itemId) {
@@ -323,7 +392,7 @@ export default {
                 //调用后端接口
                 mainRow.commands.splice(index, 1);
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
             }
         },
         onItemSubmit(data) {
@@ -341,7 +410,8 @@ export default {
                 row.interval = data.interval
                 row.timeout = data.timeout
                 row.operate = data.operate
-                row.content = data.content
+                row.content = data.type === 1 ? data.image.name : data.content
+                row.image = data.image
                 row.count = data.count
                 row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
                 row.getIndex = data.getIndex
@@ -358,7 +428,8 @@ export default {
                     interval: data.interval,
                     timeout: data.timeout,
                     operate: data.operate,
-                    content: data.content,
+                    content: data.type === 1 ? data.image.name : data.content,
+                    image: data.image,
                     count: data.count,
                     isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
                     getIndex: data.getIndex,
@@ -367,6 +438,8 @@ export default {
                 })
                 //调用后端接口
             }
+
+            mainRow.total = mainRow.commands.length;
         },
         onItemReset() {
             var data = {
@@ -380,10 +453,14 @@ export default {
                 timeout: 10,
                 operate: -1,
                 content: '',
-                count: 0,
+                image: '',
+                count: 1,
                 isThrowExceptionIfNoFind: true,
                 getIndex: 0,
             }
+
+            this.$refs.itemForm.updateFormItem('image', false, false);
+            this.$refs.itemForm.updateFormItem('content', true, true);
             this.$refs.itemForm.setFormValue(data);
         },
 
@@ -404,6 +481,8 @@ export default {
     },
     mounted() {
         this.initSelectData();
+
+        this.getMainTable();
     }
 }
 </script>

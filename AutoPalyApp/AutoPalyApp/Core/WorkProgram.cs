@@ -7,6 +7,7 @@ namespace AutoPalyApp.Core
     public static class WorkProgram
     {
         private static string? _name;
+        private static string? _filename;
         private static bool _isRecord = false;
 
         public static void RunCommand(string name)
@@ -19,6 +20,8 @@ namespace AutoPalyApp.Core
                 LogHelper.Log($"【{_name}】未找到命令");
                 return;
             }
+
+            _filename = json.FileName;
 
             var fileName = Path.GetFileNameWithoutExtension(name);
             var ext = Path.GetExtension(name);
@@ -149,7 +152,7 @@ namespace AutoPalyApp.Core
                 else if (command.Type ==  CommandTypeEnum.Image)
                 {
                     //使用opencv识别图片取得x，y
-                    point = AdbHelper.GetInstance().GetPointByImageAsync(command.Content).Result;
+                    point = AdbHelper.GetInstance().GetPointByImageAsync($"{_filename}\\{command.Content}").Result;
                 }
                 else
                 {

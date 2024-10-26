@@ -17,6 +17,8 @@ module.exports = {
     selectall: 'Select all',
     unselectall: 'Clear selected',
     switch: 'Switch',
+    save: 'Save',
+    refresh: 'Refresh',
   },
 
   commandGroup:{

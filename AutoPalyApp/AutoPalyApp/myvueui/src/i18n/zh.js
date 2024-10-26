@@ -17,6 +17,8 @@ module.exports = {
     selectall: '选择全部',
     unselectall: '取消已选',
     switch: '切换',
+    save: '保存',
+    refresh: '刷新',
   },
 
   commandGroup:{

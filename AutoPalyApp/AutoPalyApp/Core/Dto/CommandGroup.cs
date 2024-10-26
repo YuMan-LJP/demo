@@ -13,6 +13,11 @@
         public string Name { get; set; } = "";
 
         /// <summary>
+        /// json文件名
+        /// </summary>
+        public string FileName { get; set; } = "";
+
+        /// <summary>
         /// 【备注】
         /// </summary>
         public string Remark { get; set; } = "";

@@ -258,7 +258,7 @@ export default {
                 this.$refs.myForm.setFormValue(row);
                 this.showCreateModal()
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
             }
         },
         deleteRow(id) {
@@ -266,7 +266,7 @@ export default {
             if (index !== -1) {
                 this.tableRows.splice(index, 1);
             } else {
-                alert('NoFound')
+                this.$alert('System Tip', 'NoFound')
             }
         },
 

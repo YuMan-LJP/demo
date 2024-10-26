@@ -21,15 +21,21 @@
                                 <b-form-select
                                     v-else-if="formItem.type === 'select' && formItem.isShow && !formItem.isDisabled"
                                     :id="'input-' + index" v-model="formItem.value" :options="formItem.options"
-                                    :value-field="formItem.valuefield" :text-field="formItem.textfield"></b-form-select>
+                                    :value-field="formItem.valuefield" :text-field="formItem.textfield"
+                                    @change="selectChange(formItem.field)"></b-form-select>
                                 <b-form-checkbox
                                     v-else-if="formItem.type === 'checkbox' && formItem.isShow && !formItem.isDisabled"
                                     v-model="formItem.value" :id="'input-' + index">
                                     {{ formItem.description }}
                                 </b-form-checkbox>
-                                <div v-else-if="formItem.type === 'textarea' && formItem.isShow && !formItem.isDisabled">
+                                <div
+                                    v-else-if="formItem.type === 'textarea' && formItem.isShow && !formItem.isDisabled">
                                     <textarea class="form-control" :id="'input-' + index" rows="3"
                                         v-model="formItem.value"></textarea>
+                                </div>
+                                <div
+                                    v-else-if="formItem.type === 'uploadimage' && formItem.isShow && !formItem.isDisabled">
+                                    <input type="file" accept="image/png,image/gif,image/jpeg"  @change="uploadimage($event, formItem.field)"/>
                                 </div>
                                 <div v-else-if="formItem.isDisabled && formItem.isShow">
                                     <p>{{ formItem.value }}</p><!--禁用时直接显示文本即可-->
@@ -119,12 +125,17 @@ export default {
                     if (item.type === "checkbox") {
                         continue;
                     }
-                    if (item.type === "select") {
+                    if (item.type === "uploadimage") {
+                        console.log(item);
+                        if (!item.value) {
+                            emptyLabels.push(item.label);
+                        } else {
+                        }
+                    } else if (item.type === "select") {
                         if (item.value === item.NullValue) {
                             emptyLabels.push(item.label);//注意下来判断是否是空的，要按配置的NullValue来判断，有的时候下拉框id可以是任意类型不确定的
                         }
-                    }
-                    else if (!item.value) {
+                    } else if (!item.value) {
                         emptyLabels.push(item.label);
                     }
                 }
@@ -171,6 +182,36 @@ export default {
                         continue;
                     }
                     item.value = data[item.field];
+                }
+            }
+        },
+        selectChange(field) {
+            for (var tagItem of this.myTagForm) {
+                for (var item of tagItem.form) {
+                    if (item.field === field && item.change) {
+                        item.change(item.value, this);
+                    }
+                }
+            }
+        },
+        updateFormItem(field, isShow, isRequired) {
+            for (var tagItem of this.myTagForm) {
+                for (var item of tagItem.form) {
+                    if (item.field === field) {
+                        item.isShow = isShow;
+                        item.isRequired = isRequired;
+                    }
+                }
+            }
+        },
+        uploadimage(e, field){
+            console.log(e, field);
+            let file = e.target.files[0];
+            for (var tagItem of this.myTagForm) {
+                for (var item of tagItem.form) {
+                    if (item.field === field) {
+                        item.value = file;
+                    }
                 }
             }
         },
