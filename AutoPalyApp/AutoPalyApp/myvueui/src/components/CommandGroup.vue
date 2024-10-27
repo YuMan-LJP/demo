@@ -61,6 +61,10 @@
                                 <template v-slot:cell(index)="data">
                                     {{ data.index + 1 }}
                                 </template>
+                                <template v-slot:cell(content)="data">
+                                    {{ data.value }}
+                                    <img v-if="data.item.imageBase64String" :src="getImageUrl(data.item.imageBase64String)" width="30">
+                                </template>
                                 <template v-slot:cell(action)="data">
                                     <b-button-group size="sm">
                                         <b-button variant="info" @click="editItemModal(row.item.id, data.item.id)">{{
@@ -69,6 +73,10 @@
                                     <b-button-group size="sm">
                                         <b-button variant="danger" @click="deleteItemRow(row.item.id, data.item.id)">{{
                                             $t("app.delete") }}</b-button>
+                                    </b-button-group>
+                                    <b-button-group size="sm">
+                                        <b-button variant="info"
+                                            @click="showDetail(row.item.id, data.item.id)">编辑子命令组</b-button>
                                     </b-button-group>
                                 </template>
                             </b-table>
@@ -88,6 +96,51 @@
         <div id="ItemForm">
             <MyForm ref="itemForm" title="Create New Command" :myTagForm="itemForm" v-on:onsubmit="onItemSubmit"
                 v-on:onreset="onItemReset" />
+        </div>
+
+
+        <div>
+            <b-modal ref="childmodal" id="childmodal" size="xl" title="Create New Child Command"
+                header-bg-variant="dark" header-text-variant="light" body-bg-variant="light" body-text-variant="dark"
+                footer-bg-variant="dark" footer-text-variant="light">
+
+                <div>
+
+                    <b-button-toolbar key-nav aria-label="Toolbar with button groups">
+                        <b-button-group class="mx-1">
+                            <b-button variant="success" @click="newDetailModal()">
+                                {{ $t("app.create") + ' Command' }}</b-button>
+                        </b-button-group>
+                    </b-button-toolbar>
+
+                    <b-table striped small hover ref="detailTable" :fields="itemTableColumns" :items="detailTableRows">
+                        <template v-slot:cell(index)="data">
+                            {{ data.index + 1 }}
+                        </template>
+                        <template v-slot:cell(action)="data">
+                            <b-button-group size="sm">
+                                <b-button variant="info" @click="editDetailModal(data.item.id)">{{
+                                    $t("app.edit") }}</b-button>
+                            </b-button-group>
+                            <b-button-group size="sm">
+                                <b-button variant="danger" @click="deleteDetailRow(data.item.id)">{{
+                                    $t("app.delete") }}</b-button>
+                            </b-button-group>
+                        </template>
+                    </b-table>
+                </div>
+
+                <template v-slot:modal-footer>
+                    <b-button-group size="sm" class="float-right">
+                        <b-button type="button" variant="danger" @click="hideDetailModal">Close</b-button>
+                    </b-button-group>
+                </template>
+            </b-modal>
+
+            <div id="DetailForm">
+                <MyForm ref="detailForm" title="Create New Command" :myTagForm="itemForm" v-on:onsubmit="onDetailSubmit"
+                    v-on:onreset="onItemReset" />
+            </div>
         </div>
     </div>
 </template>
@@ -110,7 +163,6 @@ export default {
                         { field: 'name', value: '', type: 'text', label: 'Name', placeholder: '请输入命令组名称', description: '必填', isShow: true, isRequired: true },
                         { field: 'fileName', value: '', type: 'text', label: 'File Name', placeholder: '请输入文件名称', description: '必填', isShow: true, isRequired: true },
                         { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
-                        { field: 'total', value: 0, type: 'number', label: 'Total', isShow: false },
                     ]
                 }
             ],
@@ -140,10 +192,13 @@ export default {
                 {
                     key: 'total',
                     label: 'Total',
+                    formatter: (value, key, item) => {
+                        return item.commands.length;
+                    }
                 },
             ],
             mainTableRows: [
-                //{ id: '202410261450', name: 'Test', fileName: 'TestFile', remark: '测试数据', total: 0, commands: [] },//测试数据
+                //{ id: '202410261450', name: 'Test', fileName: 'TestFile', remark: '测试数据', commands: [] },//测试数据
             ],
 
             itemForm: [
@@ -175,7 +230,7 @@ export default {
                             }
                         },
                         { field: 'content', value: '', type: 'textarea', label: 'Content', placeholder: '请输入内容', description: '必填', isShow: true, isRequired: true, },
-                        { field: 'image', value: '', type: 'uploadimage', label: 'Image', placeholder: '请上传图片', description: '必填', isShow: false, isRequired: false, },
+                        { field: 'image', value: '', imageBase64String: '', base64Field: 'imageBase64String', type: 'uploadimage', label: 'Image', placeholder: '注意上传的图片名称不能重复', description: '必填', isShow: false, isRequired: false, },
                         { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
                     ]
                 },
@@ -185,7 +240,7 @@ export default {
                         { field: 'interval', value: 3, type: 'number', label: 'Interval', placeholder: '请输入时间间隔（单位秒）', description: '必填，默认为3', isShow: true, isRequired: true, },
                         { field: 'timeout', value: 10, type: 'number', label: 'Timeout', placeholder: '请输入超时时间（单位秒）', description: '必填，默认为10', isShow: true, isRequired: true, },
                         { field: 'count', value: 1, type: 'number', label: 'Count', placeholder: '请输入执行次数', description: '必填，默认为1', isShow: true, isRequired: true, },
-                        { field: 'isThrowExceptionIfNoFind', value: true, type: 'checkbox', label: 'Is Throw Exception If No Find', description: '异常不会报错', isShow: true },
+                        { field: 'isThrowExceptionIfNoFind', value: true, type: 'checkbox', label: 'Is Throw Exception If No Find', description: '如果找不到内容报错提示', isShow: true },
                         { field: 'getIndex', value: 0, type: 'number', label: 'Get Index', placeholder: '请输入取值序号', description: '默认为0', isShow: true, },
                     ]
                 }
@@ -255,6 +310,13 @@ export default {
                     key: 'remark',
                     label: 'Remark',
                 },
+                {
+                    key: 'total',
+                    label: 'Total',
+                    formatter: (value, key, item) => {
+                        return item.commands.length;
+                    }
+                },
             ],
             typeList: [
                 { text: 'Text', id: 0 },
@@ -265,14 +327,18 @@ export default {
                 { text: 'Sleep', id: 1 },
                 { text: 'Loop_Break', id: 2 },
                 { text: 'Loop_Continue', id: 3 },
-            ]
+            ],
+
+            curMainId: '',
+            curItemId: '',
+            detailTableRows: [],
         }
     },
     methods: {
         getMainTable() {
             this.$axios.get("/api/home/getAllJsonList").then((response) => {
                 console.log(response);
-               this.mainTableRows = response.data;
+                this.mainTableRows = response.data;
             }).catch((err) => {
                 console.log(err)
                 this.$alert('System Tip', err)
@@ -283,7 +349,6 @@ export default {
                 id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
                 name: '',
                 remark: '',
-                total: 0
             }
             this.$refs.mainForm.setFormValue(data);
             this.$refs.mainForm.showMyModal();
@@ -301,8 +366,17 @@ export default {
         deleteMainRow(mainId) {
             var index = this.mainTableRows.findIndex(f => f.id === mainId);
             if (index !== -1) {
-                //调用后端接口
-                this.mainTableRows.splice(index, 1);
+                var mainRow = this.mainTableRows[index];
+                this.$axios.get("/api/home/deleteJsonFile?name=" + mainRow.fileName).then((response) => {
+                    console.log(response);
+                    if (response.data) {
+                        this.mainTableRows.splice(index, 1);
+                        this.$alert('System Tip', 'Delete Success')
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    this.$alert('System Tip', err)
+                })
             } else {
                 this.$alert('System Tip', 'NoFound')
             }
@@ -346,18 +420,14 @@ export default {
                 row.name = data.name
                 row.fileName = data.fileName
                 row.remark = data.remark
-                row.total = data.total
-                //调用后端接口
             } else {
                 this.mainTableRows.push({
                     id: data.id,
                     name: data.name,
                     fileName: data.fileName,
                     remark: data.remark,
-                    total: data.total,
                     commands: [],//初始化子表集合
                 })
-                //调用后端接口
             }
         },
 
@@ -379,6 +449,15 @@ export default {
             var index = mainRow.commands.findIndex(f => f.id === itemId);
             if (index !== -1) {
                 var itemRow = mainRow.commands[index];
+
+                if (itemRow.type === 1) {
+                    this.$refs.itemForm.updateFormItem('content', false, false);
+                    this.$refs.itemForm.updateFormItem('image', true, true);
+                } else {
+                    this.$refs.itemForm.updateFormItem('image', false, false);
+                    this.$refs.itemForm.updateFormItem('content', true, true);
+                }
+
                 this.$refs.itemForm.setFormValue(itemRow);
                 this.$refs.itemForm.showMyModal();
             } else {
@@ -389,7 +468,6 @@ export default {
             var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
             var index = mainRow.commands.findIndex(f => f.id === itemId);
             if (index !== -1) {
-                //调用后端接口
                 mainRow.commands.splice(index, 1);
             } else {
                 this.$alert('System Tip', 'NoFound')
@@ -400,9 +478,6 @@ export default {
             var index = mainRow.commands.findIndex(f => f.id === data.id);
             if (index !== -1) {
                 var row = mainRow.commands[index];
-                row.name = data.name
-                row.remark = data.remark
-                row.total = data.total
                 row.myIndex = data.myIndex
                 row.parentIndex = data.parentIndex
                 row.name = data.name
@@ -412,11 +487,11 @@ export default {
                 row.operate = data.operate
                 row.content = data.type === 1 ? data.image.name : data.content
                 row.image = data.image
+                row.imageBase64String = data.image
                 row.count = data.count
                 row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
                 row.getIndex = data.getIndex
                 row.remark = data.remark
-                //调用后端接口
             } else {
                 mainRow.commands.push({
                     mainId: data.mainId,
@@ -430,16 +505,14 @@ export default {
                     operate: data.operate,
                     content: data.type === 1 ? data.image.name : data.content,
                     image: data.image,
+                    imageBase64String: data.image,
                     count: data.count,
                     isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
                     getIndex: data.getIndex,
                     remark: data.remark,
                     commands: [],//初始化子表集合
                 })
-                //调用后端接口
             }
-
-            mainRow.total = mainRow.commands.length;
         },
         onItemReset() {
             var data = {
@@ -454,6 +527,7 @@ export default {
                 operate: -1,
                 content: '',
                 image: '',
+                imageBase64String: null,
                 count: 1,
                 isThrowExceptionIfNoFind: true,
                 getIndex: 0,
@@ -464,6 +538,107 @@ export default {
             this.$refs.itemForm.setFormValue(data);
         },
 
+
+        showDetail(mainId, itemId) {
+            this.curMainId = mainId;
+            this.curItemId = itemId;
+
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+
+            this.detailTableRows = itemRow.commands;
+
+            this.$refs['childmodal'].show()
+        },
+        hideDetailModal() {
+            this.curMainId = '';
+            this.curItemId = '';
+            this.$refs['childmodal'].hide()
+        },
+        newDetailModal() {
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+
+            var detailIndexs = itemRow.commands.map(m => m.myIndex).sort(function (a, b) { return b - a });
+
+            var data = {
+                id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
+                parentIndex: itemRow.myIndex,
+                myIndex: detailIndexs.length > 0 ? detailIndexs[0] + 1 : 0,//取目前最大的序号往后加1
+            }
+            this.$refs.detailForm.setFormValue(data);
+            this.$refs.detailForm.showMyModal();
+        },
+        editDetailModal(detailId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+            var index = itemRow.commands.findIndex(f => f.id === detailId);
+            if (index !== -1) {
+                var detailRow = itemRow.commands[index];
+                this.$refs.itemForm.setFormValue(detailRow);
+                this.$refs.itemForm.showMyModal();
+            } else {
+                this.$alert('System Tip', 'NoFound')
+            }
+        },
+        deleteDetailRow(detailId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+            var index = itemRow.commands.findIndex(f => f.id === detailId);
+            if (index !== -1) {
+                itemRow.commands.splice(index, 1);
+            } else {
+                this.$alert('System Tip', 'NoFound')
+            }
+        },
+        onDetailSubmit(data) {
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+            var index = itemRow.commands.findIndex(f => f.id === data.id);
+            if (index !== -1) {
+                var row = itemRow.commands[index];
+                row.name = data.name
+                row.remark = data.remark
+                row.myIndex = data.myIndex
+                row.parentIndex = data.parentIndex
+                row.name = data.name
+                row.type = data.type
+                row.interval = data.interval
+                row.timeout = data.timeout
+                row.operate = data.operate
+                row.content = data.type === 1 ? data.image.name : data.content
+                row.image = data.image
+                row.imageBase64String = data.image
+                row.count = data.count
+                row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
+                row.getIndex = data.getIndex
+                row.remark = data.remark
+            } else {
+                itemRow.commands.push({
+                    id: data.id,
+                    myIndex: data.myIndex,
+                    parentIndex: data.parentIndex,
+                    name: data.name,
+                    type: data.type,
+                    interval: data.interval,
+                    timeout: data.timeout,
+                    operate: data.operate,
+                    content: data.type === 1 ? data.image.name : data.content,
+                    image: data.image,
+                    imageBase64String: data.image,
+                    count: data.count,
+                    isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
+                    getIndex: data.getIndex,
+                    remark: data.remark,
+                    commands: [],//初始化子表集合
+                })
+            }
+        },
+
+
+        getImageUrl(value){
+            return this.$common.getObjectURL(value);
+        },
         initSelectData() {
             var firstForm = this.itemForm[0].form;
             var index_type = firstForm.findIndex(f => f.field === "type")

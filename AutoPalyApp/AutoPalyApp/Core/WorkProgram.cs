@@ -14,7 +14,7 @@ namespace AutoPalyApp.Core
         {
             _name = name;
 
-            var json = FileHelper.ReadJsonFile<CommandGroup>(name);
+            var json = FileHelper.ReadJsonFile<CommandGroup<Command>>(name);
             if (json == null)
             {
                 LogHelper.Log($"【{_name}】未找到命令");
@@ -26,7 +26,7 @@ namespace AutoPalyApp.Core
             var fileName = Path.GetFileNameWithoutExtension(name);
             var ext = Path.GetExtension(name);
             var recordFileName = $"{fileName}.records{ext}";
-            var recordJson = FileHelper.ReadJsonFile<CommandGroup>(recordFileName);
+            var recordJson = FileHelper.ReadJsonFile<CommandGroup<Command>>(recordFileName);
             if (recordJson != null)
             {
                 json = recordJson;
@@ -35,17 +35,18 @@ namespace AutoPalyApp.Core
 
             LogHelper.Log($"【{_name}】命令开始");
 
-            foreach (var command in json.Commands)
+            var commands = json.Commands.OrderBy(o => o.MyIndex).ToList();
+            foreach (var command in commands)
             {
                 _name = json.Name;
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} 开始执行");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} 开始执行");
 
                 for (int i = 0; i < command.Count; i++)
                 {
                     DoCommand(command, i);
                 }
 
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} 结束执行");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} 结束执行");
             }
 
             LogHelper.Log($"【{_name}】命令结束");
@@ -68,24 +69,25 @@ namespace AutoPalyApp.Core
             if (command.Operate == OperateEnum.WaitToClick)
             {
                 WaitToClick(command, index);
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 点击 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Sleep)
             {
                 Thread.Sleep(command.Interval);
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 休眠 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 休眠 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Loop_Break)
             {
                 command.IsThrowExceptionIfNoFind = false;//循环的这种空不会报错，不然循环就无法判断条件了
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 开始循环 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
                 while ((double)stopwatch.ElapsedMilliseconds < command.Timeout * 1000.0)
                 {
-                    for (var itemIndex = 0; itemIndex < command.Commands.Count; itemIndex++)
+                    var commands = command.Commands.OrderBy(o => o.MyIndex).ToList();
+                    for (var itemIndex = 0; itemIndex < commands.Count; itemIndex++)
                     {
-                        var childCommand = command.Commands[itemIndex];
+                        var childCommand = commands[itemIndex];
                         for (int i = 0; i < childCommand.Count; i++)
                         {
                             DoCommand(childCommand, i);
@@ -100,19 +102,20 @@ namespace AutoPalyApp.Core
                     }
                 }
 
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 结束循环 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Loop_Continue)
             {
                 command.IsThrowExceptionIfNoFind = false;//循环的这种空不会报错，不然循环就无法判断条件了
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 开始循环 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
                 while ((double)stopwatch.ElapsedMilliseconds < command.Timeout * 1000.0)
                 {
-                    for (var itemIndex = 0; itemIndex < command.Commands.Count; itemIndex++)
+                    var commands = command.Commands.OrderBy(o => o.MyIndex).ToList();
+                    for (var itemIndex = 0; itemIndex < commands.Count; itemIndex++)
                     {
-                        var childCommand = command.Commands[itemIndex];
+                        var childCommand = commands[itemIndex];
                         for (int i = 0; i < childCommand.Count; i++)
                         {
                             DoCommand(childCommand, i);
@@ -126,7 +129,7 @@ namespace AutoPalyApp.Core
                         break;
                     }
                 }
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 结束循环 {index + 1}次");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
             }
             else
             {
@@ -162,8 +165,8 @@ namespace AutoPalyApp.Core
 
             if (point != null)
             {
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 取得坐标：{point?.X}|{point?.Y}");
-                FileHelper.WriteMessageTxt("HonkaiStarRail_Records.txt", $"【ParentIndex:{command.ParentIndex}-Index:{command.Index}】X:{point?.X}|Y:{point?.Y}");
+                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 取得坐标：{point?.X}|{point?.Y}");
+                FileHelper.WriteMessageTxt("HonkaiStarRail_Records.txt", $"【ParentIndex:{command.ParentIndex}-Index:{command.MyIndex}】X:{point?.X}|Y:{point?.Y}");
 
                 if (!_isRecord)
                 {
@@ -193,7 +196,7 @@ namespace AutoPalyApp.Core
             {
                 if (command.IsThrowExceptionIfNoFind)
                 {
-                    throw new Exception($"【{_name}】-- {command.ParentIndex}-{command.Index} {command.Content}未找到该内容");
+                    throw new Exception($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} {command.Content}未找到该内容");
                 }
                 else
                 {
@@ -203,7 +206,7 @@ namespace AutoPalyApp.Core
 
             //使用adb点击即可
             AdbHelper.GetInstance().InputTap((Point)point);
-            LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.Index} -- 点击 成功 【{command.Content}】");
+            LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 成功 【{command.Content}】");
         }
     }
 }

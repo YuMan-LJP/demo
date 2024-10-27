@@ -35,7 +35,10 @@
                                 </div>
                                 <div
                                     v-else-if="formItem.type === 'uploadimage' && formItem.isShow && !formItem.isDisabled">
-                                    <input type="file" accept="image/png,image/gif,image/jpeg"  @change="uploadimage($event, formItem.field)"/>
+                                    <input type="file" accept="image/png,image/jpeg"
+                                        @change="uploadimage($event, formItem.field)" />
+                                    <img :src="getImageUrl(formItem.imageBase64String)" width="50px">
+                                    <p>{{ formItem.placeholder }}</p>
                                 </div>
                                 <div v-else-if="formItem.isDisabled && formItem.isShow">
                                     <p>{{ formItem.value }}</p><!--禁用时直接显示文本即可-->
@@ -126,10 +129,10 @@ export default {
                         continue;
                     }
                     if (item.type === "uploadimage") {
-                        console.log(item);
                         if (!item.value) {
                             emptyLabels.push(item.label);
                         } else {
+                            object[item.base64Field] = item.imageBase64String
                         }
                     } else if (item.type === "select") {
                         if (item.value === item.NullValue) {
@@ -162,6 +165,8 @@ export default {
                         item.value = 0;
                     } else if (item.type === "checkbox") {
                         item.value = false;
+                    } else if (item.type === "uploadimage") {
+                        item.imageBase64String = "";
                     } else {
                         item.value = "";
                     }
@@ -178,6 +183,11 @@ export default {
         setFormValue(data) {
             for (var tagItem of this.myTagForm) {
                 for (var item of tagItem.form) {
+                    if (item.type === "uploadimage") {
+                        if (data.imageBase64String) {
+                            item.imageBase64String = data[item.base64Field];
+                        }
+                    }
                     if (data[item.field] === undefined) {
                         continue;
                     }
@@ -204,17 +214,26 @@ export default {
                 }
             }
         },
-        uploadimage(e, field){
-            console.log(e, field);
+        uploadimage(e, field) {
             let file = e.target.files[0];
             for (var tagItem of this.myTagForm) {
                 for (var item of tagItem.form) {
                     if (item.field === field) {
                         item.value = file;
+
+                        if (item.base64Field) {
+                            item.imageBase64String = file;
+                        }
                     }
                 }
             }
         },
+
+        
+        getImageUrl(value){
+            return this.$common.getObjectURL(value);
+        },
+        
     },
     created() {
         this.guid = this.$common.getGuid();

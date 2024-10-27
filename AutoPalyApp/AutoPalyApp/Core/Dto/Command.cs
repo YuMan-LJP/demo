@@ -3,6 +3,16 @@
     public class Command
     {
         /// <summary>
+        /// 系统使用的GUID
+        /// </summary>
+        public string MainId { get; set; } = "";
+
+        /// <summary>
+        /// 系统使用的GUID
+        /// </summary>
+        public string Id { get; set; } = "";
+
+        /// <summary>
         /// 上一级序号，有子集合的时候使用
         /// </summary>
         public int? ParentIndex { get; set; }
@@ -10,7 +20,7 @@
         /// <summary>
         /// 【序号】命令必须按序号从小到大依次执行
         /// </summary>
-        public int Index { get; set; }
+        public int MyIndex { get; set; }
 
         /// <summary>
         /// 【命名】用户自定义
@@ -56,6 +66,8 @@
         /// 【取值序号】文字识别，如果存在多个时，标记取哪个，顺序从左上到右下
         /// </summary>
         public int GetIndex { get; set; } = 0;
+
+        public string Remark { get; set; } = "";
 
         /// <summary>
         /// 历史记录

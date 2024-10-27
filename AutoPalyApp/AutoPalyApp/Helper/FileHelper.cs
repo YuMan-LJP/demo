@@ -95,5 +95,21 @@ namespace AutoPalyApp.Helper
 
             return new List<string>();
         }
+
+        /// <summary>
+        /// 将图片文件转换为 Base64 编码的字符串。
+        /// Converts an image file to a Base64-encoded string.
+        /// </summary>
+        /// <param name="imagePath">图片文件的路径。Path to the image file.</param>
+        /// <returns>返回 Base64 编码的图片字符串。Returns a Base64-encoded image string.</returns>
+        public static string ConvertImageToBase64(string imagePath)
+        {
+            if (!File.Exists(imagePath))
+            {
+                throw new FileNotFoundException("指定的图片路径不存在。Specified image path does not exist.");
+            }
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+            return Convert.ToBase64String(imageBytes);
+        }
     }
 }

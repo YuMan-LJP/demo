@@ -1,6 +1,6 @@
 ﻿namespace AutoPalyApp.Core.Dto
 {
-    public class CommandGroup
+    public class CommandGroup<T>
     {
         /// <summary>
         /// 【唯一Id】可以用GUID，对应定时任务
@@ -25,6 +25,6 @@
         /// <summary>
         /// 【命令脚本】
         /// </summary>
-        public List<Command> Commands { get; set; } = new List<Command>();
+        public List<T> Commands { get; set; } = new List<T>();
     }
 }

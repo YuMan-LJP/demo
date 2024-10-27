@@ -1,5 +1,7 @@
-﻿using AutoPalyApp.Core.Dto;
+﻿using AutoPalyApp.Controllers.Model;
+using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -25,12 +27,12 @@ namespace AutoPalyApp.Controllers
             try
             {
                 var groupData = Request.Form["groupData"];
-                var inputDto = JsonConvert.DeserializeObject<CommandGroup>(groupData);
+                var inputDto = JsonConvert.DeserializeObject<CommandGroup<Command>>(groupData);
 
                 var files = Request.Form.Files;
                 if (files.Count > 0)
                 {
-                    var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\Temp";
+                    var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
                     if (!Directory.Exists(rootPath))
                     {
                         Directory.CreateDirectory(rootPath);
@@ -60,9 +62,9 @@ namespace AutoPalyApp.Controllers
             return await Task.FromResult(false);
         }
 
-        public async Task<List<CommandGroup>> GetAllJsonList()
+        public async Task<List<CommandGroupOutputDto>> GetAllJsonList()
         {
-            List<CommandGroup>output = new List<CommandGroup>();
+            List<CommandGroupOutputDto> output = new List<CommandGroupOutputDto>();
             var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
             var jsonFiils = System.IO.Directory.GetFiles(rootPath)
                 .Where(w => System.IO.Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
@@ -70,13 +72,46 @@ namespace AutoPalyApp.Controllers
                 .ToList();
             foreach (var file in jsonFiils)
             {
-                var data = FileHelper.ReadJsonFile<CommandGroup>(file);
+                var data = FileHelper.ReadJsonFile<CommandGroupOutputDto>(file);
                 if (data != null)
                 {
+                    foreach (var command in data.Commands)
+                    {
+                        if (command.Type == CommandTypeEnum.Image)
+                        {
+                            command.ImageBase64String = FileHelper.ConvertImageToBase64($"{rootPath}\\{data.FileName}\\{command.Content}");
+                        }
+                    }
                     output.Add(data);
                 }
             }
             return await Task.FromResult(output);
+        }
+
+        public async Task<bool> DeleteJsonFile(string name)
+        {
+            try
+            {
+                var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+                var jsonPath = $"{rootPath}\\{name}.json";
+                if (System.IO.File.Exists(jsonPath))
+                {
+                    System.IO.File.Delete(jsonPath);
+                }
+
+                var filePath = $"{rootPath}\\{name}";
+                if (Directory.Exists(filePath))
+                {
+                    Directory.Delete(filePath, true);
+                }
+
+                return await Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(ex.Message, ex);
+            }
+            return await Task.FromResult(false);
         }
     }
 }
