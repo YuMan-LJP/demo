@@ -1,7 +1,6 @@
 ﻿using AutoPalyApp.Controllers.Model;
 using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -66,6 +65,10 @@ namespace AutoPalyApp.Controllers
         {
             List<CommandGroupOutputDto> output = new List<CommandGroupOutputDto>();
             var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+            if (!Directory.Exists(rootPath))
+            {
+                return output;
+            }
             var jsonFiils = System.IO.Directory.GetFiles(rootPath)
                 .Where(w => System.IO.Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
                 .Select(s => Path.GetFileName(s))

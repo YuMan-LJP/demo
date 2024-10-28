@@ -9,7 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\image\" />
+    <Compile Remove="myvueui\**" />
+    <Content Remove="myvueui\**" />
+    <EmbeddedResource Remove="myvueui\**" />
+    <None Remove="myvueui\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +43,10 @@
 	  <None Update="log4net.xml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 	
 </Project>

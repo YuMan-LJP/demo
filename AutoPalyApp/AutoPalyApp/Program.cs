@@ -14,20 +14,21 @@ namespace AutoPalyApp
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls("http://localhost:5000");//指定 C# 服务的端口
             builder.Services.AddControllers();
+#if DEBUG
             builder.Services.AddCors(options =>
             {
-                //跨域配置
-                options.AddPolicy("all", builder =>
-                {
-                    builder
-                    .WithMethods("GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS")
+                //跨域配置，开发时需要，前端编译后放到wwwroot里面就不需要开启跨域了
+                options.AddDefaultPolicy(builder => builder.WithOrigins("http://localhost:8080")
+                    .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowAnyOrigin();
-                    //.AllowCredentials()
-                });
+                    .AllowCredentials());
             });
+#endif
+
             var app = builder.Build();
-            app.UseCors("all");//跨域
+#if DEBUG
+            app.UseCors();//跨域配置
+#endif
             app.UseDefaultFiles();//静态文件相关 (index.html)
             app.UseStaticFiles();//静态文件相关 (wwwroot)
             app.MapControllers();
