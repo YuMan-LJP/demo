@@ -1,6 +1,6 @@
 ﻿namespace AutoPalyApp.Core.Dto
 {
-    public class CommandGroup<T>
+    public class CommandGroup
     {
         /// <summary>
         /// 【唯一Id】可以用GUID，对应定时任务
@@ -13,9 +13,9 @@
         public string Name { get; set; } = "";
 
         /// <summary>
-        /// json文件名
+        /// 【应用程序名称】如果模拟器没有正在运行该程序，会自动启动并激活窗口
         /// </summary>
-        public string FileName { get; set; } = "";
+        public string AppName { get; set; } = "";
 
         /// <summary>
         /// 【备注】
@@ -25,6 +25,6 @@
         /// <summary>
         /// 【命令脚本】
         /// </summary>
-        public List<T> Commands { get; set; } = new List<T>();
+        public List<Command> Commands { get; set; } = new List<Command>();
     }
 }

@@ -6,6 +6,7 @@ import About from '../components/About'
 import Home from '../components/Home'
 import Index from '../components/Index'
 import CommandGroup from '../components/CommandGroup'
+import TaskScheduler from '../components/TaskScheduler'
 
 //创建并暴露一个路由器
 export default new VueRouter({
@@ -33,6 +34,11 @@ export default new VueRouter({
             path:'/commandGroup',
             name: 'commandGroup',
             component:CommandGroup
+        },
+        {
+            path:'/taskScheduler',
+            name: 'taskScheduler',
+            component:TaskScheduler
         }
     ]
 })

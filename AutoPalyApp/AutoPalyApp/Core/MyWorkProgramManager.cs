@@ -5,29 +5,26 @@ using System.Xml.Linq;
 
 namespace AutoPalyApp.Core
 {
-    public class WorkProgramManager
+    public class MyWorkProgramManager : IMyWorkProgramManager
     {
-        private string _fileName;
+        private string? _fileName;
         private bool _isRecord = false;
 
-        public WorkProgramManager(string fileName)
+        public void RunCommand(string fileName)
         {
             _fileName = fileName;
-        }
 
-        public void RunCommand()
-        {
-            var json = MyFileHelper.ReadJsonFile<CommandGroup<Command>>(_fileName);
+            var json = MyFileHelper.ReadJsonFile<CommandGroup>(_fileName);
             if (json == null)
             {
                 MyLogHelper.Log($"【{_fileName}】未找到命令");
                 return;
             }
 
-            var fileName = Path.GetFileNameWithoutExtension(_fileName);
+            var fileNameNoExt = Path.GetFileNameWithoutExtension(_fileName);
             var ext = Path.GetExtension(_fileName);
-            var recordFileName = $"{fileName}.records{ext}";
-            var recordJson = MyFileHelper.ReadJsonFile<CommandGroup<Command>>(recordFileName);
+            var recordFileName = $"{fileNameNoExt}.records{ext}";
+            var recordJson = MyFileHelper.ReadJsonFile<CommandGroup>(recordFileName);
             if (recordJson != null)
             {
                 json = recordJson;
@@ -153,7 +150,7 @@ namespace AutoPalyApp.Core
                     //使用adb识别文字取得x，y
                     point = MyAdbHelper.GetInstance().GetPointByTextAsync(command.Content, command.GetIndex).Result;
                 }
-                else if (command.Type ==  CommandTypeEnum.Image)
+                else if (command.Type == CommandTypeEnum.Image)
                 {
                     //使用opencv识别图片取得x，y
                     point = MyAdbHelper.GetInstance().GetPointByImageAsync($"{Path.GetFileNameWithoutExtension(_fileName)}\\{command.Content}").Result;

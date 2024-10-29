@@ -1,7 +1,6 @@
-﻿using Quartz.Impl;
-using Quartz;
+﻿using Quartz;
+using Quartz.Impl;
 using Quartz.Impl.Matchers;
-using static Vanara.PInvoke.Kernel32;
 
 namespace AutoPalyApp.Helper.JobHelper
 {

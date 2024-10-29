@@ -14,7 +14,7 @@ namespace AutoPalyApp
         private void Form1_Load(object sender, EventArgs e)
         {
 #if DEBUG
-            LogHelper.Info("启动，前端项目端口是：http://localhost:8080/");
+            MyLogHelper.Info("启动，前端项目端口是：http://localhost:8080/");
             // 开发时 使用前端项目自己的服务器地址
             webView21.Source = new Uri("http://localhost:8080/");
 #else

@@ -11,6 +11,7 @@
             <!-- Vue中借助router-link标签实现路由的切换，这里使用了bootstrap自带路由功能 -->
             <!-- <b-nav-item :to="{ name: 'home', params: { username: '需要传递的值' } }" exact exact-active-class="active">{{ $t("app.home") }}</b-nav-item> -->
             <b-nav-item to="/home" exact exact-active-class="active">{{ $t("app.home") }}</b-nav-item>
+            <b-nav-item to="/taskScheduler" exact exact-active-class="active">{{ $t("taskScheduler.title") }}</b-nav-item>
             <b-nav-item to="/commandGroup" exact exact-active-class="active">{{ $t("commandGroup.title") }}</b-nav-item>
             <b-nav-item to="/about" exact exact-active-class="active">{{ $t("app.about") }}</b-nav-item>
             <!-- <b-nav-item href="#" disabled>Disabled</b-nav-item> -->

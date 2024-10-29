@@ -25,7 +25,7 @@
                     </b-button-group>
                     <b-button-group class="mx-1">
                         <b-button variant="danger" @click="deleteMainRow(data.item.id)">{{ $t("app.delete")
-                            }}</b-button>
+                        }}</b-button>
                     </b-button-group>
                     <b-button-group>
                         <b-button variant="primary" @click="saveMainodal(data.item.id)">{{ $t("app.save") }}</b-button>
@@ -63,7 +63,8 @@
                                 </template>
                                 <template v-slot:cell(content)="data">
                                     {{ data.value }}
-                                    <img v-if="data.item.imageBase64String" :src="getImageUrl(data.item.imageBase64String)" width="30">
+                                    <img v-if="data.item.imageBase64String" :src="getImageUrl(data.item.imageBase64String)"
+                                        width="30">
                                 </template>
                                 <template v-slot:cell(action)="data">
                                     <b-button-group size="sm">
@@ -89,8 +90,7 @@
         </div>
 
         <div id="MainForm">
-            <MyForm ref="mainForm" title="Create New Command Group" :myTagForm="mainForm"
-                v-on:onsubmit="onMainSubmit" />
+            <MyForm ref="mainForm" title="Create New Command Group" :myTagForm="mainForm" v-on:onsubmit="onMainSubmit" />
         </div>
 
         <div id="ItemForm">
@@ -100,9 +100,9 @@
 
 
         <div>
-            <b-modal ref="childmodal" id="childmodal" size="xl" title="Create New Child Command"
-                header-bg-variant="dark" header-text-variant="light" body-bg-variant="light" body-text-variant="dark"
-                footer-bg-variant="dark" footer-text-variant="light">
+            <b-modal ref="childmodal" id="childmodal" size="xl" title="Create New Child Command" header-bg-variant="dark"
+                header-text-variant="light" body-bg-variant="light" body-text-variant="dark" footer-bg-variant="dark"
+                footer-text-variant="light">
 
                 <div>
 
@@ -161,7 +161,7 @@ export default {
                     form: [
                         { field: 'id', value: '', type: 'text', label: 'GUID', isShow: true, isDisabled: true },//自动生成，禁止输入
                         { field: 'name', value: '', type: 'text', label: 'Name', placeholder: '请输入命令组名称', description: '必填', isShow: true, isRequired: true },
-                        { field: 'fileName', value: '', type: 'text', label: 'File Name', placeholder: '请输入文件名称', description: '必填', isShow: true, isRequired: true },
+                        { field: 'appName', value: '', type: 'text', label: 'App Name', placeholder: '请输入App名称', description: '必填', isShow: true, isRequired: true },
                         { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
                     ]
                 }
@@ -182,8 +182,8 @@ export default {
                     label: 'Name',
                 },
                 {
-                    key: 'fileName',
-                    label: 'File Name',
+                    key: 'appName',
+                    label: 'App Name',
                 },
                 {
                     key: 'remark',
@@ -197,9 +197,7 @@ export default {
                     }
                 },
             ],
-            mainTableRows: [
-                //{ id: '202410261450', name: 'Test', fileName: 'TestFile', remark: '测试数据', commands: [] },//测试数据
-            ],
+            mainTableRows: [],
 
             itemForm: [
                 {
@@ -336,7 +334,7 @@ export default {
     },
     methods: {
         getMainTable() {
-            this.$axios.get("/api/home/getAllJsonList").then((response) => {
+            this.$axios.get("/api/commandGroup/getAllJsonList").then((response) => {
                 console.log(response);
                 this.mainTableRows = response.data;
             }).catch((err) => {
@@ -347,8 +345,6 @@ export default {
         newMainModal() {
             var data = {
                 id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
-                name: '',
-                remark: '',
             }
             this.$refs.mainForm.setFormValue(data);
             this.$refs.mainForm.showMyModal();
@@ -367,7 +363,7 @@ export default {
             var index = this.mainTableRows.findIndex(f => f.id === mainId);
             if (index !== -1) {
                 var mainRow = this.mainTableRows[index];
-                this.$axios.get("/api/home/deleteJsonFile?name=" + mainRow.fileName).then((response) => {
+                this.$axios.get("/api/commandGroup/deleteJsonFile?id=" + mainRow.id).then((response) => {
                     console.log(response);
                     if (response.data) {
                         this.mainTableRows.splice(index, 1);
@@ -394,7 +390,7 @@ export default {
                 }
                 formData.append('groupData', JSON.stringify(row))
 
-                this.$axios.post("/api/home/SaveJsonFile", formData, {
+                this.$axios.post("/api/commandGroup/SaveJsonFile", formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -418,13 +414,13 @@ export default {
             if (index !== -1) {
                 var row = this.mainTableRows[index];
                 row.name = data.name
-                row.fileName = data.fileName
+                row.appName = data.appName
                 row.remark = data.remark
             } else {
                 this.mainTableRows.push({
                     id: data.id,
                     name: data.name,
-                    fileName: data.fileName,
+                    appName: data.appName,
                     remark: data.remark,
                     commands: [],//初始化子表集合
                 })
@@ -636,7 +632,7 @@ export default {
         },
 
 
-        getImageUrl(value){
+        getImageUrl(value) {
             return this.$common.getObjectURL(value);
         },
         initSelectData() {

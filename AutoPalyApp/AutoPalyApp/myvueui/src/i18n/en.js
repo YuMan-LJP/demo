@@ -23,5 +23,9 @@ module.exports = {
 
   commandGroup:{
     title: 'Command Group'
+  },
+
+  taskScheduler:{
+    title: 'Task Scheduler'
   }
 }

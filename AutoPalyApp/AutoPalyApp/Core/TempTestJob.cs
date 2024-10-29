@@ -26,6 +26,9 @@ namespace AutoPalyApp.Core
 
             //运行命令
 
+            //https://www.cnblogs.com/hailexuexi/p/16854230.html
+            //https://blog.51cto.com/u_16213383/7419832
+            //实现前后端通讯
 
             await Task.CompletedTask;
         }

@@ -1,11 +1,97 @@
-﻿using AutoPalyApp.Helper;
+﻿using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Helper;
 using AutoPalyApp.Helper.JobHelper;
 
 namespace AutoPalyApp.Core
 {
-    public static class MyTaskSchedulerManager
+    public class MyTaskSchedulerManager : IMyTaskSchedulerManager
     {
-        public static void TaskStart()
+        private readonly Lazy<IMyWorkProgramManager> _myWorkProgramManager;
+
+        public MyTaskSchedulerManager(Lazy<IMyWorkProgramManager> myWorkProgramManager)
+        {
+            _myWorkProgramManager = myWorkProgramManager;
+        }
+
+        public string GetFileUrl()
+        {
+            return $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\TaskJson";
+        }
+
+        public List<MyJobInfo> GetMyJobInfos()
+        {
+            var rootPath = GetFileUrl();
+            if (!Directory.Exists(rootPath))
+            {
+                return new List<MyJobInfo>();
+            }
+            var jsonFiils = Directory.GetFiles(rootPath)
+               .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
+               .Select(s => Path.GetFileName(s))
+               .ToList();
+
+            List<MyJobInfo> output = new List<MyJobInfo>();
+            foreach (var file in jsonFiils)
+            {
+                var data = MyFileHelper.ReadJsonFile<MyJobInfo>(file, rootPath);
+                if (data != null)
+                {
+                    output.Add(data);
+                }
+            }
+            return output;
+        }
+
+        public bool SaveJsonFile(MyJobInfo jobInfo)
+        {
+            try
+            {
+                var rootPath = GetFileUrl();
+                MyFileHelper.SaveJsonFile($"{jobInfo.Id}.json", jobInfo, rootPath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MyLogHelper.Error(ex.Message, ex);
+            }
+            return false;
+
+        }
+
+        public bool DeleteJsonFile(string id)
+        {
+            try
+            {
+                var rootPath = GetFileUrl();
+                var jsonPath = $"{rootPath}\\{id}.json";
+                if (File.Exists(jsonPath))
+                {
+                    File.Delete(jsonPath);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MyLogHelper.Error(ex.Message, ex);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 立即触发一次执行
+        /// </summary>
+        /// <param name="commandGroupId"></param>
+        public void StartCommand(string commandGroupId)
+        {
+            _myWorkProgramManager.Value.RunCommand(commandGroupId + ".json");
+        }
+
+        /// <summary>
+        /// 测试用
+        /// </summary>
+        public void TestTaskStart()
         {
             string job;
             string trigger;

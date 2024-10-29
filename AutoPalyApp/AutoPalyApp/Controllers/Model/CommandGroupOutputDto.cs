@@ -8,7 +8,7 @@ namespace AutoPalyApp.Controllers.Model
 
         public string Name { get; set; } = "";
 
-        public string FileName { get; set; } = "";
+        public string AppName { get; set; } = "";
 
         public string Remark { get; set; } = "";
 

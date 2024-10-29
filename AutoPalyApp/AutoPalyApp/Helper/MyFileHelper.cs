@@ -1,13 +1,17 @@
 ﻿using Newtonsoft.Json;
+using System.IO;
 using System.Text;
 
 namespace AutoPalyApp.Helper
 {
     public static class MyFileHelper
     {
-        public static T? ReadJsonFile<T>(string jsonFileName)
+        public static T? ReadJsonFile<T>(string jsonFileName, string rootPath = "")
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+            if (string.IsNullOrWhiteSpace(rootPath))
+            {
+                rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Json";
+            }
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);
@@ -26,9 +30,12 @@ namespace AutoPalyApp.Helper
             return output;
         }
 
-        public static void SaveJsonFile<T>(string jsonFileName, T jsonObject)
+        public static void SaveJsonFile<T>(string jsonFileName, T jsonObject, string rootPath = "")
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+            if (string.IsNullOrWhiteSpace(rootPath))
+            {
+                rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Json";
+            }
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);
@@ -47,7 +54,7 @@ namespace AutoPalyApp.Helper
 
         public static void WriteMessageTxt(string fileName, string message)
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);
@@ -74,7 +81,7 @@ namespace AutoPalyApp.Helper
 
         public static List<string> ReadTxtByLine(string fileName)
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File";
+            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);

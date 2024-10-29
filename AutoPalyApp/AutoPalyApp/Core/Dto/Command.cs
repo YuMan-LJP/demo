@@ -1,4 +1,6 @@
-﻿namespace AutoPalyApp.Core.Dto
+﻿using System.Text.Json.Serialization;
+
+namespace AutoPalyApp.Core.Dto
 {
     public class Command
     {
