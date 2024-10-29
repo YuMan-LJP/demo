@@ -3,7 +3,7 @@ using System.Text;
 
 namespace AutoPalyApp.Helper
 {
-    public static class FileHelper
+    public static class MyFileHelper
     {
         public static T? ReadJsonFile<T>(string jsonFileName)
         {

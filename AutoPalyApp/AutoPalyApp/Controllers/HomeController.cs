@@ -1,4 +1,5 @@
 ﻿using AutoPalyApp.Controllers.Model;
+using AutoPalyApp.Core;
 using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
 using Microsoft.AspNetCore.Mvc;
@@ -51,12 +52,12 @@ namespace AutoPalyApp.Controllers
                     }
                 }
 
-                FileHelper.SaveJsonFile($"{inputDto.FileName}.json", inputDto);
+                MyFileHelper.SaveJsonFile($"{inputDto.FileName}.json", inputDto);
                 return await Task.FromResult(true);
             }
             catch (Exception ex)
             {
-                LogHelper.Error(ex.Message, ex);
+                MyLogHelper.Error(ex.Message, ex);
             }
             return await Task.FromResult(false);
         }
@@ -75,14 +76,14 @@ namespace AutoPalyApp.Controllers
                 .ToList();
             foreach (var file in jsonFiils)
             {
-                var data = FileHelper.ReadJsonFile<CommandGroupOutputDto>(file);
+                var data = MyFileHelper.ReadJsonFile<CommandGroupOutputDto>(file);
                 if (data != null)
                 {
                     foreach (var command in data.Commands)
                     {
                         if (command.Type == CommandTypeEnum.Image)
                         {
-                            command.ImageBase64String = FileHelper.ConvertImageToBase64($"{rootPath}\\{data.FileName}\\{command.Content}");
+                            command.ImageBase64String = MyFileHelper.ConvertImageToBase64($"{rootPath}\\{data.FileName}\\{command.Content}");
                         }
                     }
                     output.Add(data);
@@ -112,9 +113,15 @@ namespace AutoPalyApp.Controllers
             }
             catch (Exception ex)
             {
-                LogHelper.Error(ex.Message, ex);
+                MyLogHelper.Error(ex.Message, ex);
             }
             return await Task.FromResult(false);
+        }
+
+        public async Task<bool> TestApi()
+        {
+            MyTaskSchedulerManager.TaskStart();
+            return await Task.FromResult(true);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace AutoPalyApp.Helper
 {
-    public static class LogHelper
+    public static class MyLogHelper
     {
         public static void Info(object msg)
         {

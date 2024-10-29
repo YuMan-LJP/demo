@@ -6,12 +6,12 @@ using OpenCvSharp;
 
 namespace AutoPalyApp.Helper
 {
-    public sealed class AdbHelper
+    public sealed class MyAdbHelper
     {
-        private static AdbHelper? _instance;
+        private static MyAdbHelper? _instance;
         private static readonly object _lock = new object();
-        private AdbHelper() { }
-        public static AdbHelper GetInstance()
+        private MyAdbHelper() { }
+        public static MyAdbHelper GetInstance()
         {
             if (_instance == null)
             {
@@ -20,7 +20,7 @@ namespace AutoPalyApp.Helper
                     if (_instance == null)
                     {
                         InitAdbClient();
-                        _instance = new AdbHelper();
+                        _instance = new MyAdbHelper();
                     }
                 }
             }
@@ -64,14 +64,15 @@ namespace AutoPalyApp.Helper
 
         private static AdbClient InitAdbClient()
         {
-            LogHelper.Log($"初始化AdbClient......");
+            MyLogHelper.Debug($"[{DateTime.Now}] 类：{nameof(MyAdbHelper)} AdbClient初始化");
+
             if (!AdbServer.Instance.GetStatus().IsRunning)
             {
                 var server = new AdbServer();
                 StartServerResult result = server.StartServer($"{Environment.CurrentDirectory}\\Helper\\adb\\adb.exe", false);
                 if (result == StartServerResult.Started)
                 {
-                    LogHelper.Log($"adb服务启动");
+                    MyLogHelper.Log($"adb服务启动");
                     Console.WriteLine("adb服务启动");
                 }
             }
@@ -83,7 +84,8 @@ namespace AutoPalyApp.Helper
 
         private static DeviceClient InitDeviceClient(AdbClient adbClient)
         {
-            LogHelper.Log($"初始化DeviceClient......");
+            MyLogHelper.Debug($"[{DateTime.Now}] 类：{nameof(MyAdbHelper)} DeviceClient初始化");
+
             var device = adbClient.GetDevices().FirstOrDefault();
             return new DeviceClient(adbClient, device);
         }
@@ -155,7 +157,7 @@ namespace AutoPalyApp.Helper
             }
             catch (Exception ex)
             {
-                LogHelper.Error(ex.Message, ex);
+                MyLogHelper.Error(ex.Message, ex);
             }
 
             return outputPath;
@@ -232,7 +234,7 @@ namespace AutoPalyApp.Helper
         {
             var tempImagePath = await ScreencapAsync();
 
-            var result = PaddleOCRHelper.GetInstance().GetOcrResultByPath(tempImagePath, text, index);
+            var result = MyPaddleOCRHelper.GetInstance().GetOcrResultByPath(tempImagePath, text, index);
             if (result == null)
             {
                 return null;
@@ -247,7 +249,7 @@ namespace AutoPalyApp.Helper
             }
             catch (Exception ex)
             {
-                LogHelper.Error(ex.Message, ex);
+                MyLogHelper.Error(ex.Message, ex);
             }
 
             return result;
@@ -293,7 +295,7 @@ namespace AutoPalyApp.Helper
             }
             catch (Exception ex)
             {
-                LogHelper.Error(ex.Message, ex);
+                MyLogHelper.Error(ex.Message, ex);
             }
 
             if (maxValue > 0.9)//匹配精确的至少要7以上

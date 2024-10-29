@@ -6,12 +6,12 @@ using System.Text.RegularExpressions;
 
 namespace AutoPalyApp.Helper
 {
-    public sealed class PaddleOCRHelper
+    public sealed class MyPaddleOCRHelper
     {
-        private static PaddleOCRHelper? _instance;
+        private static MyPaddleOCRHelper? _instance;
         private static readonly object _lock = new object();
-        private PaddleOCRHelper() { }
-        public static PaddleOCRHelper GetInstance()
+        private MyPaddleOCRHelper() { }
+        public static MyPaddleOCRHelper GetInstance()
         {
             if (_instance == null)
             {
@@ -19,7 +19,7 @@ namespace AutoPalyApp.Helper
                 {
                     if (_instance == null)
                     {
-                        _instance = new PaddleOCRHelper();
+                        _instance = new MyPaddleOCRHelper();
                     }
                 }
             }
@@ -45,7 +45,8 @@ namespace AutoPalyApp.Helper
 
         private static OcrClient InitOcrClient()
         {
-            LogHelper.Log($"初始化OcrClient......");
+            MyLogHelper.Debug($"[{DateTime.Now}] 类：{nameof(MyPaddleOCRHelper)} OcrClient初始化");
+
             var asmLocPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var _enginePath = $"{asmLocPath}\\Helper\\PaddleOCR-json_v1.4.1\\PaddleOCR-json.exe";
             var startupArgs = OcrEngineStartupArgs.WithPipeMode(_enginePath);

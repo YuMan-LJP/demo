@@ -18,7 +18,7 @@ namespace AutoPalyApp
             // 开发时 使用前端项目自己的服务器地址
             webView21.Source = new Uri("http://localhost:8080/");
 #else
-            LogHelper.Info("启动，前端项目端口是：http://localhost:5000/");
+            MyLogHelper.Info("启动，前端项目端口是：http://localhost:5000/");
             // 发布后, 会把html复制到 wwwroot 交给C#托管
             // 所以这里填 c# 服务器的地址
             webView21.Source = new Uri("http://localhost:5000");

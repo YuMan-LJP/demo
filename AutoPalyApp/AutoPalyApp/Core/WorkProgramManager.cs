@@ -1,85 +1,86 @@
 ﻿using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace AutoPalyApp.Core
 {
-    public static class WorkProgram
+    public class WorkProgramManager
     {
-        private static string? _name;
-        private static string? _filename;
-        private static bool _isRecord = false;
+        private string _fileName;
+        private bool _isRecord = false;
 
-        public static void RunCommand(string name)
+        public WorkProgramManager(string fileName)
         {
-            _name = name;
+            _fileName = fileName;
+        }
 
-            var json = FileHelper.ReadJsonFile<CommandGroup<Command>>(name);
+        public void RunCommand()
+        {
+            var json = MyFileHelper.ReadJsonFile<CommandGroup<Command>>(_fileName);
             if (json == null)
             {
-                LogHelper.Log($"【{_name}】未找到命令");
+                MyLogHelper.Log($"【{_fileName}】未找到命令");
                 return;
             }
 
-            _filename = json.FileName;
-
-            var fileName = Path.GetFileNameWithoutExtension(name);
-            var ext = Path.GetExtension(name);
+            var fileName = Path.GetFileNameWithoutExtension(_fileName);
+            var ext = Path.GetExtension(_fileName);
             var recordFileName = $"{fileName}.records{ext}";
-            var recordJson = FileHelper.ReadJsonFile<CommandGroup<Command>>(recordFileName);
+            var recordJson = MyFileHelper.ReadJsonFile<CommandGroup<Command>>(recordFileName);
             if (recordJson != null)
             {
                 json = recordJson;
                 _isRecord = true;
             }
 
-            LogHelper.Log($"【{_name}】命令开始");
+            MyLogHelper.Log($"【{_fileName}】命令开始");
 
             var commands = json.Commands.OrderBy(o => o.MyIndex).ToList();
             foreach (var command in commands)
             {
-                _name = json.Name;
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} 开始执行");
+                _fileName = json.Name;
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} 开始执行");
 
                 for (int i = 0; i < command.Count; i++)
                 {
                     DoCommand(command, i);
                 }
 
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} 结束执行");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} 结束执行");
             }
 
-            LogHelper.Log($"【{_name}】命令结束");
+            MyLogHelper.Log($"【{_fileName}】命令结束");
 
             if (!_isRecord)
             {
                 try
                 {
-                    FileHelper.SaveJsonFile(recordFileName, json);
+                    MyFileHelper.SaveJsonFile(recordFileName, json);
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.Error(ex.Message, ex);
+                    MyLogHelper.Error(ex.Message, ex);
                 }
             }
         }
 
-        private static void DoCommand(Command command, int index)
+        private void DoCommand(Command command, int index)
         {
             if (command.Operate == OperateEnum.WaitToClick)
             {
                 WaitToClick(command, index);
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Sleep)
             {
                 Thread.Sleep(command.Interval);
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 休眠 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 休眠 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Loop_Break)
             {
                 command.IsThrowExceptionIfNoFind = false;//循环的这种空不会报错，不然循环就无法判断条件了
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
                 while ((double)stopwatch.ElapsedMilliseconds < command.Timeout * 1000.0)
@@ -102,12 +103,12 @@ namespace AutoPalyApp.Core
                     }
                 }
 
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
             }
             else if (command.Operate == OperateEnum.Loop_Continue)
             {
                 command.IsThrowExceptionIfNoFind = false;//循环的这种空不会报错，不然循环就无法判断条件了
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 开始循环 {index + 1}次");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
                 while ((double)stopwatch.ElapsedMilliseconds < command.Timeout * 1000.0)
@@ -129,7 +130,7 @@ namespace AutoPalyApp.Core
                         break;
                     }
                 }
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 结束循环 {index + 1}次");
             }
             else
             {
@@ -137,7 +138,7 @@ namespace AutoPalyApp.Core
             }
         }
 
-        private static Point? FindContentAndGetPoint(Command command, int index = 0)
+        private Point? FindContentAndGetPoint(Command command, int index = 0)
         {
             Point? point;
 
@@ -150,12 +151,12 @@ namespace AutoPalyApp.Core
                 if (command.Type == CommandTypeEnum.Text)
                 {
                     //使用adb识别文字取得x，y
-                    point = AdbHelper.GetInstance().GetPointByTextAsync(command.Content, command.GetIndex).Result;
+                    point = MyAdbHelper.GetInstance().GetPointByTextAsync(command.Content, command.GetIndex).Result;
                 }
                 else if (command.Type ==  CommandTypeEnum.Image)
                 {
                     //使用opencv识别图片取得x，y
-                    point = AdbHelper.GetInstance().GetPointByImageAsync($"{_filename}\\{command.Content}").Result;
+                    point = MyAdbHelper.GetInstance().GetPointByImageAsync($"{Path.GetFileNameWithoutExtension(_fileName)}\\{command.Content}").Result;
                 }
                 else
                 {
@@ -165,8 +166,8 @@ namespace AutoPalyApp.Core
 
             if (point != null)
             {
-                LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 取得坐标：{point?.X}|{point?.Y}");
-                FileHelper.WriteMessageTxt("HonkaiStarRail_Records.txt", $"【ParentIndex:{command.ParentIndex}-Index:{command.MyIndex}】X:{point?.X}|Y:{point?.Y}");
+                MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 取得坐标：{point?.X}|{point?.Y}");
+                MyFileHelper.WriteMessageTxt("HonkaiStarRail_Records.txt", $"【ParentIndex:{command.ParentIndex}-Index:{command.MyIndex}】X:{point?.X}|Y:{point?.Y}");
 
                 if (!_isRecord)
                 {
@@ -181,7 +182,7 @@ namespace AutoPalyApp.Core
             return point;
         }
 
-        private static void WaitToClick(Command command, int index)
+        private void WaitToClick(Command command, int index)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -196,7 +197,7 @@ namespace AutoPalyApp.Core
             {
                 if (command.IsThrowExceptionIfNoFind)
                 {
-                    throw new Exception($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} {command.Content}未找到该内容");
+                    throw new Exception($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} {command.Content}未找到该内容");
                 }
                 else
                 {
@@ -205,8 +206,8 @@ namespace AutoPalyApp.Core
             }
 
             //使用adb点击即可
-            AdbHelper.GetInstance().InputTap((Point)point);
-            LogHelper.Log($"【{_name}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 成功 【{command.Content}】");
+            MyAdbHelper.GetInstance().InputTap((Point)point);
+            MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 成功 【{command.Content}】");
         }
     }
 }
