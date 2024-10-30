@@ -72,12 +72,6 @@ Vue.prototype.$common = common;//挂一个全局公共方法
 
 Vue.config.productionTip = false//关闭Vue的生产提示
 
-if(window.chrome && window.chrome.webview){
-  window.chrome.webview.addEventListener('message', (event)=>{
-    console.log(event);
-  });
-}
-
 new Vue({
   render: h => h(App),
   router: router,

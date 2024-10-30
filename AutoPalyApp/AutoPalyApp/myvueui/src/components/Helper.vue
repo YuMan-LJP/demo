@@ -38,6 +38,7 @@ export default {
             })
         })
 
+        //测试方法：vue编译把发布文件放到wwwroot，启动后端，访问Hepler页面，然后浏览器发送请求http://localhost:5000/api/TaskScheduler/TestApi，这边就可以收到订阅消息了
         this.$common.event.on("vueMessageEvent", (data) =>{
             if(data.Arg1){
                 console.log(data.Arg1)
