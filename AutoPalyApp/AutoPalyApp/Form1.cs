@@ -1,3 +1,4 @@
+using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
 using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
@@ -30,8 +31,33 @@ namespace AutoPalyApp
             var text = e.TryGetWebMessageAsString();
             Console.WriteLine(text);
 
-            var json = JsonConvert.SerializeObject(new {  });
+            var json = JsonConvert.SerializeObject(new { data1 = "后端发消息给前端", data2 = "测试123456" });
             webView21.CoreWebView2.PostWebMessageAsJson(json);
+        }
+
+        /// <summary>
+        /// 发送消息给前端
+        /// </summary>
+        /// <param name="data"></param>
+        public static bool SendMessageToWebView(WebViewMessageDto webViewMessage)
+        {
+            var json = JsonConvert.SerializeObject(webViewMessage);
+            foreach (var form in Application.OpenForms)//找到当前已经打开的窗体
+            {
+                if (form is Form1 form1)
+                {
+                    //特别注意，直接使用会有异常：CoreWebView2 can only be accessed from the UI thread
+                    //form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
+
+                    CommonHelper.SyncBeginInvoke(form1, delegate ()
+                    {
+                        form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
+                    });
+                    MyLogHelper.Debug($"【SendMessageToWebView】[{webViewMessage.GUID}] {webViewMessage.EventKey} 发送消息给前端");
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Index</title>
+</head>
+<body>
+    <div style="text-align:center">
+        <h1>临时页面</h1>
+        <p>内容制作中，尽情期待</p>
+
+        <button onclick="sendMessage()">测试发送消息给后端</button>
+        <p>后端返回消息给前端：</p>
+        <div id="showText">
+
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            initWebview()
+        }
+        function initWebview() {
+            //后端发消息给前端
+            window.chrome.webview.addEventListener('message', arg => {
+                console.log(arg);
+                if (Object.prototype.toString.call(arg.data) === '[object String]') {
+                    console.log(arg.data);//用于简单通讯
+                    document.getElementById("showText").insertAdjacentHTML('beforeend', '<p>' + arg.data + '</p>');
+                } else {
+                    console.log(arg.data);//用于复杂通讯
+                    document.getElementById("showText").insertAdjacentHTML('beforeend', '<p>' + JSON.stringify(arg.data) + '</p>');
+                }
+            })
+        }
+        function sendMessage() {
+            //前端发消息给后端
+            var obj = { arg1: "aaa", arg2: "bbb" }
+            window.chrome.webview.postMessage(JSON.stringify(obj));
+        }
+    </script>
+</body>
+</html>

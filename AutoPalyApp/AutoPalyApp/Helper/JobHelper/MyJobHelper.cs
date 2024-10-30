@@ -95,11 +95,24 @@ namespace AutoPalyApp.Helper.JobHelper
         }
 
         /// <summary>
-        /// 临时开启一个job
+        /// 开启一个临时job
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="cron"></param>
-        public static void TempStartJob<T>(string cron, out string jobKey, out string triggerKey, bool isTriggerNow = false) where T : IJob
+        /// <param name="jobKey"></param>
+        /// <param name="triggerKey"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <param name="arg3"></param>
+        /// <param name="isTriggerNow"></param>
+        public static void StartTempJob<T>(
+            string cron,
+            out string jobKey,
+            out string triggerKey,
+            string arg1 = "",
+            string arg2 = "",
+            string arg3 = "",
+            bool isTriggerNow = false) where T : IJob
         {
             jobKey = Guid.NewGuid().ToString();
             triggerKey = Guid.NewGuid().ToString();
@@ -108,6 +121,11 @@ namespace AutoPalyApp.Helper.JobHelper
             Task<IScheduler> task = StdSchedulerFactory.GetDefaultScheduler();
             IScheduler scheduler = task.Result;
             IJobDetail job = JobBuilder.Create<T>()
+                .SetJobData(new JobDataMap {
+                    new KeyValuePair<string, object>("Arg1", arg1),
+                    new KeyValuePair<string, object>("Arg2", arg2),
+                    new KeyValuePair<string, object>("Arg3", arg3),
+                })
                 .WithIdentity(jobKey, groupName)
                 .WithDescription("TempJob")
                 .Build();

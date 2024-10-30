@@ -4,6 +4,7 @@ module.exports = {
     title: 'LJP App',
     home: 'Home',
     about: 'About',
+    helper: 'Helper',
     languages: 'Languages',
     search: 'Search',
     selected: 'Selected {number}',

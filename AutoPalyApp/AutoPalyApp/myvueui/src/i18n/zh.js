@@ -4,6 +4,7 @@ module.exports = {
     title: 'LJP 应用程序',
     home: '主页',
     about: '关于',
+    helper: '帮助',
     languages: '语言',
     search: '查询',
     selected: '已选择 {number} 行',

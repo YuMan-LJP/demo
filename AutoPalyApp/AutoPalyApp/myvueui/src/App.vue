@@ -14,6 +14,7 @@
             <b-nav-item to="/taskScheduler" exact exact-active-class="active">{{ $t("taskScheduler.title") }}</b-nav-item>
             <b-nav-item to="/commandGroup" exact exact-active-class="active">{{ $t("commandGroup.title") }}</b-nav-item>
             <b-nav-item to="/about" exact exact-active-class="active">{{ $t("app.about") }}</b-nav-item>
+            <b-nav-item to="/helper" exact exact-active-class="active">{{ $t("app.helper") }}</b-nav-item>
             <!-- <b-nav-item href="#" disabled>Disabled</b-nav-item> -->
           </b-navbar-nav>
 
@@ -25,14 +26,14 @@
             </b-nav-form>
 
             <b-nav-item-dropdown :text="$t('app.languages')" right>
-              <b-dropdown-item href="#" v-for="curLang in languagelist"
-                @click="selectlang(curLang.key)">{{ curLang.value }}</b-dropdown-item>
+              <b-dropdown-item href="#" v-for="curLang in languagelist" @click="selectlang(curLang.key)">{{ curLang.value
+              }}</b-dropdown-item>
             </b-nav-item-dropdown>
           </b-navbar-nav>
         </b-collapse>
       </b-navbar>
     </div>
-    
+
     <!-- 指定组件的呈现位置 -->
     <router-view></router-view>
   </div>
@@ -62,7 +63,23 @@ export default {
     } else {
       localStorage.setItem('lang', this.language)
     }
-  }
+  },
+  mounted() {
+    //初始化WebView后端消息通讯
+    if (window.chrome && window.chrome.webview) {
+      console.log("开启webview订阅");
+      //后端发消息给前端
+      window.chrome.webview.addEventListener('message', arg => {
+        console.log(arg);
+        if (Object.prototype.toString.call(arg.data) === '[object String]') {
+          console.log(arg.data);//用于简单通讯，忽略，目前都用json通讯
+        } else {
+          console.log(arg.data);//用于复杂通讯
+          this.$common.event.trigger(arg.data.EventKey, arg.data.Message);//触发事件
+        }
+      })
+    }
+  },
 }
 </script>
 

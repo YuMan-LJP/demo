@@ -5,6 +5,7 @@ import HelloWorld from '../components/HelloWorld.vue'
 import About from '../components/About'
 import Home from '../components/Home'
 import Index from '../components/Index'
+import Helper from '../components/Helper'
 import CommandGroup from '../components/CommandGroup'
 import TaskScheduler from '../components/TaskScheduler'
 
@@ -29,6 +30,11 @@ export default new VueRouter({
             path:'/',
             name: 'index',
             component:Index
+        },
+        {
+            path:'/helper',
+            name: 'helper',
+            component:Helper
         },
         {
             path:'/commandGroup',

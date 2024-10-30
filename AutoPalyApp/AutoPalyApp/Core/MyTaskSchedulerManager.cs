@@ -1,4 +1,5 @@
 ﻿using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Core.Jobs;
 using AutoPalyApp.Helper;
 using AutoPalyApp.Helper.JobHelper;
 
@@ -25,13 +26,13 @@ namespace AutoPalyApp.Core
             {
                 return new List<MyJobInfo>();
             }
-            var jsonFiils = Directory.GetFiles(rootPath)
+            var jsonFiles = Directory.GetFiles(rootPath)
                .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
                .Select(s => Path.GetFileName(s))
                .ToList();
 
             List<MyJobInfo> output = new List<MyJobInfo>();
-            foreach (var file in jsonFiils)
+            foreach (var file in jsonFiles)
             {
                 var data = MyFileHelper.ReadJsonFile<MyJobInfo>(file, rootPath);
                 if (data != null)
@@ -95,11 +96,48 @@ namespace AutoPalyApp.Core
         {
             string job;
             string trigger;
-            MyJobHelper.TempStartJob<TempTestJob>("0/10 * * * * ?", out job, out trigger);
+            MyJobHelper.StartTempJob<TempTestJob>("0/3 * * * * ?", out job, out trigger);
             MyLogHelper.Info($"临时测试：job：{job}|trigger：{trigger}");
 
-            MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key", "job组别", "job描述", "触发器唯一Key", "触发器组别", "触发器描述", "0/2 * * * * ?", "test111", "test222");
-            MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key_2", "job组别", "job描述_2", "触发器唯一Key_2", "触发器组别", "触发器描述_2", "0/2 * * * * ?", "test333", "test444");
+            string job2;
+            string trigger2;
+            MyJobHelper.StartTempJob<TempTestJob>("0/7 * * * * ?", out job2, out trigger2);
+            MyLogHelper.Info($"临时测试：job：{job2}|trigger：{trigger2}");
+
+            //MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key", "job组别", "job描述", "触发器唯一Key", "触发器组别", "触发器描述", "0/5 * * * * ?", "test111", "test222");
+            //MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key_2", "job组别", "job描述_2", "触发器唯一Key_2", "触发器组别", "触发器描述_2", "0/7 * * * * ?", "test333", "test444");
+        }
+
+        public bool StartCommandGroupJob(string jobId, string triggerId)
+        {
+            var rootPath = GetFileUrl();
+            if (!Directory.Exists(rootPath))
+            {
+                return false;
+            }
+            var jsonFile = Directory.GetFiles(rootPath)
+               .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
+               .Where(s => Path.GetFileName(s) == jobId)
+               .SingleOrDefault();
+
+            if (jsonFile == null)
+            {
+                return false;
+            }
+
+            var jobInfo = MyFileHelper.ReadJsonFile<MyJobInfo>(jsonFile, rootPath);
+            if (jobInfo == null)
+            {
+                return false;
+            }
+            var triggerInfo = jobInfo.Triggers.Where(w => w.Id == triggerId).SingleOrDefault();
+            if (triggerInfo == null)
+            {
+                return false;
+            }
+
+            MyJobHelper.AddJobAndTrigger<CommandGroupJob>(jobInfo.Key, jobInfo.Group, jobInfo.Description, triggerInfo.Key, triggerInfo.Group, triggerInfo.Description, triggerInfo.Cron, "MuMu模拟器12", $"{triggerInfo.CommandGroupId}.json");
+            return true;
         }
     }
 }

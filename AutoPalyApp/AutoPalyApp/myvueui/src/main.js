@@ -8,8 +8,12 @@ import axios from 'axios'
 import VueRouter from "vue-router";
 import router from './router'//引入路由器
 import VueI18n from 'vue-i18n'
+import VueToastr from 'vue-toastr';
+import BlockUI from 'vue-blockui'
 import common from './utils/common'
-import alert from './components/Common/alert'
+//import alert from './components/Common/alert'
+import message from './components/Common/message'
+import loading from './components/Common/loading'
 
 
 // Install BootstrapVue
@@ -45,7 +49,25 @@ const i18n = new VueI18n({
   }
 })
 
-Vue.use(alert);//挂一个全局弹窗提示插件（alert、confirm、msg）
+
+//http://s4l1h.github.io/vue-toastr/
+Vue.use(VueToastr, {
+  defaultTimeout: 3000,
+  //defaultProgressBar: false,
+  //defaultProgressBarValue: 0,
+  //defaultType: "error",
+  defaultPosition: "toast-bottom-right",//'toast-top-right', 'toast-bottom-right', 'toast-bottom-left', 'toast-top-left', 'toast-top-full-width', 'toast-bottom-full-width', 'toast-top-center', 'toast-bottom-center'
+  //defaultCloseOnHover: false,
+  //defaultStyle: { "background-color": "red" },
+  //defaultClassNames: ["animated", "zoomInUp"]
+});
+
+
+Vue.use(BlockUI)
+
+//Vue.use(alert);//改用vue-swal
+Vue.use(message);
+Vue.use(loading);
 Vue.prototype.$common = common;//挂一个全局公共方法
 
 Vue.config.productionTip = false//关闭Vue的生产提示

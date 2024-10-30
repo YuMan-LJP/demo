@@ -7,10 +7,10 @@ function getGuid() {
 }
 
 function getObjectURL(file) {
-    if(typeof(file) === "string"){
-        if(file && file.indexOf('data:image') !== -1){
+    if (typeof (file) === "string") {
+        if (file && file.indexOf('data:image') !== -1) {
             return file;
-        }else if(file && file.indexOf('blob') !== -1){
+        } else if (file && file.indexOf('blob') !== -1) {
             return file;
         }
         return 'data:image/jpeg;base64,' + file;
@@ -28,7 +28,59 @@ function getObjectURL(file) {
     return url;
 }
 
+function event() {
+    var _callbacks = {};
+
+    var on = function (eventName, callback) {
+        if (!_callbacks[eventName]) {
+            _callbacks[eventName] = [];
+        }
+
+        _callbacks[eventName].push(callback);
+    };
+
+    var off = function (eventName, callback) {
+        var callbacks = _callbacks[eventName];
+        if (!callbacks) {
+            return;
+        }
+
+        var index = -1;
+        for (var i = 0; i < callbacks.length; i++) {
+            if (callbacks[i] === callback) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index < 0) {
+            return;
+        }
+
+        _callbacks[eventName].splice(index, 1);
+    };
+
+    var trigger = function (eventName) {
+        var callbacks = _callbacks[eventName];
+        if (!callbacks || !callbacks.length) {
+            return;
+        }
+
+        var args = Array.prototype.slice.call(arguments, 1);
+        for (var i = 0; i < callbacks.length; i++) {
+            callbacks[i].apply(this, args);
+        }
+    };
+
+    return {
+        on: on,
+        off: off,
+        trigger: trigger
+    };
+}
+
 export default {
     getGuid,
     getObjectURL,
+    event: event(),
 }

@@ -2,6 +2,8 @@
 using AutoPalyApp.Core.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Quartz;
+using static Vanara.PInvoke.Gdi32;
 
 namespace AutoPalyApp.Controllers
 {
@@ -52,9 +54,15 @@ namespace AutoPalyApp.Controllers
             return await Task.FromResult(_myTaskSchedulerManager.Value.DeleteJsonFile(id));
         }
 
+        public async Task<bool> StartCommandGroupJob(string jobId, string triggerId)
+        {
+            return await Task.FromResult(_myTaskSchedulerManager.Value.StartCommandGroupJob(jobId, triggerId));
+        }
+
         public async Task<bool> TestApi()
         {
-            _myTaskSchedulerManager.Value.TestTaskStart();
+            //_myTaskSchedulerManager.Value.TestTaskStart();
+            Form1.SendMessageToWebView(new WebViewMessageDto("vueMessageEvent", new { Arg1 = "后端返回的参数1", Arg2 = "后端返回的参数2", arg3 = "后端返回的参数3" }));
             return await Task.FromResult(true);
         }
     }

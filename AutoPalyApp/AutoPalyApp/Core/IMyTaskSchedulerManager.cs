@@ -9,5 +9,6 @@ namespace AutoPalyApp.Core
         bool SaveJsonFile(MyJobInfo jobInfo);
         void StartCommand(string commandGroupId);
         void TestTaskStart();
+        bool StartCommandGroupJob(string jobId, string triggerId);
     }
 }

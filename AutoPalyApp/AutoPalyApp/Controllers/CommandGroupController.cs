@@ -41,7 +41,7 @@ namespace AutoPalyApp.Controllers
                     {
                         if (item.Type == CommandTypeEnum.Image)
                         {
-                            item.ImageBase64String = MyFileHelper.ConvertImageToBase64($"{rootPath}\\{data.Id}\\{item.Content}");
+                            item.ImageBase64String = CommonHelper.ConvertImageToBase64($"{rootPath}\\{data.Id}\\{item.Content}");
                         }
                     }
                     output.Add(data);

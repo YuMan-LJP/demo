@@ -1,9 +1,20 @@
 <template>
-    <h1>首页</h1>
+    <div>
+        <h1>首页</h1>
+
+    </div>
 </template>
 
 <script>
-    export default {
-        name:'Index'
+export default {
+    name: 'Index',
+    data() {
+        return {
+        }
+    },
+    methods: {
+    },
+    mounted() {
     }
+}
 </script>
