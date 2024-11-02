@@ -41,23 +41,31 @@ namespace AutoPalyApp
         /// <param name="data"></param>
         public static bool SendMessageToWebView(WebViewMessageDto webViewMessage)
         {
-            var json = JsonConvert.SerializeObject(webViewMessage);
-            foreach (var form in Application.OpenForms)//找到当前已经打开的窗体
+            try
             {
-                if (form is Form1 form1)
+                var json = JsonConvert.SerializeObject(webViewMessage);
+                foreach (var form in Application.OpenForms)//找到当前已经打开的窗体
                 {
-                    //特别注意，直接使用会有异常：CoreWebView2 can only be accessed from the UI thread
-                    //form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
-
-                    CommonHelper.SyncBeginInvoke(form1, delegate ()
+                    if (form is Form1 form1)
                     {
-                        form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
-                    });
-                    MyLogHelper.Debug($"【SendMessageToWebView】[{webViewMessage.GUID}] {webViewMessage.EventKey} 发送消息给前端");
-                    return true;
+                        //特别注意，直接使用会有异常：CoreWebView2 can only be accessed from the UI thread
+                        //form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
+
+                        CommonHelper.SyncBeginInvoke(form1, delegate ()
+                        {
+                            form1.webView21.CoreWebView2.PostWebMessageAsJson(json);
+                        });
+                        MyLogHelper.Debug($"【SendMessageToWebView】[{webViewMessage.GUID}] {webViewMessage.EventKey} 发送消息给前端");
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
+            catch (Exception ex)
+            {
+                MyLogHelper.Error(ex);
+                return false;
+            }
         }
     }
 }

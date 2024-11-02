@@ -30,6 +30,9 @@
                     <b-button-group>
                         <b-button variant="primary" @click="saveMainodal(data.item.id)">{{ $t("app.save") }}</b-button>
                     </b-button-group>
+                    <b-button-group>
+                        <b-button variant="primary" @click="runNow(data.item.id)">{{ $t("commandGroup.runNow") }}</b-button>
+                    </b-button-group>
                 </template>
 
                 <template v-slot:row-details="row">
@@ -339,7 +342,7 @@ export default {
                 this.mainTableRows = response.data;
             }).catch((err) => {
                 console.log(err)
-                this.$alert('System Tip', err)
+                this.$messageError('System Tip', err)
             })
         },
         newMainModal() {
@@ -356,7 +359,7 @@ export default {
                 this.$refs.mainForm.setFormValue(row);
                 this.$refs.mainForm.showMyModal();
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         deleteMainRow(mainId) {
@@ -367,14 +370,14 @@ export default {
                     console.log(response);
                     if (response.data) {
                         this.mainTableRows.splice(index, 1);
-                        this.$alert('System Tip', 'Delete Success')
+                        this.$messageSuccess('System Tip', 'Delete Success')
                     }
                 }).catch((err) => {
                     console.log(err)
-                    this.$alert('System Tip', err)
+                    this.$messageError('System Tip', err)
                 })
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         saveMainodal(mainId) {
@@ -397,16 +400,16 @@ export default {
                 }).then((response) => {
                     console.log(response)
                     if (response.data === true) {
-                        this.$alert('System Tip', 'Save Success')
+                        this.$messageSuccess('System Tip', 'Save Success')
                     } else {
-                        this.$alert('System Tip', 'Save Fail')
+                        this.$messageWarn('System Tip', 'Save Fail')
                     }
                 }).catch((err) => {
                     console.log(err)
-                    this.$alert('System Tip', 'Save Fail')
+                    this.$messageError('System Tip', 'Save Fail')
                 })
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         onMainSubmit(data) {
@@ -457,7 +460,7 @@ export default {
                 this.$refs.itemForm.setFormValue(itemRow);
                 this.$refs.itemForm.showMyModal();
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         deleteItemRow(mainId, itemId) {
@@ -466,7 +469,7 @@ export default {
             if (index !== -1) {
                 mainRow.commands.splice(index, 1);
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         onItemSubmit(data) {
@@ -574,7 +577,7 @@ export default {
                 this.$refs.itemForm.setFormValue(detailRow);
                 this.$refs.itemForm.showMyModal();
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         deleteDetailRow(detailId) {
@@ -584,7 +587,7 @@ export default {
             if (index !== -1) {
                 itemRow.commands.splice(index, 1);
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         onDetailSubmit(data) {
@@ -629,6 +632,19 @@ export default {
                     commands: [],//初始化子表集合
                 })
             }
+        },
+        runNow(mainId){
+            this.$axios.get("/api/taskScheduler/startCommandGroupJobByTemp?id=" + mainId).then((response) => {
+                console.log(response);
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Success')
+                } else {
+                    this.$messageWarn('System Tip', 'Fail')
+                }
+            }).catch((err) => {
+                console.log(err)
+                this.$messageError('System Tip', err)
+            })
         },
 
 

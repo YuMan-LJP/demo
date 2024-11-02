@@ -10,5 +10,6 @@ namespace AutoPalyApp.Core
         void StartCommand(string commandGroupId);
         void TestTaskStart();
         bool StartCommandGroupJob(string jobId, string triggerId);
+        bool StartCommandGroupJobByTemp(string commandGroupId);
     }
 }

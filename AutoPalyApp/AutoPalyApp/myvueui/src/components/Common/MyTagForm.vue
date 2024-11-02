@@ -145,7 +145,7 @@ export default {
             }
 
             if (emptyLabels.length > 0) {
-                alert("以下字段不能为空：" + emptyLabels.join(', '));
+                this.$messageWarn('系统提示', "以下字段不能为空：" + emptyLabels.join(', '));
                 return;
             }
 

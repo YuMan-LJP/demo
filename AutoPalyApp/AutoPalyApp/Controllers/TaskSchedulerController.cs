@@ -2,8 +2,6 @@
 using AutoPalyApp.Core.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Quartz;
-using static Vanara.PInvoke.Gdi32;
 
 namespace AutoPalyApp.Controllers
 {
@@ -57,6 +55,11 @@ namespace AutoPalyApp.Controllers
         public async Task<bool> StartCommandGroupJob(string jobId, string triggerId)
         {
             return await Task.FromResult(_myTaskSchedulerManager.Value.StartCommandGroupJob(jobId, triggerId));
+        }
+
+        public async Task<bool> StartCommandGroupJobByTemp(string id)
+        {
+            return await Task.FromResult(_myTaskSchedulerManager.Value.StartCommandGroupJobByTemp(id));
         }
 
         public async Task<bool> TestApi()

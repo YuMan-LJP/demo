@@ -23,10 +23,15 @@ module.exports = {
   },
 
   commandGroup:{
-    title: '命令组'
+    title: '命令组',
+    runNow: '立即运行',
   },
 
   taskScheduler:{
     title: '任务调度'
+  },
+
+  commandLog:{
+    title: '命令日志'
   }
 }

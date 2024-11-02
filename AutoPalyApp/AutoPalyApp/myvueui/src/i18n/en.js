@@ -23,10 +23,15 @@ module.exports = {
   },
 
   commandGroup:{
-    title: 'Command Group'
+    title: 'Command Group',
+    runNow: 'Run Now',
   },
 
   taskScheduler:{
     title: 'Task Scheduler'
+  },
+
+  commandLog:{
+    title: 'Command Log'
   }
 }

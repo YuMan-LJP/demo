@@ -139,5 +139,14 @@ namespace AutoPalyApp.Core
             MyJobHelper.AddJobAndTrigger<CommandGroupJob>(jobInfo.Key, jobInfo.Group, jobInfo.Description, triggerInfo.Key, triggerInfo.Group, triggerInfo.Description, triggerInfo.Cron, "MuMu模拟器12", $"{triggerInfo.CommandGroupId}.json");
             return true;
         }
+
+        public bool StartCommandGroupJobByTemp(string commandGroupId)
+        {
+            string job;
+            string trigger;
+            MyJobHelper.StartTempJob<CommandGroupJob>("* * 22 * * ?", out job, out trigger, "MuMu模拟器12", $"{commandGroupId}.json", "", true);
+            MyLogHelper.Info($"临时启动：job：{job}|trigger：{trigger}"); 
+            return true;
+        }
     }
 }

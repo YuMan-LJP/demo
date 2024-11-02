@@ -1,7 +1,6 @@
 ﻿using AutoPalyApp.Core.Dto;
 using AutoPalyApp.Helper;
 using System.Diagnostics;
-using System.Xml.Linq;
 
 namespace AutoPalyApp.Core
 {
@@ -194,6 +193,7 @@ namespace AutoPalyApp.Core
             {
                 if (command.IsThrowExceptionIfNoFind)
                 {
+                    Form1.SendMessageToWebView(new Dto.WebViewMessageDto(MyConsts.CommandLog, new { _fileName, command.ParentIndex, command.MyIndex, message = $"{command.Content}未找到该内容" }));
                     throw new Exception($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} {command.Content}未找到该内容");
                 }
                 else
@@ -205,6 +205,7 @@ namespace AutoPalyApp.Core
             //使用adb点击即可
             MyAdbHelper.GetInstance().InputTap((Point)point);
             MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 点击 成功 【{command.Content}】");
+            Form1.SendMessageToWebView(new Dto.WebViewMessageDto(MyConsts.CommandLog, new { _fileName, command.ParentIndex, command.MyIndex, message = $"点击【{command.Content}】" }));
         }
     }
 }

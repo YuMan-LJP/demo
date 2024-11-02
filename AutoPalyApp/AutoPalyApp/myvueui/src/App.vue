@@ -13,8 +13,9 @@
             <b-nav-item to="/home" exact exact-active-class="active">{{ $t("app.home") }}</b-nav-item>
             <b-nav-item to="/taskScheduler" exact exact-active-class="active">{{ $t("taskScheduler.title") }}</b-nav-item>
             <b-nav-item to="/commandGroup" exact exact-active-class="active">{{ $t("commandGroup.title") }}</b-nav-item>
-            <b-nav-item to="/about" exact exact-active-class="active">{{ $t("app.about") }}</b-nav-item>
             <b-nav-item to="/helper" exact exact-active-class="active">{{ $t("app.helper") }}</b-nav-item>
+            <b-nav-item to="/about" exact exact-active-class="active">{{ $t("app.about") }}</b-nav-item>
+            <b-nav-item to="/commandLog" exact exact-active-class="active">{{ $t("commandLog.title") }}</b-nav-item>
             <!-- <b-nav-item href="#" disabled>Disabled</b-nav-item> -->
           </b-navbar-nav>
 

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2>任务调度</h2>
+        <h2>{{ $t("taskScheduler.title") }}</h2>
         <div>
             <b-button-toolbar key-nav aria-label="Toolbar with button groups">
                 <b-button-group class="mx-1">
@@ -69,6 +69,9 @@
                                     <b-button-group size="sm">
                                         <b-button variant="danger" @click="deleteItemRow(row.item.id, data.item.id)">{{
                                             $t("app.delete") }}</b-button>
+                                    </b-button-group>
+                                    <b-button-group>
+                                        <b-button variant="primary" @click="startCommandGroupJob(row.item.id, data.item.id)">启动</b-button>
                                     </b-button-group>
                                 </template>
                             </b-table>
@@ -207,7 +210,7 @@ export default {
                 this.mainTableRows = response.data;
             }).catch((err) => {
                 console.log(err)
-                this.$alert('System Tip', err)
+                this.$messageError('System Tip', err)
             })
         },
         newMainModal() {
@@ -227,7 +230,7 @@ export default {
                 this.$refs.mainForm.setFormValue(row);
                 this.$refs.mainForm.showMyModal();
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         deleteMainRow(mainId) {
@@ -238,14 +241,14 @@ export default {
                     console.log(response);
                     if (response.data) {
                         this.mainTableRows.splice(index, 1);
-                        this.$alert('System Tip', 'Delete Success')
+                        this.$messageSuccess('System Tip', 'Delete Success')
                     }
                 }).catch((err) => {
                     console.log(err)
-                    this.$alert('System Tip', err)
+                    this.$messageError('System Tip', err)
                 })
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         saveMainodal(mainId) {
@@ -263,16 +266,16 @@ export default {
                 }).then((response) => {
                     console.log(response)
                     if (response.data === true) {
-                        this.$alert('System Tip', 'Save Success')
+                        this.$messageSuccess('System Tip', 'Save Success')
                     } else {
-                        this.$alert('System Tip', 'Save Fail')
+                        this.$messageWarn('System Tip', 'Save Fail')
                     }
                 }).catch((err) => {
                     console.log(err)
-                    this.$alert('System Tip', 'Save Fail')
+                    this.$messageError('System Tip', 'Save Fail')
                 })
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         onMainSubmit(data) {
@@ -309,7 +312,7 @@ export default {
                 this.$refs.itemForm.setFormValue(itemRow);
                 this.$refs.itemForm.showMyModal();
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         deleteItemRow(mainId, itemId) {
@@ -318,7 +321,7 @@ export default {
             if (index !== -1) {
                 mainRow.triggers.splice(index, 1);
             } else {
-                this.$alert('System Tip', 'NoFound')
+                this.$messageError('System Tip', 'NoFound')
             }
         },
         onItemSubmit(data) {
@@ -344,6 +347,19 @@ export default {
             }
         },
 
+        startCommandGroupJob(mainId, itemId) {
+            this.$axios.get("/api/taskScheduler/startCommandGroupJob?jobId=" + mainId + '&triggerId=' + itemId).then((response) => {
+                console.log(response);
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Success')
+                } else {
+                    this.$messageWarn('System Tip', 'Fail')
+                }
+            }).catch((err) => {
+                console.log(err)
+                this.$messageError('System Tip', err)
+            })
+        },
         initSelectData() {
             this.$axios.get("/api/taskScheduler/getCommandGroupList").then((response) => {
                 console.log(response);
@@ -357,7 +373,7 @@ export default {
                 this.commandGroupList.forEach(f => firstForm[index_type].options.push({ text: f, id: f }))
             }).catch((err) => {
                 console.log(err)
-                this.$alert('System Tip', err)
+                this.$messageError('System Tip', err)
             })
         }
     },
