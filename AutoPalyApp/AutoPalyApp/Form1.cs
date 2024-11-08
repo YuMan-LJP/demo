@@ -26,6 +26,11 @@ namespace AutoPalyApp
 #endif
         }
 
+        /// <summary>
+        /// 接收前端发出的消息
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void webView21_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var text = e.TryGetWebMessageAsString();

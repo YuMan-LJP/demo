@@ -72,11 +72,6 @@ namespace AutoPalyApp.Core.Dto
         public string Remark { get; set; } = "";
 
         /// <summary>
-        /// 历史记录
-        /// </summary>
-        public List<Point>? Points { get; set; }
-
-        /// <summary>
         /// 【命令脚本】可能这一个命令下面包含多个子命令，需要按【特殊指令】进行循环执行
         /// </summary>
         public List<Command>? Commands { get; set; }

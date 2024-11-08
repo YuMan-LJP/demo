@@ -6,12 +6,8 @@ namespace AutoPalyApp.Helper
 {
     public static class MyFileHelper
     {
-        public static T? ReadJsonFile<T>(string jsonFileName, string rootPath = "")
+        public static T? ReadJsonFile<T>(string jsonFileName, string rootPath)
         {
-            if (string.IsNullOrWhiteSpace(rootPath))
-            {
-                rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Json";
-            }
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);
@@ -30,12 +26,8 @@ namespace AutoPalyApp.Helper
             return output;
         }
 
-        public static void SaveJsonFile<T>(string jsonFileName, T jsonObject, string rootPath = "")
+        public static void SaveJsonFile<T>(string jsonFileName, T jsonObject, string rootPath)
         {
-            if (string.IsNullOrWhiteSpace(rootPath))
-            {
-                rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Json";
-            }
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);

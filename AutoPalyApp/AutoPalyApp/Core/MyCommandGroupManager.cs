@@ -7,16 +7,16 @@ namespace AutoPalyApp.Core
     {
         public string GetFileUrl()
         {
-            return $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Json";
+            return $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\CommandJson";
         }
 
         public bool SaveJsonFile(CommandGroup commandGroup, IFormFileCollection files)
         {
             try
             {
+                var rootPath = GetFileUrl();
                 if (files.Count > 0)
                 {
-                    var rootPath = GetFileUrl();
                     if (!Directory.Exists(rootPath))
                     {
                         Directory.CreateDirectory(rootPath);
@@ -36,7 +36,7 @@ namespace AutoPalyApp.Core
                     }
                 }
 
-                MyFileHelper.SaveJsonFile($"{commandGroup.Id}.json", commandGroup);
+                MyFileHelper.SaveJsonFile($"{commandGroup.Id}.json", commandGroup, rootPath);
 
                 return true;
             }

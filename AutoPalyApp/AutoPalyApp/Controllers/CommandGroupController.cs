@@ -34,7 +34,7 @@ namespace AutoPalyApp.Controllers
 
             foreach (var file in jsonFiils)
             {
-                var data = MyFileHelper.ReadJsonFile<CommandGroupOutputDto>(file);
+                var data = MyFileHelper.ReadJsonFile<CommandGroupOutputDto>(file, rootPath);
                 if (data != null)
                 {
                     foreach (var item in data.Commands)

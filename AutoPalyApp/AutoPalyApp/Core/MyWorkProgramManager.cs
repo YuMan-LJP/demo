@@ -7,27 +7,25 @@ namespace AutoPalyApp.Core
     public class MyWorkProgramManager : IMyWorkProgramManager
     {
         private string? _fileName;
-        private bool _isRecord = false;
+
+        private readonly IMyCommandGroupManager _myCommandGroupManager;
+
+        public MyWorkProgramManager(IMyCommandGroupManager myCommandGroupManager)
+        {
+            _myCommandGroupManager = myCommandGroupManager;
+        }
 
         public void RunCommand(string fileName)
         {
+            var rootPath = _myCommandGroupManager.GetFileUrl();
+
             _fileName = fileName;
 
-            var json = MyFileHelper.ReadJsonFile<CommandGroup>(_fileName);
+            var json = MyFileHelper.ReadJsonFile<CommandGroup>(_fileName, rootPath);
             if (json == null)
             {
                 MyLogHelper.Log($"【{_fileName}】未找到命令");
                 return;
-            }
-
-            var fileNameNoExt = Path.GetFileNameWithoutExtension(_fileName);
-            var ext = Path.GetExtension(_fileName);
-            var recordFileName = $"{fileNameNoExt}.records{ext}";
-            var recordJson = MyFileHelper.ReadJsonFile<CommandGroup>(recordFileName);
-            if (recordJson != null)
-            {
-                json = recordJson;
-                _isRecord = true;
             }
 
             MyLogHelper.Log($"【{_fileName}】命令开始");
@@ -47,18 +45,6 @@ namespace AutoPalyApp.Core
             }
 
             MyLogHelper.Log($"【{_fileName}】命令结束");
-
-            if (!_isRecord)
-            {
-                try
-                {
-                    MyFileHelper.SaveJsonFile(recordFileName, json);
-                }
-                catch (Exception ex)
-                {
-                    MyLogHelper.Error(ex.Message, ex);
-                }
-            }
         }
 
         private void DoCommand(Command command, int index)
@@ -138,41 +124,25 @@ namespace AutoPalyApp.Core
         {
             Point? point;
 
-            if (_isRecord && command.Points != null)
+            if (command.Type == CommandTypeEnum.Text)
             {
-                point = command.Points.Skip(index).FirstOrDefault();
+                //使用adb识别文字取得x，y
+                point = MyAdbHelper.GetInstance().GetPointByTextAsync(command.Content, command.GetIndex).Result;
+            }
+            else if (command.Type == CommandTypeEnum.Image)
+            {
+                //使用opencv识别图片取得x，y
+                point = MyAdbHelper.GetInstance().GetPointByImageAsync($"{Path.GetFileNameWithoutExtension(_fileName)}\\{command.Content}").Result;
             }
             else
             {
-                if (command.Type == CommandTypeEnum.Text)
-                {
-                    //使用adb识别文字取得x，y
-                    point = MyAdbHelper.GetInstance().GetPointByTextAsync(command.Content, command.GetIndex).Result;
-                }
-                else if (command.Type == CommandTypeEnum.Image)
-                {
-                    //使用opencv识别图片取得x，y
-                    point = MyAdbHelper.GetInstance().GetPointByImageAsync($"{Path.GetFileNameWithoutExtension(_fileName)}\\{command.Content}").Result;
-                }
-                else
-                {
-                    throw new Exception($"Type 未定义实现");
-                }
+                throw new Exception($"Type 未定义实现");
             }
 
             if (point != null)
             {
                 MyLogHelper.Log($"【{_fileName}】-- {command.ParentIndex}-{command.MyIndex} -- 取得坐标：{point?.X}|{point?.Y}");
                 MyFileHelper.WriteMessageTxt("HonkaiStarRail_Records.txt", $"【ParentIndex:{command.ParentIndex}-Index:{command.MyIndex}】X:{point?.X}|Y:{point?.Y}");
-
-                if (!_isRecord)
-                {
-                    if (command.Points == null)
-                    {
-                        command.Points = new List<Point>();
-                    }
-                    command.Points.Add((Point)point);
-                }
             }
 
             return point;
