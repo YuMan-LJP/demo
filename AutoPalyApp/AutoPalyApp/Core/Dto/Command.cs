@@ -1,7 +1,8 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoPalyApp.Core.Dto
 {
+    [Table("CommandGroup_Item")]
     public class Command
     {
         /// <summary>

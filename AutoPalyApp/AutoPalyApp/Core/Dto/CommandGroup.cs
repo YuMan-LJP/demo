@@ -1,5 +1,8 @@
-﻿namespace AutoPalyApp.Core.Dto
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AutoPalyApp.Core.Dto
 {
+    [Table("CommandGroup_Main")]
     public class CommandGroup
     {
         /// <summary>

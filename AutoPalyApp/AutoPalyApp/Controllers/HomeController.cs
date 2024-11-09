@@ -16,5 +16,23 @@ namespace AutoPalyApp.Controllers
             }
             return await Task.FromResult(false);
         }
+
+        public async Task<int> TestApi()
+        {
+            using (MyEfContext db = new MyEfContext())
+            {
+                db.MyTriggerInfos.Add(new Core.Dto.MyTriggerInfo
+                {
+                    Id = "1",
+                    CommandGroupId = "1",
+                    Cron = "1",
+                    Description = "1",
+                    Group = "1",
+                    Key = "1",
+                    MainId = "1",
+                });
+                return await db.SaveChangesAsync();
+            }
+        }
     }
 }

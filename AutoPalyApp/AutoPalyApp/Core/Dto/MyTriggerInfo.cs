@@ -1,5 +1,8 @@
-﻿namespace AutoPalyApp.Core.Dto
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AutoPalyApp.Core.Dto
 {
+    [Table("TaskScheduler_Trigger")]
     public class MyTriggerInfo
     {
         public string MainId { get; set; } = "";
