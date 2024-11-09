@@ -28,6 +28,16 @@ function getObjectURL(file) {
     return url;
 }
 
+function fileToBase64String(file){
+    let base64String; 
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        base64String = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    return base64String;
+}
+
 function event() {
     var _callbacks = {};
 
