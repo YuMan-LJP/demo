@@ -19,10 +19,10 @@ namespace AutoPalyApp.Core.Jobs
 
         protected string _jobKey { get; set; } = "";
         protected string _jobGroup { get; set; } = "";
-        protected string _jobDescription { get; set; } = "";
+        protected string? _jobDescription { get; set; } = "";
         protected string _triggerName { get; set; } = "";
         protected string _triggerGroup { get; set; } = "";
-        protected string _triggerDescription { get; set; } = "";
+        protected string? _triggerDescription { get; set; } = "";
 
         public async Task Execute(IJobExecutionContext context)
         {

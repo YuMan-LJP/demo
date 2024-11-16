@@ -1,4 +1,4 @@
-﻿using AutoPalyApp.Core.Dto;
+﻿using AutoPalyApp.Core.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoPalyApp.Helper
@@ -14,8 +14,8 @@ namespace AutoPalyApp.Helper
 #endif
         }
 
-        public DbSet<Command> Commands { get; set; }
-        public DbSet<CommandGroup> CommandGroups { get; set; }
+        public DbSet<MyCommand> MyCommands { get; set; }
+        public DbSet<MyCommandGroup> MyCommandGroups { get; set; }
         public DbSet<MyJobInfo> MyJobInfos { get; set; }
         public DbSet<MyTriggerInfo> MyTriggerInfos { get; set; }
     }

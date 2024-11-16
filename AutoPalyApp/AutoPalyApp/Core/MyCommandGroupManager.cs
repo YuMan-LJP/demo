@@ -1,77 +1,132 @@
 ﻿using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Core.Entity;
 using AutoPalyApp.Helper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AutoPalyApp.Core
 {
     public class MyCommandGroupManager : IMyCommandGroupManager
     {
-        public string GetFileUrl()
+        public async Task<MyCommandGroupDto> GetCommandGroupByIdAsync(string jodId, bool isIncludeItem = false)
         {
-            return $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\CommandJson";
+            using var db = new MyEfContext();
+            var main = await db.MyCommandGroups.Where(w => w.Id == jodId).ProjectToEx<MyCommandGroupDto>().SingleOrDefaultAsync();
+            if (main == null)
+            {
+                throw new Exception("Command Group Not Found");
+            }
+            main.Commands = await db.MyCommands.Where(w => w.ParentId == main.Id).ProjectToEx<MyCommandDto>().ToListAsync();
+            return main;
         }
 
-        public bool SaveJsonFile(CommandGroup commandGroup, IFormFileCollection files)
+        public async Task<List<MyCommandGroupDto>> GetCommandGroupListAsync(bool isIncludeItem = false)
         {
-            try
+            using var db = new MyEfContext();
+            var mains = await db.MyCommandGroups.ProjectToEx<MyCommandGroupDto>().ToListAsync();
+            if (isIncludeItem)
             {
-                var rootPath = GetFileUrl();
-                if (files.Count > 0)
+                var ids = mains.Select(s => s.Id).ToList();
+                var items = await db.MyCommands.Where(w => ids.Any(a => a == w.ParentId)).ProjectToEx<MyCommandDto>().ToListAsync();
+                foreach (var main in mains)
                 {
-                    if (!Directory.Exists(rootPath))
-                    {
-                        Directory.CreateDirectory(rootPath);
-                    }
-                    var filePath = $"{rootPath}\\{commandGroup.Id}";//如果是图片的话，按组名建文件夹区分
-                    if (!Directory.Exists(filePath))
-                    {
-                        Directory.CreateDirectory(filePath);
-                    }
-
-                    foreach (var file in files)
-                    {
-                        using var stream = file.OpenReadStream();
-                        using var fileStream = System.IO.File.Create($"{filePath}\\{file.FileName}");
-                        stream.Seek(0, SeekOrigin.Begin);
-                        stream.CopyTo(fileStream);
-                    }
+                    main.Commands = items.Where(w => w.ParentId == main.Id).ToList();
                 }
-
-                MyFileHelper.SaveJsonFile($"{commandGroup.Id}.json", commandGroup, rootPath);
-
-                return true;
             }
-            catch (Exception ex)
-            {
-                MyLogHelper.Error(ex.Message, ex);
-            }
-            return false;
-           
+            return mains;
         }
 
-        public bool DeleteJsonFile(string id)
+        /// <summary>
+        /// 提前多查一层，第三层需要前端点第二层的详情的时候再往下查，避免一次性拿出太多数据
+        /// </summary>
+        /// <param name="mainId"></param>
+        /// <returns></returns>
+        public async Task<List<MyCommandDto>> GetCommandByParentIdListAsync(string parentId, bool isIncludeItem = false)
         {
-            try
+            using var db = new MyEfContext();
+            var mains = await db.MyCommands.Where(w => w.ParentId == parentId).ProjectToEx<MyCommandDto>().ToListAsync();
+            if (isIncludeItem)
             {
-                var rootPath = GetFileUrl();
-                var jsonPath = $"{rootPath}\\{id}.json";
-                if (System.IO.File.Exists(jsonPath))
+                var ids = mains.Select(s => s.Id).ToList();
+                var items = await db.MyCommands.Where(w => ids.Any(a => a == w.ParentId)).ProjectToEx<MyCommandDto>().ToListAsync();
+                foreach (var main in mains)
                 {
-                    System.IO.File.Delete(jsonPath);
+                    main.Commands = items.Where(w => w.ParentId == main.Id).ToList();
                 }
-
-                var filePath = $"{rootPath}\\{id}";
-                if (Directory.Exists(filePath))
-                {
-                    Directory.Delete(filePath, true);
-                }
-
-                return true;
             }
-            catch (Exception ex)
+            return mains;
+        }
+
+        public async Task<bool> SaveMyCommandGroupAsync(MyCommandGroup commandGroup)
+        {
+            using var db = new MyEfContext();
+            var main = await db.MyCommandGroups.AsNoTracking().FirstOrDefaultAsync(s => s.Id == commandGroup.Id);
+            if (main == null)
             {
-                MyLogHelper.Error(ex.Message, ex);
+                await db.MyCommandGroups.AddAsync(commandGroup);
+            }
+            else
+            {
+                db.MyCommandGroups.Update(commandGroup);
+            }
+            var res = await db.SaveChangesAsync();
+            return res > 0;
+        }
+
+        public async Task<bool> SaveMyCommandItemAsync(MyCommand command)
+        {
+            using var db = new MyEfContext();
+            var data = await db.MyCommands.AsNoTracking().FirstOrDefaultAsync(s => s.Id == command.Id);
+            if (data == null)
+            {
+                await db.MyCommands.AddAsync(command);
+            }
+            else
+            {
+                db.MyCommands.Update(command);
+            }
+            var res = await db.SaveChangesAsync();
+            return res > 0;
+        }
+
+        public async Task<bool> DeleteMyCommandGroupAsync(string id)
+        {
+            using var db = new MyEfContext();
+            var data = await db.MyCommandGroups.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (data != null)
+            {
+                db.MyCommandGroups.Remove(data);
+
+                var items = await db.MyCommands.Where(w => w.ParentId == id).Select(s => s).AsNoTracking().ToListAsync();
+                db.MyCommands.RemoveRange(items);
+
+                var res = await db.SaveChangesAsync();
+                return res > 0;
             }
             return false;
+        }
+
+        public async Task<bool> DeleteMyCommandItemAsync(string id)
+        {
+            using var db = new MyEfContext();
+            var data = await db.MyCommands.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (data != null)
+            {
+                db.MyCommands.Remove(data);
+
+                var items = await db.MyCommands.Where(w => w.ParentId == id).Select(s => s).AsNoTracking().ToListAsync();
+                //这里要递归查询，并删除子类里面的子类，子子类还有子类，或者设置外建关联，删除主数据，子数据一并自动删除，TODO...
+                db.MyCommands.RemoveRange(items);
+
+                var res = await db.SaveChangesAsync();
+                return res > 0;
+            }
+            return false;
+        }
+
+        public async Task<List<SelectDto>> GetCommandGroupSelectListAsync()
+        {
+            using var db = new MyEfContext();
+            return await db.MyCommandGroups.Select(s => new SelectDto(s.Id, s.Name)).ToListAsync();
         }
     }
 }

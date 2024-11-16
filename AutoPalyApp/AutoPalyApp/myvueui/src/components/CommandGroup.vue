@@ -28,9 +28,6 @@
                         }}</b-button>
                     </b-button-group>
                     <b-button-group>
-                        <b-button variant="primary" @click="saveMainodal(data.item.id)">{{ $t("app.save") }}</b-button>
-                    </b-button-group>
-                    <b-button-group>
                         <b-button variant="primary" @click="runNow(data.item.id)">{{ $t("commandGroup.runNow") }}</b-button>
                     </b-button-group>
                 </template>
@@ -65,9 +62,8 @@
                                     {{ data.index + 1 }}
                                 </template>
                                 <template v-slot:cell(content)="data">
-                                    {{ data.value }}
-                                    <img v-if="data.item.imageBase64String" :src="getImageUrl(data.item.imageBase64String)"
-                                        width="30">
+                                    <img v-if="data.item.type === 1" :src="data.value" width='30'>
+                                    <span v-else>{{ data.value }}</span>
                                 </template>
                                 <template v-slot:cell(action)="data">
                                     <b-button-group size="sm">
@@ -206,7 +202,7 @@ export default {
                 {
                     title: '一般设置',
                     form: [
-                        { field: 'mainId', value: 0, type: 'number', isShow: false },//主表Id
+                        { field: 'parentId', value: 0, type: 'number', isShow: false },//主表Id
                         { field: 'id', value: '', type: 'text', label: 'GUID', isShow: false, isDisabled: true },//自动生成，禁止输入
                         { field: 'myIndex', value: 0, type: 'number', label: 'Index', isShow: false, isDisabled: true },//自动生成，禁止输入
                         { field: 'parentIndex', value: null, type: 'number', label: 'Parent Index', isShow: false, isDisabled: true },//自动生成，禁止输入
@@ -231,7 +227,7 @@ export default {
                             }
                         },
                         { field: 'content', value: '', type: 'textarea', label: 'Content', placeholder: '请输入内容', description: '必填', isShow: true, isRequired: true, },
-                        { field: 'image', value: '', imageBase64String: '', base64Field: 'imageBase64String', type: 'uploadimage', label: 'Image', placeholder: '注意上传的图片名称不能重复', description: '必填', isShow: false, isRequired: false, },
+                        { field: 'image', value: '', base64Field: 'content', type: 'uploadimage', label: 'Image', placeholder: '注意上传的图片名称不能重复', description: '必填', isShow: false, isRequired: false, },
                         { field: 'remark', value: '', type: 'textarea', label: 'Remark', placeholder: '请输入备注', description: '可空', isShow: true },
                     ]
                 },
@@ -302,6 +298,12 @@ export default {
                 {
                     key: 'isThrowExceptionIfNoFind',
                     label: 'Is Throw Exception If No Find',
+                    formatter: (value, key, item) => {
+                        if (value) {
+                            return '√'
+                        }
+                        return 'X'
+                    }
                 },
                 {
                     key: 'getIndex',
@@ -311,13 +313,13 @@ export default {
                     key: 'remark',
                     label: 'Remark',
                 },
-                {
-                    key: 'total',
-                    label: 'Total',
-                    formatter: (value, key, item) => {
-                        return item.commands.length;
-                    }
-                },
+                // {
+                //     key: 'total',
+                //     label: 'Total',
+                //     formatter: (value, key, item) => {
+                //         return item.commands.length;
+                //     }
+                // },
             ],
             typeList: [
                 { text: 'Text', id: 0 },
@@ -330,17 +332,21 @@ export default {
                 { text: 'Loop_Continue', id: 3 },
             ],
 
-            curMainId: '',
+            //目前只支持第二层的维护，如果以后需要拓展更多层，这里就不能这样实现了
+            curParentId: '',
             curItemId: '',
             detailTableRows: [],
         }
     },
     methods: {
         getMainTable() {
-            this.$axios.get("/api/commandGroup/getAllJsonList").then((response) => {
+            this.$setBusy();
+            this.$axios.get("/api/commandGroup/getCommandGroupList?isIncludeItem=true").then((response) => {
+                this.$clearBusy();
                 console.log(response);
                 this.mainTableRows = response.data;
             }).catch((err) => {
+                this.$clearBusy();
                 console.log(err)
                 this.$messageError('System Tip', err)
             })
@@ -352,8 +358,8 @@ export default {
             this.$refs.mainForm.setFormValue(data);
             this.$refs.mainForm.showMyModal();
         },
-        editMainModal(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
+        editMainModal(parentId) {
+            var index = this.mainTableRows.findIndex(f => f.id === parentId);
             if (index !== -1) {
                 var row = this.mainTableRows[index];
                 this.$refs.mainForm.setFormValue(row);
@@ -362,89 +368,80 @@ export default {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
-        deleteMainRow(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
+        deleteMainRow(parentId) {
+            var index = this.mainTableRows.findIndex(f => f.id === parentId);
             if (index !== -1) {
                 var mainRow = this.mainTableRows[index];
-                this.$axios.get("/api/commandGroup/deleteJsonFile?id=" + mainRow.id).then((response) => {
-                    console.log(response);
-                    if (response.data) {
-                        this.mainTableRows.splice(index, 1);
-                        this.$messageSuccess('System Tip', 'Delete Success')
-                    }
-                }).catch((err) => {
-                    console.log(err)
-                    this.$messageError('System Tip', err)
-                })
-            } else {
-                this.$messageError('System Tip', 'NoFound')
-            }
-        },
-        saveMainodal(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
-            if (index !== -1) {
-                var row = this.mainTableRows[index];
 
-                let formData = new FormData();
-                for (var command of row.commands) {
-                    if (command.image) {
-                        formData.append('files', command.image)
+                this.$messageConfirm("系统提示", "确定要删除吗？", (isConfirm) => {
+                    if (isConfirm) {
+                        this.$setBusy();
+                        this.$axios.get("/api/commandGroup/deleteMyCommandGroup?id=" + mainRow.id).then((response) => {
+                            this.$clearBusy();
+                            console.log(response);
+                            if (response.data) {
+                                this.mainTableRows.splice(index, 1);
+                                this.$messageSuccess('System Tip', 'Delete Success')
+                            }
+                        }).catch((err) => {
+                            this.$clearBusy();
+                            console.log(err)
+                            this.$messageError('System Tip', err)
+                        })
                     }
-                }
-                formData.append('groupData', JSON.stringify(row))
-
-                this.$axios.post("/api/commandGroup/SaveJsonFile", formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then((response) => {
-                    console.log(response)
-                    if (response.data === true) {
-                        this.$messageSuccess('System Tip', 'Save Success')
-                    } else {
-                        this.$messageWarn('System Tip', 'Save Fail')
-                    }
-                }).catch((err) => {
-                    console.log(err)
-                    this.$messageError('System Tip', 'Save Fail')
                 })
             } else {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
         onMainSubmit(data) {
-            var index = this.mainTableRows.findIndex(f => f.id === data.id);
-            if (index !== -1) {
-                var row = this.mainTableRows[index];
-                row.name = data.name
-                row.appName = data.appName
-                row.remark = data.remark
-            } else {
-                this.mainTableRows.push({
-                    id: data.id,
-                    name: data.name,
-                    appName: data.appName,
-                    remark: data.remark,
-                    commands: [],//初始化子表集合
-                })
-            }
+            this.$setBusy();
+            this.$axios.post("/api/commandGroup/saveMyCommandGroup", data).then((response) => {
+                this.$clearBusy();
+                console.log(response)
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Save Success')
+
+                    var index = this.mainTableRows.findIndex(f => f.id === data.id);
+                    if (index !== -1) {
+                        var row = this.mainTableRows[index];
+                        row.name = data.name
+                        row.appName = data.appName
+                        row.remark = data.remark
+                    } else {
+                        this.mainTableRows.push({
+                            id: data.id,
+                            name: data.name,
+                            appName: data.appName,
+                            remark: data.remark,
+                            commands: [],//初始化子表集合
+                        })
+                    }
+                } else {
+                    this.$messageWarn('System Tip', 'Save Fail')
+                }
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', 'Save Fail')
+            })
         },
 
-        newItemModal(mainId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
+        newItemModal(parentId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === parentId)[0];
 
             var itemIndexs = mainRow.commands.map(m => m.myIndex).sort(function (a, b) { return b - a });
 
             var data = {
-                mainId: mainId,
+                parentId: parentId,
                 id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
                 myIndex: itemIndexs.length > 0 ? itemIndexs[0] + 1 : 0,//取目前最大的序号往后加1
             }
             this.$refs.itemForm.setFormValue(data);
             this.$refs.itemForm.showMyModal();
         },
-        editItemModal(mainId, itemId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
+        editItemModal(parentId, itemId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === parentId)[0];
             var index = mainRow.commands.findIndex(f => f.id === itemId);
             if (index !== -1) {
                 var itemRow = mainRow.commands[index];
@@ -463,59 +460,86 @@ export default {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
-        deleteItemRow(mainId, itemId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
+        deleteItemRow(parentId, itemId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === parentId)[0];
             var index = mainRow.commands.findIndex(f => f.id === itemId);
             if (index !== -1) {
-                mainRow.commands.splice(index, 1);
+                this.$messageConfirm("系统提示", "确定要删除吗？", (isConfirm) => {
+                    if (isConfirm) {
+                        this.$setBusy();
+                        this.$axios.get("/api/commandGroup/deleteMyCommandItem?id=" + itemId).then((response) => {
+                            this.$clearBusy();
+                            console.log(response);
+                            if (response.data) {
+                                mainRow.commands.splice(index, 1);
+                                this.$messageSuccess('System Tip', 'Delete Success')
+                            }
+                        }).catch((err) => {
+                            this.$clearBusy();
+                            console.log(err)
+                            this.$messageError('System Tip', err)
+                        })
+                    }
+                })
             } else {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
         onItemSubmit(data) {
-            var mainRow = this.mainTableRows.filter(f => f.id === data.mainId)[0];
-            var index = mainRow.commands.findIndex(f => f.id === data.id);
-            if (index !== -1) {
-                var row = mainRow.commands[index];
-                row.myIndex = data.myIndex
-                row.parentIndex = data.parentIndex
-                row.name = data.name
-                row.type = data.type
-                row.interval = data.interval
-                row.timeout = data.timeout
-                row.operate = data.operate
-                row.content = data.type === 1 ? data.image.name : data.content
-                row.image = data.image
-                row.imageBase64String = data.image
-                row.count = data.count
-                row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
-                row.getIndex = data.getIndex
-                row.remark = data.remark
-            } else {
-                mainRow.commands.push({
-                    mainId: data.mainId,
-                    id: data.id,
-                    myIndex: data.myIndex,
-                    parentIndex: data.parentIndex,
-                    name: data.name,
-                    type: data.type,
-                    interval: data.interval,
-                    timeout: data.timeout,
-                    operate: data.operate,
-                    content: data.type === 1 ? data.image.name : data.content,
-                    image: data.image,
-                    imageBase64String: data.image,
-                    count: data.count,
-                    isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
-                    getIndex: data.getIndex,
-                    remark: data.remark,
-                    commands: [],//初始化子表集合
-                })
-            }
+            this.$setBusy();
+            this.$axios.post("/api/commandGroup/saveMyCommandItem", data).then((response) => {
+                this.$clearBusy();
+                console.log(response)
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Save Success')
+
+                    var mainRow = this.mainTableRows.filter(f => f.id === data.parentId)[0];
+                    var index = mainRow.commands.findIndex(f => f.id === data.id);
+                    if (index !== -1) {
+                        var row = mainRow.commands[index];
+                        row.myIndex = data.myIndex
+                        row.parentIndex = data.parentIndex
+                        row.name = data.name
+                        row.type = data.type
+                        row.interval = data.interval
+                        row.timeout = data.timeout
+                        row.operate = data.operate
+                        row.content = data.type === 1 ? data.image : data.content
+                        row.count = data.count
+                        row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
+                        row.getIndex = data.getIndex
+                        row.remark = data.remark
+                    } else {
+                        mainRow.commands.push({
+                            parentId: data.parentId,
+                            id: data.id,
+                            myIndex: data.myIndex,
+                            parentIndex: data.parentIndex,
+                            name: data.name,
+                            type: data.type,
+                            interval: data.interval,
+                            timeout: data.timeout,
+                            operate: data.operate,
+                            content: data.type === 1 ? data.image : data.content,
+                            count: data.count,
+                            isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
+                            getIndex: data.getIndex,
+                            remark: data.remark,
+                            commands: [],//初始化子表集合
+                        })
+                    }
+                } else {
+                    this.$messageWarn('System Tip', 'Save Fail')
+                }
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', 'Save Fail')
+            })
         },
         onItemReset() {
             var data = {
-                mainId: '',
+                parentId: '',
                 id: '',
                 myIndex: 0,
                 parentIndex: null,
@@ -526,7 +550,6 @@ export default {
                 operate: -1,
                 content: '',
                 image: '',
-                imageBase64String: null,
                 count: 1,
                 isThrowExceptionIfNoFind: true,
                 getIndex: 0,
@@ -538,24 +561,33 @@ export default {
         },
 
 
-        showDetail(mainId, itemId) {
-            this.curMainId = mainId;
+        showDetail(parentId, itemId) {
+            this.curParentId = parentId;
             this.curItemId = itemId;
 
-            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curParentId)[0];
             var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
 
-            this.detailTableRows = itemRow.commands;
-
-            this.$refs['childmodal'].show()
+            this.$setBusy();
+            this.$axios.get("/api/commandGroup/getCommandByParentIdList?parentId=" + itemId + "&isIncludeItem=true").then((response) => {
+                this.$clearBusy();
+                console.log(response);
+                itemRow.commands = response.data;
+                this.detailTableRows = itemRow.commands;
+                this.$refs['childmodal'].show()
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', err)
+            })
         },
         hideDetailModal() {
-            this.curMainId = '';
+            this.curParentId = '';
             this.curItemId = '';
             this.$refs['childmodal'].hide()
         },
         newDetailModal() {
-            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curParentId)[0];
             var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
 
             var detailIndexs = itemRow.commands.map(m => m.myIndex).sort(function (a, b) { return b - a });
@@ -569,7 +601,7 @@ export default {
             this.$refs.detailForm.showMyModal();
         },
         editDetailModal(detailId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curParentId)[0];
             var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
             var index = itemRow.commands.findIndex(f => f.id === detailId);
             if (index !== -1) {
@@ -581,60 +613,90 @@ export default {
             }
         },
         deleteDetailRow(detailId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
+            var mainRow = this.mainTableRows.filter(f => f.id === this.curParentId)[0];
             var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
             var index = itemRow.commands.findIndex(f => f.id === detailId);
             if (index !== -1) {
-                itemRow.commands.splice(index, 1);
+                this.$messageConfirm("系统提示", "确定要删除吗？", (isConfirm) => {
+                    if (isConfirm) {
+                        this.$setBusy();
+                        this.$axios.get("/api/commandGroup/deleteMyCommandItem?id=" + detailId).then((response) => {
+                            this.$clearBusy();
+                            console.log(response);
+                            if (response.data) {
+                                itemRow.commands.splice(index, 1);
+                                this.$messageSuccess('System Tip', 'Delete Success')
+                            }
+                        }).catch((err) => {
+                            this.$clearBusy();
+                            console.log(err)
+                            this.$messageError('System Tip', err)
+                        })
+                    }
+                })
             } else {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
         onDetailSubmit(data) {
-            var mainRow = this.mainTableRows.filter(f => f.id === this.curMainId)[0];
-            var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
-            var index = itemRow.commands.findIndex(f => f.id === data.id);
-            if (index !== -1) {
-                var row = itemRow.commands[index];
-                row.name = data.name
-                row.remark = data.remark
-                row.myIndex = data.myIndex
-                row.parentIndex = data.parentIndex
-                row.name = data.name
-                row.type = data.type
-                row.interval = data.interval
-                row.timeout = data.timeout
-                row.operate = data.operate
-                row.content = data.type === 1 ? data.image.name : data.content
-                row.image = data.image
-                row.imageBase64String = data.image
-                row.count = data.count
-                row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
-                row.getIndex = data.getIndex
-                row.remark = data.remark
-            } else {
-                itemRow.commands.push({
-                    id: data.id,
-                    myIndex: data.myIndex,
-                    parentIndex: data.parentIndex,
-                    name: data.name,
-                    type: data.type,
-                    interval: data.interval,
-                    timeout: data.timeout,
-                    operate: data.operate,
-                    content: data.type === 1 ? data.image.name : data.content,
-                    image: data.image,
-                    imageBase64String: data.image,
-                    count: data.count,
-                    isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
-                    getIndex: data.getIndex,
-                    remark: data.remark,
-                    commands: [],//初始化子表集合
-                })
-            }
+            data.parentId = this.curItemId;
+
+            this.$setBusy();
+            this.$axios.post("/api/commandGroup/saveMyCommandItem", data).then((response) => {
+                this.$clearBusy();
+                console.log(response)
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Save Success')
+
+                    var mainRow = this.mainTableRows.filter(f => f.id === this.curParentId)[0];
+                    var itemRow = mainRow.commands.filter(f => f.id === this.curItemId)[0];
+                    var index = itemRow.commands.findIndex(f => f.id === data.id);
+                    if (index !== -1) {
+                        var row = itemRow.commands[index];
+                        row.name = data.name
+                        row.remark = data.remark
+                        row.myIndex = data.myIndex
+                        row.parentIndex = data.parentIndex
+                        row.name = data.name
+                        row.type = data.type
+                        row.interval = data.interval
+                        row.timeout = data.timeout
+                        row.operate = data.operate
+                        row.content = data.type === 1 ? data.image : data.content
+                        row.count = data.count
+                        row.isThrowExceptionIfNoFind = data.isThrowExceptionIfNoFind
+                        row.getIndex = data.getIndex
+                        row.remark = data.remark
+                    } else {
+                        itemRow.commands.push({
+                            parentId: data.parentId,
+                            id: data.id,
+                            myIndex: data.myIndex,
+                            parentIndex: data.parentIndex,
+                            name: data.name,
+                            type: data.type,
+                            interval: data.interval,
+                            timeout: data.timeout,
+                            operate: data.operate,
+                            content: data.type === 1 ? data.image : data.content,
+                            count: data.count,
+                            isThrowExceptionIfNoFind: data.isThrowExceptionIfNoFind,
+                            getIndex: data.getIndex,
+                            remark: data.remark,
+                            commands: [],//初始化子表集合
+                        })
+                    }
+                } else {
+                    this.$messageWarn('System Tip', 'Save Fail')
+                }
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', 'Save Fail')
+            })
         },
-        runNow(mainId){
-            this.$axios.get("/api/taskScheduler/startCommandGroupJobByTemp?id=" + mainId).then((response) => {
+        runNow(parentId) {
+            this.$axios.get("/api/taskScheduler/startCommandGroupJobByTemp?id=" + parentId).then((response) => {
                 console.log(response);
                 if (response.data === true) {
                     this.$messageSuccess('System Tip', 'Success')
@@ -647,10 +709,6 @@ export default {
             })
         },
 
-
-        getImageUrl(value) {
-            return this.$common.getObjectURL(value);
-        },
         initSelectData() {
             var firstForm = this.itemForm[0].form;
             var index_type = firstForm.findIndex(f => f.field === "type")

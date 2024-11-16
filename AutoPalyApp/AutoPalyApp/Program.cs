@@ -18,7 +18,10 @@ namespace AutoPalyApp
             #region 初始化Web
             var webBuilder = WebApplication.CreateBuilder();
             webBuilder.WebHost.UseUrls("http://localhost:5000");//指定 C# 服务的端口
-            webBuilder.Services.AddControllers();
+            webBuilder.Services.AddControllers(options =>
+            {
+                options.Filters.Add(new ExceptionFilter());//记录全局异常日志
+            });
 #if DEBUG
             webBuilder.Services.AddCors(options =>
             {
@@ -32,7 +35,8 @@ namespace AutoPalyApp
 
             //给Web服务注册依赖注入
             webBuilder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-            webBuilder.Host.ConfigureContainer<ContainerBuilder>(builder => {
+            webBuilder.Host.ConfigureContainer<ContainerBuilder>(builder =>
+            {
                 builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                     .AsImplementedInterfaces()
                     .InstancePerLifetimeScope();

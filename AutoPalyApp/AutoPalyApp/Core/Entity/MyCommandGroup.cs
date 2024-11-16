@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using AutoPalyApp.Core.Dto;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AutoPalyApp.Core.Dto
+namespace AutoPalyApp.Core.Entity
 {
     [Table("CommandGroup_Main")]
-    public class CommandGroup
+    public class MyCommandGroup
     {
         /// <summary>
         /// 【唯一Id】可以用GUID，对应定时任务
@@ -24,10 +25,5 @@ namespace AutoPalyApp.Core.Dto
         /// 【备注】
         /// </summary>
         public string Remark { get; set; } = "";
-
-        /// <summary>
-        /// 【命令脚本】
-        /// </summary>
-        public List<Command> Commands { get; set; } = new List<Command>();
     }
 }

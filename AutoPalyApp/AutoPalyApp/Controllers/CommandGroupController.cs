@@ -1,9 +1,7 @@
-﻿using AutoPalyApp.Controllers.Model;
-using AutoPalyApp.Core;
+﻿using AutoPalyApp.Core;
 using AutoPalyApp.Core.Dto;
-using AutoPalyApp.Helper;
+using AutoPalyApp.Core.Entity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace AutoPalyApp.Controllers
 {
@@ -18,50 +16,31 @@ namespace AutoPalyApp.Controllers
             _myCommandGroupManager = myCommandGroupManager;
         }
 
-        public async Task<List<CommandGroupOutputDto>> GetAllJsonList()
+        public async Task<List<MyCommandGroupDto>> GetCommandGroupListAsync(bool isIncludeItem = false)
         {
-            List<CommandGroupOutputDto> output = new List<CommandGroupOutputDto>();
-            var rootPath = _myCommandGroupManager.Value.GetFileUrl();
-            if (!Directory.Exists(rootPath))
-            {
-                return output;
-            }
-
-            var jsonFiils = Directory.GetFiles(rootPath)
-                .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
-                .Select(s => Path.GetFileName(s))
-                .ToList();
-
-            foreach (var file in jsonFiils)
-            {
-                var data = MyFileHelper.ReadJsonFile<CommandGroupOutputDto>(file, rootPath);
-                if (data != null)
-                {
-                    foreach (var item in data.Commands)
-                    {
-                        if (item.Type == CommandTypeEnum.Image)
-                        {
-                            item.ImageBase64String = CommonHelper.ConvertImageToBase64($"{rootPath}\\{data.Id}\\{item.Content}");
-                        }
-                    }
-                    output.Add(data);
-                }
-            }
-            return await Task.FromResult(output);
+            return await _myCommandGroupManager.Value.GetCommandGroupListAsync(isIncludeItem);
         }
-
+        public async Task<List<MyCommandDto>> getCommandByParentIdListAsync(string parentId, bool isIncludeItem = false)
+        {
+            return await _myCommandGroupManager.Value.GetCommandByParentIdListAsync(parentId, isIncludeItem);
+        }
         [HttpPost]
-        public async Task<bool> SaveJsonFile()
+        public async Task<bool> SaveMyCommandGroupAsync(MyCommandGroup inputDto)
         {
-            var inputDto = JsonConvert.DeserializeObject<CommandGroup>(Request.Form["groupData"].ToString());
-            var files = Request.Form.Files;
-            var output = _myCommandGroupManager.Value.SaveJsonFile(inputDto, files);
-            return await Task.FromResult(output);
+            return await _myCommandGroupManager.Value.SaveMyCommandGroupAsync(inputDto);
         }
-
-        public async Task<bool> DeleteJsonFile(string id)
+        [HttpPost]
+        public async Task<bool> SaveMyCommandItemAsync(MyCommand inputDto)
         {
-            return await Task.FromResult(_myCommandGroupManager.Value.DeleteJsonFile(id));
+            return await _myCommandGroupManager.Value.SaveMyCommandItemAsync(inputDto);
+        }
+        public async Task<bool> DeleteMyCommandGroupAsync(string id)
+        {
+            return await _myCommandGroupManager.Value.DeleteMyCommandGroupAsync(id);
+        }
+        public async Task<bool> DeleteMyCommandItemAsync(string id)
+        {
+            return await _myCommandGroupManager.Value.DeleteMyCommandItemAsync(id);
         }
     }
 }

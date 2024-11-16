@@ -1,7 +1,9 @@
 ﻿using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Core.Entity;
 using AutoPalyApp.Core.Jobs;
 using AutoPalyApp.Helper;
 using AutoPalyApp.Helper.JobHelper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AutoPalyApp.Core
 {
@@ -14,68 +16,98 @@ namespace AutoPalyApp.Core
             _myWorkProgramManager = myWorkProgramManager;
         }
 
-        public string GetFileUrl()
+        public async Task<List<MyJobInfoDto>> GetJobListAsync(bool isIncludeItem = false)
         {
-            return $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\TaskJson";
-        }
-
-        public List<MyJobInfo> GetMyJobInfos()
-        {
-            var rootPath = GetFileUrl();
-            if (!Directory.Exists(rootPath))
+            using var db = new MyEfContext();
+            var mains = await db.MyJobInfos.Select(s => s).ProjectToEx<MyJobInfoDto>().ToListAsync();
+            if (isIncludeItem)
             {
-                return new List<MyJobInfo>();
-            }
-            var jsonFiles = Directory.GetFiles(rootPath)
-               .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
-               .Select(s => Path.GetFileName(s))
-               .ToList();
-
-            List<MyJobInfo> output = new List<MyJobInfo>();
-            foreach (var file in jsonFiles)
-            {
-                var data = MyFileHelper.ReadJsonFile<MyJobInfo>(file, rootPath);
-                if (data != null)
+                var ids = mains.Select(s => s.Id).ToList();
+                var items = await db.MyTriggerInfos.Where(w => ids.Any(a => a == w.JobId)).AsNoTracking().ToListAsync();
+                foreach (var main in mains)
                 {
-                    output.Add(data);
+                    main.Triggers = items.Where(w => w.JobId == main.Id).ToList();
                 }
             }
-            return output;
+            return mains;
         }
 
-        public bool SaveJsonFile(MyJobInfo jobInfo)
+        public async Task<List<MyTriggerInfo>> GetTriggerListAsync(string mainId)
         {
-            try
-            {
-                var rootPath = GetFileUrl();
-                MyFileHelper.SaveJsonFile($"{jobInfo.Id}.json", jobInfo, rootPath);
+            using var db = new MyEfContext();
+            return await db.MyTriggerInfos.Where(w => w.JobId == mainId).Select(s => s).AsNoTracking().ToListAsync();
+        }
 
-                return true;
-            }
-            catch (Exception ex)
+        public async Task<MyJobInfoDto?> GetJobByIdAsync(string id)
+        {
+            using var db = new MyEfContext();
+            return await db.MyJobInfos.Where(w => w.Id == id).Select(s => s).ProjectToEx<MyJobInfoDto>().SingleOrDefaultAsync();
+        }
+
+        public async Task<MyTriggerInfo?> GetTriggerByIdAsync(string id)
+        {
+            using var db = new MyEfContext();
+            return await db.MyTriggerInfos.Where(w => w.Id == id).Select(s => s).AsNoTracking().SingleOrDefaultAsync();
+        }
+
+        public async Task<bool> SaveMyJobInfoAsync(MyJobInfo inputDto)
+        {
+            using var db = new MyEfContext();
+            var job = await db.MyJobInfos.AsNoTracking().FirstOrDefaultAsync(s => s.Id == inputDto.Id);
+            if (job == null)
             {
-                MyLogHelper.Error(ex.Message, ex);
+                await db.MyJobInfos.AddAsync(inputDto);
+            }
+            else
+            {
+                db.MyJobInfos.Update(inputDto);
+            }
+            var res = await db.SaveChangesAsync();
+            return res > 0;
+        }
+
+        public async Task<bool> SaveMyTriggerInfoAsync(MyTriggerInfo inputDto)
+        {
+            using var db = new MyEfContext();
+            var job = await db.MyTriggerInfos.AsNoTracking().FirstOrDefaultAsync(s => s.Id == inputDto.Id);
+            if (job == null)
+            {
+                await db.MyTriggerInfos.AddAsync(inputDto);
+            }
+            else
+            {
+                db.MyTriggerInfos.Update(inputDto);
+            }
+            var res = await db.SaveChangesAsync();
+            return res > 0;
+        }
+
+        public async Task<bool> DeleteMyJobInfoAsync(string id)
+        {
+            using var db = new MyEfContext();
+            var job = await db.MyJobInfos.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (job != null)
+            {
+                db.MyJobInfos.Remove(job);
+
+                var triggers = await db.MyTriggerInfos.Where(w => w.JobId == id).Select(s => s).AsNoTracking().ToListAsync();
+                db.MyTriggerInfos.RemoveRange(triggers);
+
+                var res = await db.SaveChangesAsync();
+                return res > 0;
             }
             return false;
-
         }
 
-        public bool DeleteJsonFile(string id)
+        public async Task<bool> DeleteMyTriggerInfoAsync(string id)
         {
-            try
+            using var db = new MyEfContext();
+            var trigger = await db.MyTriggerInfos.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (trigger != null)
             {
-                var rootPath = GetFileUrl();
-                var jsonPath = $"{rootPath}\\{id}.json";
-                if (File.Exists(jsonPath))
-                {
-                    File.Delete(jsonPath);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MyLogHelper.Error(ex.Message, ex);
+                db.MyTriggerInfos.Remove(trigger);
+                var res = await db.SaveChangesAsync();
+                return res > 0;
             }
             return false;
         }
@@ -84,69 +116,39 @@ namespace AutoPalyApp.Core
         /// 立即触发一次执行
         /// </summary>
         /// <param name="commandGroupId"></param>
-        public void StartCommand(string commandGroupId)
+        public async Task StartCommandAsync(string commandGroupId)
         {
-            _myWorkProgramManager.Value.RunCommand(commandGroupId + ".json");
+            await _myWorkProgramManager.Value.RunCommandAsync(commandGroupId);
         }
 
-        /// <summary>
-        /// 测试用
-        /// </summary>
-        public void TestTaskStart()
+        public async Task<bool> StartCommandGroupJobAsync(string jobId, string triggerId)
         {
-            string job;
-            string trigger;
-            MyJobHelper.StartTempJob<TempTestJob>("0/3 * * * * ?", out job, out trigger);
-            MyLogHelper.Info($"临时测试：job：{job}|trigger：{trigger}");
-
-            string job2;
-            string trigger2;
-            MyJobHelper.StartTempJob<TempTestJob>("0/7 * * * * ?", out job2, out trigger2);
-            MyLogHelper.Info($"临时测试：job：{job2}|trigger：{trigger2}");
-
-            //MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key", "job组别", "job描述", "触发器唯一Key", "触发器组别", "触发器描述", "0/5 * * * * ?", "test111", "test222");
-            //MyJobHelper.AddJobAndTrigger<TempTestJob>("Job唯一Key_2", "job组别", "job描述_2", "触发器唯一Key_2", "触发器组别", "触发器描述_2", "0/7 * * * * ?", "test333", "test444");
-        }
-
-        public bool StartCommandGroupJob(string jobId, string triggerId)
-        {
-            var rootPath = GetFileUrl();
-            if (!Directory.Exists(rootPath))
-            {
-                return false;
-            }
-            var jsonFile = Directory.GetFiles(rootPath)
-               .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
-               .Where(s => Path.GetFileName(s) == jobId)
-               .SingleOrDefault();
-
-            if (jsonFile == null)
-            {
-                return false;
-            }
-
-            var jobInfo = MyFileHelper.ReadJsonFile<MyJobInfo>(jsonFile, rootPath);
+            var jobInfo = await GetJobByIdAsync(jobId);
             if (jobInfo == null)
             {
                 return false;
             }
-            var triggerInfo = jobInfo.Triggers.Where(w => w.Id == triggerId).SingleOrDefault();
+
+            var triggerInfo = await GetTriggerByIdAsync(triggerId);
             if (triggerInfo == null)
             {
                 return false;
             }
 
-            MyJobHelper.AddJobAndTrigger<CommandGroupJob>(jobInfo.Key, jobInfo.Group, jobInfo.Description, triggerInfo.Key, triggerInfo.Group, triggerInfo.Description, triggerInfo.Cron, "MuMu模拟器12", $"{triggerInfo.CommandGroupId}.json");
+            MyJobHelper.AddJobAndTrigger<CommandGroupJob>(jobInfo.Key, jobInfo.Group, jobInfo.Description, triggerInfo.Key, triggerInfo.Group, triggerInfo.Description, triggerInfo.Cron, "MuMu模拟器12", triggerInfo.CommandGroupId);
             return true;
         }
 
-        public bool StartCommandGroupJobByTemp(string commandGroupId)
+        public async Task<bool> StartCommandGroupJobByTempAsync(string commandGroupId)
         {
-            string job;
-            string trigger;
-            MyJobHelper.StartTempJob<CommandGroupJob>("* * 22 * * ?", out job, out trigger, "MuMu模拟器12", $"{commandGroupId}.json", "", true);
-            MyLogHelper.Info($"临时启动：job：{job}|trigger：{trigger}"); 
-            return true;
+            return await Task.Factory.StartNew(() =>
+            {
+                string job;
+                string trigger;
+                MyJobHelper.StartTempJob<CommandGroupJob>("* * 22 * * ?", out job, out trigger, "MuMu模拟器12", commandGroupId, "", true);
+                MyLogHelper.Info($"临时启动：job：{job}|trigger：{trigger}");
+                return true;
+            });
         }
     }
 }

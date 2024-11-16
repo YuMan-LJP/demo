@@ -1,4 +1,5 @@
-﻿using AutoPalyApp.Helper;
+﻿using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Helper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AutoPalyApp.Controllers
@@ -17,22 +18,16 @@ namespace AutoPalyApp.Controllers
             return await Task.FromResult(false);
         }
 
-        public async Task<int> TestApi()
+#if DEBUG
+        /// <summary>
+        /// 测试后端发送消息通知给前端
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> TestApi()
         {
-            using (MyEfContext db = new MyEfContext())
-            {
-                db.MyTriggerInfos.Add(new Core.Dto.MyTriggerInfo
-                {
-                    Id = "1",
-                    CommandGroupId = "1",
-                    Cron = "1",
-                    Description = "1",
-                    Group = "1",
-                    Key = "1",
-                    MainId = "1",
-                });
-                return await db.SaveChangesAsync();
-            }
+            Form1.SendMessageToWebView(new WebViewMessageDto("vueMessageEvent", new { Arg1 = "后端返回的参数1", Arg2 = "后端返回的参数2", arg3 = "后端返回的参数3" }));
+            return await Task.FromResult(true);
         }
+#endif
     }
 }

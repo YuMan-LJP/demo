@@ -44,9 +44,9 @@ namespace AutoPalyApp.Helper
             }
         }
 
-        public static void WriteMessageTxt(string fileName, string message)
+        public static void WriteMessageTxt(string fileName, string message, string rootPath)
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
+            //var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);
@@ -71,9 +71,9 @@ namespace AutoPalyApp.Helper
             }
         }
 
-        public static List<string> ReadTxtByLine(string fileName)
+        public static List<string> ReadTxtByLine(string fileName, string rootPath)
         {
-            var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
+            //var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\File\\Txt";
             if (!Directory.Exists(rootPath))
             {
                 Directory.CreateDirectory(rootPath);

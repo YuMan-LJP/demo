@@ -8,5 +8,10 @@ module.exports = defineConfig({
   //       additionalData: `@import "@/styles/custom.scss";`// @为目录src的别名
   //     }
   //   }
-  // }
+  // },
+  devServer:{
+    client: {
+      overlay: false,//解决页面弹出红色报错遮罩层
+    }
+  }
 })

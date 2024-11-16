@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AutoPalyApp.Core.Dto
+namespace AutoPalyApp.Core.Entity
 {
     [Table("TaskScheduler_Job")]
     public class MyJobInfo
@@ -12,7 +12,5 @@ namespace AutoPalyApp.Core.Dto
         public string Group { get; set; } = "";
 
         public string Description { get; set; } = "";
-
-        public List<MyTriggerInfo> Triggers { get; set; }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using AutoPalyApp.Core.Dto;
 
-namespace AutoPalyApp.Core.Dto
+namespace AutoPalyApp.Core.Entity
 {
     [Table("CommandGroup_Item")]
-    public class Command
+    public class MyCommand
     {
         /// <summary>
         /// 系统使用的GUID
         /// </summary>
-        public string MainId { get; set; } = "";
+        public string ParentId { get; set; } = "";
 
         /// <summary>
         /// 系统使用的GUID
@@ -52,6 +53,7 @@ namespace AutoPalyApp.Core.Dto
 
         /// <summary>
         /// 【内容】图片相对地址、需要识别的文字内容、休眠等待的时间
+        /// 存储到sqlite时直接存base64数据
         /// </summary>
         public string Content { get; set; } = "";
 
@@ -71,10 +73,5 @@ namespace AutoPalyApp.Core.Dto
         public int GetIndex { get; set; } = 0;
 
         public string Remark { get; set; } = "";
-
-        /// <summary>
-        /// 【命令脚本】可能这一个命令下面包含多个子命令，需要按【特殊指令】进行循环执行
-        /// </summary>
-        public List<Command>? Commands { get; set; }
     }
 }

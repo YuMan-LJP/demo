@@ -26,9 +26,6 @@
                         <b-button variant="danger" @click="deleteMainRow(data.item.id)">{{ $t("app.delete")
                         }}</b-button>
                     </b-button-group>
-                    <b-button-group>
-                        <b-button variant="primary" @click="saveMainodal(data.item.id)">{{ $t("app.save") }}</b-button>
-                    </b-button-group>
                 </template>
 
                 <template v-slot:row-details="row">
@@ -70,8 +67,9 @@
                                         <b-button variant="danger" @click="deleteItemRow(row.item.id, data.item.id)">{{
                                             $t("app.delete") }}</b-button>
                                     </b-button-group>
-                                    <b-button-group>
-                                        <b-button variant="primary" @click="startCommandGroupJob(row.item.id, data.item.id)">启动</b-button>
+                                    <b-button-group size="sm">
+                                        <b-button variant="primary"
+                                            @click="startCommandGroupJob(row.item.id, data.item.id)">启动</b-button>
                                     </b-button-group>
                                 </template>
                             </b-table>
@@ -186,7 +184,7 @@ export default {
                 {
                     title: '请填写表单',
                     form: [
-                        { field: 'mainId', value: 0, type: 'number', isShow: false },//主表Id
+                        { field: 'jobId', value: 0, type: 'number', isShow: false },//主表Id
                         { field: 'id', value: '', type: 'text', label: 'GUID', isShow: true, isDisabled: true },//自动生成，禁止输入
                         { field: 'key', value: '', type: 'text', label: 'key', placeholder: '请输入Key', description: '必填', isShow: true, isRequired: true },
                         { field: 'group', value: '', type: 'text', label: 'Group', placeholder: '请输入Group', description: '必填', isShow: true, isRequired: true },
@@ -205,10 +203,13 @@ export default {
     },
     methods: {
         getMainTable() {
-            this.$axios.get("/api/taskScheduler/getAllJsonList").then((response) => {
+            this.$setBusy();
+            this.$axios.get("/api/taskScheduler/getJobList?isIncludeItem=true").then((response) => {
+                this.$clearBusy();
                 console.log(response);
                 this.mainTableRows = response.data;
             }).catch((err) => {
+                this.$clearBusy();
                 console.log(err)
                 this.$messageError('System Tip', err)
             })
@@ -223,8 +224,8 @@ export default {
             this.$refs.mainForm.setFormValue(data);
             this.$refs.mainForm.showMyModal();
         },
-        editMainModal(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
+        editMainModal(jobId) {
+            var index = this.mainTableRows.findIndex(f => f.id === jobId);
             if (index !== -1) {
                 var row = this.mainTableRows[index];
                 this.$refs.mainForm.setFormValue(row);
@@ -233,17 +234,21 @@ export default {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
-        deleteMainRow(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
+        deleteMainRow(jobId) {
+            var index = this.mainTableRows.findIndex(f => f.id === jobId);
             if (index !== -1) {
                 var mainRow = this.mainTableRows[index];
-                this.$axios.get("/api/taskScheduler/deleteJsonFile?id=" + mainRow.id).then((response) => {
+
+                this.$setBusy();
+                this.$axios.get("/api/taskScheduler/deleteMyJobInfo?id=" + mainRow.id).then((response) => {
+                    this.$clearBusy();
                     console.log(response);
                     if (response.data) {
                         this.mainTableRows.splice(index, 1);
                         this.$messageSuccess('System Tip', 'Delete Success')
                     }
                 }).catch((err) => {
+                    this.$clearBusy();
                     console.log(err)
                     this.$messageError('System Tip', err)
                 })
@@ -251,61 +256,49 @@ export default {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
-        saveMainodal(mainId) {
-            var index = this.mainTableRows.findIndex(f => f.id === mainId);
-            if (index !== -1) {
-                var row = this.mainTableRows[index];
-
-                let formData = new FormData();
-                formData.append('jobInfo', JSON.stringify(row))
-
-                this.$axios.post("/api/taskScheduler/SaveJsonFile", formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then((response) => {
-                    console.log(response)
-                    if (response.data === true) {
-                        this.$messageSuccess('System Tip', 'Save Success')
-                    } else {
-                        this.$messageWarn('System Tip', 'Save Fail')
-                    }
-                }).catch((err) => {
-                    console.log(err)
-                    this.$messageError('System Tip', 'Save Fail')
-                })
-            } else {
-                this.$messageError('System Tip', 'NoFound')
-            }
-        },
         onMainSubmit(data) {
-            var index = this.mainTableRows.findIndex(f => f.id === data.id);
-            if (index !== -1) {
-                var row = this.mainTableRows[index];
-                row.key = data.key
-                row.group = data.group
-                row.description = data.description
-            } else {
-                this.mainTableRows.push({
-                    id: data.id,
-                    key: data.key,
-                    group: data.group,
-                    description: data.description,
-                    triggers: [],//初始化子表集合
-                })
-            }
+            this.$setBusy();
+            this.$axios.post("/api/taskScheduler/saveMyJobInfo", data).then((response) => {
+                this.$clearBusy();
+                console.log(response)
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Save Success')
+
+                    var index = this.mainTableRows.findIndex(f => f.id === data.id);
+                    if (index !== -1) {
+                        var row = this.mainTableRows[index];
+                        row.key = data.key
+                        row.group = data.group
+                        row.description = data.description
+                    } else {
+                        this.mainTableRows.push({
+                            id: data.id,
+                            key: data.key,
+                            group: data.group,
+                            description: data.description,
+                            triggers: [],//初始化子表集合
+                        })
+                    }
+                } else {
+                    this.$messageWarn('System Tip', 'Save Fail')
+                }
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', 'Save Fail')
+            })
         },
 
-        newItemModal(mainId) {
+        newItemModal(jobId) {
             var data = {
-                mainId: mainId,
+                jobId: jobId,
                 id: this.$common.getGuid(),//生成GUID作为Key，并且不能编辑
             }
             this.$refs.itemForm.setFormValue(data);
             this.$refs.itemForm.showMyModal();
         },
-        editItemModal(mainId, itemId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
+        editItemModal(jobId, itemId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === jobId)[0];
             var index = mainRow.triggers.findIndex(f => f.id === itemId);
             if (index !== -1) {
                 var itemRow = mainRow.triggers[index];
@@ -315,40 +308,71 @@ export default {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
-        deleteItemRow(mainId, itemId) {
-            var mainRow = this.mainTableRows.filter(f => f.id === mainId)[0];
+        deleteItemRow(jobId, itemId) {
+            var mainRow = this.mainTableRows.filter(f => f.id === jobId)[0];
             var index = mainRow.triggers.findIndex(f => f.id === itemId);
             if (index !== -1) {
-                mainRow.triggers.splice(index, 1);
+                this.$messageConfirm("系统提示", "确定要删除吗？", (isConfirm) => {
+                    if (isConfirm) {
+                        this.$setBusy();
+                        this.$axios.get("/api/commandGroup/deleteMyTriggerInfo?id=" + itemId).then((response) => {
+                            this.$clearBusy();
+                            console.log(response);
+                            if (response.data) {
+                                mainRow.triggers.splice(index, 1);
+                                this.$messageSuccess('System Tip', 'Delete Success')
+                            }
+                        }).catch((err) => {
+                            this.$clearBusy();
+                            console.log(err)
+                            this.$messageError('System Tip', err)
+                        })
+                    }
+                })
             } else {
                 this.$messageError('System Tip', 'NoFound')
             }
         },
         onItemSubmit(data) {
-            var mainRow = this.mainTableRows.filter(f => f.id === data.mainId)[0];
-            var index = mainRow.triggers.findIndex(f => f.id === data.id);
-            if (index !== -1) {
-                var row = mainRow.triggers[index];
-                row.key = data.key
-                row.group = data.group
-                row.description = data.description
-                row.cron = data.cron
-                row.commandGroupId = data.commandGroupId
-            } else {
-                mainRow.triggers.push({
-                    mainId: data.mainId,
-                    id: data.id,
-                    key: data.key,
-                    group: data.group,
-                    description: data.description,
-                    cron: data.cron,
-                    commandGroupId: data.commandGroupId,
-                })
-            }
+            this.$setBusy();
+            this.$axios.post("/api/taskScheduler/saveMyTriggerInfo", data).then((response) => {
+                this.$clearBusy();
+                console.log(response)
+                if (response.data === true) {
+                    this.$messageSuccess('System Tip', 'Save Success')
+
+                    var mainRow = this.mainTableRows.filter(f => f.id === data.jobId)[0];
+                    var index = mainRow.triggers.findIndex(f => f.id === data.id);
+                    if (index !== -1) {
+                        var row = mainRow.triggers[index];
+                        row.key = data.key
+                        row.group = data.group
+                        row.description = data.description
+                        row.cron = data.cron
+                        row.commandGroupId = data.commandGroupId
+                    } else {
+                        mainRow.triggers.push({
+                            jobId: data.jobId,
+                            id: data.id,
+                            key: data.key,
+                            group: data.group,
+                            description: data.description,
+                            cron: data.cron,
+                            commandGroupId: data.commandGroupId,
+                        })
+                    }
+                } else {
+                    this.$messageWarn('System Tip', 'Save Fail')
+                }
+            }).catch((err) => {
+                this.$clearBusy();
+                console.log(err)
+                this.$messageError('System Tip', 'Save Fail')
+            })
         },
 
-        startCommandGroupJob(mainId, itemId) {
-            this.$axios.get("/api/taskScheduler/startCommandGroupJob?jobId=" + mainId + '&triggerId=' + itemId).then((response) => {
+        startCommandGroupJob(jobId, itemId) {
+            this.$axios.get("/api/taskScheduler/startCommandGroupJob?jobId=" + jobId + '&triggerId=' + itemId).then((response) => {
                 console.log(response);
                 if (response.data === true) {
                     this.$messageSuccess('System Tip', 'Success')
@@ -361,7 +385,7 @@ export default {
             })
         },
         initSelectData() {
-            this.$axios.get("/api/taskScheduler/getCommandGroupList").then((response) => {
+            this.$axios.get("/api/taskScheduler/getCommandGroupSelectList").then((response) => {
                 console.log(response);
                 this.commandGroupList = response.data;
 
@@ -370,7 +394,7 @@ export default {
                 firstForm[index_type].options = [
                     { text: '请选择', id: -1, disabled: true },
                 ]
-                this.commandGroupList.forEach(f => firstForm[index_type].options.push({ text: f, id: f }))
+                this.commandGroupList.forEach(f => firstForm[index_type].options.push(f))
             }).catch((err) => {
                 console.log(err)
                 this.$messageError('System Tip', err)

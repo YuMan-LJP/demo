@@ -141,8 +141,12 @@ namespace AutoPalyApp.Helper
             return OcrToPoint(matchText);
         }
 
-        private Point OcrToPoint(OcrData data)
+        private Point? OcrToPoint(OcrData data)
         {
+            if (data.Box == null)
+            {
+                return null;
+            }
             var maxX = data.Box.Max(m => m[0]);
             var minX = data.Box.Min(m => m[0]);
             var maxY = data.Box.Max(m => m[1]);
@@ -157,8 +161,12 @@ namespace AutoPalyApp.Helper
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        private string StringAdapter(string text)
+        private string StringAdapter(string? text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return "";
+            }
             var result = Regex.Match(text, @"[a-zA-Z0-9_\u4e00-\u9fa5 ]+");
             if (result != null)
             {

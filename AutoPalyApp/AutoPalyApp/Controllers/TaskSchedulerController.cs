@@ -1,7 +1,7 @@
 ﻿using AutoPalyApp.Core;
 using AutoPalyApp.Core.Dto;
+using AutoPalyApp.Core.Entity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace AutoPalyApp.Controllers
 {
@@ -18,55 +18,43 @@ namespace AutoPalyApp.Controllers
             _myCommandGroupManager = myCommandGroupManager;
         }
 
-        public async Task<List<MyJobInfo>> GetAllJsonList()
+        public async Task<List<MyJobInfoDto>> GetJobListAsync(bool isIncludeItem = false)
         {
-            return await Task.FromResult(_myTaskSchedulerManager.Value.GetMyJobInfos());
+            return await _myTaskSchedulerManager.Value.GetJobListAsync(isIncludeItem);
         }
-
-        public async Task<List<string>> GetCommandGroupList()
+        public async Task<List<MyTriggerInfo>> GetTriggerListAsync(string mainId)
         {
-            var rootPath = _myCommandGroupManager.Value.GetFileUrl();
-            if (!Directory.Exists(rootPath))
-            {
-                return new List<string>();
-            }
-
-            var files = Directory.GetFiles(rootPath)
-                .Where(w => Path.GetExtension(w).Equals(".json", StringComparison.CurrentCultureIgnoreCase))
-                .Select(s => Path.GetFileNameWithoutExtension(s))//文件名就是Id
-                .ToList();
-            return await Task.FromResult(files);
+            return await _myTaskSchedulerManager.Value.GetTriggerListAsync(mainId);
         }
-
+        public async Task<List<SelectDto>> GetCommandGroupSelectListAsync()
+        {
+            return await _myCommandGroupManager.Value.GetCommandGroupSelectListAsync();
+        }
         [HttpPost]
-        public async Task<bool> SaveJsonFile()
+        public async Task<bool> SaveMyJobInfoAsync(MyJobInfoDto inputDto)
         {
-            var inputDto = JsonConvert.DeserializeObject<MyJobInfo>(Request.Form["jobInfo"].ToString());
-            var files = Request.Form.Files;
-            var output = _myTaskSchedulerManager.Value.SaveJsonFile(inputDto);
-            return await Task.FromResult(output);
+            return await _myTaskSchedulerManager.Value.SaveMyJobInfoAsync(inputDto);
         }
-
-        public async Task<bool> DeleteJsonFile(string id)
+        [HttpPost]
+        public async Task<bool> SaveMyTriggerInfoAsync(MyTriggerInfo inputDto)
         {
-            return await Task.FromResult(_myTaskSchedulerManager.Value.DeleteJsonFile(id));
+            return await _myTaskSchedulerManager.Value.SaveMyTriggerInfoAsync(inputDto);
         }
-
-        public async Task<bool> StartCommandGroupJob(string jobId, string triggerId)
+        public async Task DeleteMyJobInfoAsync(string id)
         {
-            return await Task.FromResult(_myTaskSchedulerManager.Value.StartCommandGroupJob(jobId, triggerId));
+            await _myTaskSchedulerManager.Value.DeleteMyJobInfoAsync(id);
         }
-
-        public async Task<bool> StartCommandGroupJobByTemp(string id)
+        public async Task DeleteMyTriggerInfoAsync(string id)
         {
-            return await Task.FromResult(_myTaskSchedulerManager.Value.StartCommandGroupJobByTemp(id));
+            await _myTaskSchedulerManager.Value.DeleteMyTriggerInfoAsync(id);
         }
-
-        public async Task<bool> TestApi()
+        public async Task<bool> StartCommandGroupJobAsync(string jobId, string triggerId)
         {
-            //_myTaskSchedulerManager.Value.TestTaskStart();
-            Form1.SendMessageToWebView(new WebViewMessageDto("vueMessageEvent", new { Arg1 = "后端返回的参数1", Arg2 = "后端返回的参数2", arg3 = "后端返回的参数3" }));
-            return await Task.FromResult(true);
+            return await _myTaskSchedulerManager.Value.StartCommandGroupJobAsync(jobId, triggerId);
+        }
+        public async Task<bool> StartCommandGroupJobByTempAsync(string id)
+        {
+            return await _myTaskSchedulerManager.Value.StartCommandGroupJobByTempAsync(id);
         }
     }
 }

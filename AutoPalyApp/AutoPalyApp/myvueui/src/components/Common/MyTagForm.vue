@@ -28,16 +28,14 @@
                                     v-model="formItem.value" :id="'input-' + index">
                                     {{ formItem.description }}
                                 </b-form-checkbox>
-                                <div
-                                    v-else-if="formItem.type === 'textarea' && formItem.isShow && !formItem.isDisabled">
+                                <div v-else-if="formItem.type === 'textarea' && formItem.isShow && !formItem.isDisabled">
                                     <textarea class="form-control" :id="'input-' + index" rows="3"
                                         v-model="formItem.value"></textarea>
                                 </div>
-                                <div
-                                    v-else-if="formItem.type === 'uploadimage' && formItem.isShow && !formItem.isDisabled">
+                                <div v-else-if="formItem.type === 'uploadimage' && formItem.isShow && !formItem.isDisabled">
                                     <input type="file" accept="image/png,image/jpeg"
-                                        @change="uploadimage($event, formItem.field)" />
-                                    <img :src="getImageUrl(formItem.imageBase64String)" width="50px">
+                                        @change="uploadimage($event, formItem.base64Field)" />
+                                    <img :src="getImageBase64(formItem.base64Field)" width="50px">
                                     <p>{{ formItem.placeholder }}</p>
                                 </div>
                                 <div v-else-if="formItem.isDisabled && formItem.isShow">
@@ -129,10 +127,9 @@ export default {
                         continue;
                     }
                     if (item.type === "uploadimage") {
-                        if (!item.value) {
+                        var base64 = this.getImageBase64(item.base64Field);
+                        if (!base64) {
                             emptyLabels.push(item.label);
-                        } else {
-                            object[item.base64Field] = item.imageBase64String
                         }
                     } else if (item.type === "select") {
                         if (item.value === item.NullValue) {
@@ -165,8 +162,6 @@ export default {
                         item.value = 0;
                     } else if (item.type === "checkbox") {
                         item.value = false;
-                    } else if (item.type === "uploadimage") {
-                        item.imageBase64String = "";
                     } else {
                         item.value = "";
                     }
@@ -183,11 +178,6 @@ export default {
         setFormValue(data) {
             for (var tagItem of this.myTagForm) {
                 for (var item of tagItem.form) {
-                    if (item.type === "uploadimage") {
-                        if (data.imageBase64String) {
-                            item.imageBase64String = data[item.base64Field];
-                        }
-                    }
                     if (data[item.field] === undefined) {
                         continue;
                     }
@@ -216,24 +206,29 @@ export default {
         },
         uploadimage(e, field) {
             let file = e.target.files[0];
-            for (var tagItem of this.myTagForm) {
-                for (var item of tagItem.form) {
-                    if (item.field === field) {
-                        item.value = file;
-
-                        if (item.base64Field) {
-                            item.imageBase64String = file;
+            this.$common.fileToBase64(file).then((base64) => {
+                for (var tagItem of this.myTagForm) {
+                    for (var item of tagItem.form) {
+                        if (item.field === field) {
+                            item.value = base64;
                         }
                     }
                 }
-            }
+            });
         },
 
-        
-        getImageUrl(value){
-            return this.$common.getObjectURL(value);
+        getImageBase64(base64Field) {
+            var base64 = "";
+            for (var tagItem of this.myTagForm) {
+                for (var item of tagItem.form) {
+                    if (item.field === base64Field) {
+                        base64 = item.value;
+                    }
+                }
+            }
+            return base64;
         },
-        
+
     },
     created() {
         this.guid = this.$common.getGuid();

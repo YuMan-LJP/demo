@@ -1,8 +1,7 @@
-﻿using AdvancedSharpAdbClient.DeviceCommands;
-using AdvancedSharpAdbClient;
+﻿using AdvancedSharpAdbClient;
+using AdvancedSharpAdbClient.DeviceCommands;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.Receivers;
-using OpenCvSharp;
 
 namespace AutoPalyApp.Helper
 {
@@ -196,14 +195,14 @@ namespace AutoPalyApp.Helper
             await GetDeviceClientInstance().ClickAsync(x, y);
         }
 
-        public async Task InputTapAsync(System.Drawing.Point point)
+        public async Task InputTapAsync(Point point)
         {
             //adb shell input tap X Y
             //X Y分别为当前屏幕下的x和y轴坐标值
             await GetDeviceClientInstance().ClickAsync(point);
         }
 
-        public void InputTap(System.Drawing.Point point)
+        public void InputTap(Point point)
         {
             //adb shell input tap X Y
             //X Y分别为当前屏幕下的x和y轴坐标值
@@ -217,7 +216,7 @@ namespace AutoPalyApp.Helper
             await GetDeviceClientInstance().SwipeAsync(x1, y1, x2, y2, 1000 * 1);
         }
 
-        public async Task InputSwipeAsync(System.Drawing.Point first, System.Drawing.Point second)
+        public async Task InputSwipeAsync(Point first, Point second)
         {
             //adb shell input swipe X1 Y1 X2 Y2
             //X1 Y1 和X2 Y2分别为滑动起始点的坐标
@@ -230,7 +229,7 @@ namespace AutoPalyApp.Helper
             await GetAdbClientInstance().PullAsync(GetDeviceClientInstance().Device, path, fileStream);
         }
 
-        public async Task<System.Drawing.Point?> GetPointByTextAsync(string text, int index = 0)
+        public async Task<Point?> GetPointByTextAsync(string text, int index = 0)
         {
             var tempImagePath = await ScreencapAsync();
 
@@ -255,7 +254,7 @@ namespace AutoPalyApp.Helper
             return result;
         }
 
-        public async Task<System.Drawing.Point?> GetPointByImageAsync(string imageName, bool isShowMat = false)
+        public async Task<Point?> GetPointByImagePathAsync(string imageName, bool isShowMat = false)
         {
             var rootPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\App_Data\\Temp";
             if (!Directory.Exists(rootPath))
@@ -264,27 +263,7 @@ namespace AutoPalyApp.Helper
             }
 
             var tempImagePath = await ScreencapAsync();
-
-            //识别目标图片在原图片中的位置
-            Mat source = new Mat(tempImagePath, ImreadModes.AnyColor);
-            Mat target = new Mat($"{rootPath}\\{imageName}", ImreadModes.AnyColor);
-            //Cv2.Resize(target, target, new Size(55, 45));//分辨率不一样时，一定要转换到一样的比例在来比较，不然很难匹配到，图片大小比例影响很大
-
-            Mat result = new Mat();
-            Cv2.MatchTemplate(source, target, result, TemplateMatchModes.CCoeffNormed);
-            OpenCvSharp.Point minLoc, maxLoc;
-            double minValue, maxValue;
-            Cv2.MinMaxLoc(result, out minValue, out maxValue, out minLoc, out maxLoc);//68*215  231*267
-
-            if (isShowMat)
-            {
-                Mat mask = source.Clone();
-                //画框显示
-                Cv2.Rectangle(mask, maxLoc, new OpenCvSharp.Point(maxLoc.X + target.Cols, maxLoc.Y + target.Rows), Scalar.Green, 2);
-                Cv2.ImShow("mask", mask);
-                Cv2.WaitKey(0);
-                Cv2.DestroyAllWindows();
-            }
+            var result = MyOpenCvHelper.GetPointByImagePath(tempImagePath, $"{rootPath}\\{imageName}", isShowMat);
 
             try
             {
@@ -298,11 +277,27 @@ namespace AutoPalyApp.Helper
                 MyLogHelper.Error(ex.Message, ex);
             }
 
-            if (maxValue > 0.9)//匹配精确的至少要7以上
+            return result;
+        }
+
+        public async Task<Point?> GetPointByImageBase64Async(string imageBase64, bool isShowMat = false)
+        {
+            var tempImagePath = await ScreencapAsync();
+            var result = MyOpenCvHelper.GetPointByImageBase64(tempImagePath, imageBase64, isShowMat);
+
+            try
             {
-                return new System.Drawing.Point(maxLoc.X, maxLoc.Y);
+                if (File.Exists(tempImagePath))
+                {
+                    File.Delete(tempImagePath);
+                }
             }
-            return null;
+            catch (Exception ex)
+            {
+                MyLogHelper.Error(ex.Message, ex);
+            }
+
+            return result;
         }
     }
 }
