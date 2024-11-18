@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace AutoPalyApp.Core
 {
-    public class MyWorkProgramManager : IMyWorkProgramManager
+    public class MyWorkProgramManager : MyManagerBase, IMyWorkProgramManager
     {
         private readonly IMyCommandGroupManager _myCommandGroupManager;
 

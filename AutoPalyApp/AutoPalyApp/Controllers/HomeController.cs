@@ -6,7 +6,7 @@ namespace AutoPalyApp.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class HomeController : ControllerBase
+    public class HomeController : MyControllerBase
     {
         public async Task<bool> ShowMessageBox(string msg)
         {

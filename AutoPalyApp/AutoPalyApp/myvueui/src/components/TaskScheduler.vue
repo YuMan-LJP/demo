@@ -210,8 +210,6 @@ export default {
                 this.mainTableRows = response.data;
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         },
         newMainModal() {
@@ -249,8 +247,6 @@ export default {
                     }
                 }).catch((err) => {
                     this.$clearBusy();
-                    console.log(err)
-                    this.$messageError('System Tip', err)
                 })
             } else {
                 this.$messageError('System Tip', 'NoFound')
@@ -284,8 +280,6 @@ export default {
                 }
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', 'Save Fail')
             })
         },
 
@@ -324,8 +318,6 @@ export default {
                             }
                         }).catch((err) => {
                             this.$clearBusy();
-                            console.log(err)
-                            this.$messageError('System Tip', err)
                         })
                     }
                 })
@@ -366,8 +358,6 @@ export default {
                 }
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', 'Save Fail')
             })
         },
 
@@ -380,8 +370,6 @@ export default {
                     this.$messageWarn('System Tip', 'Fail')
                 }
             }).catch((err) => {
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         },
         initSelectData() {
@@ -396,8 +384,6 @@ export default {
                 ]
                 this.commandGroupList.forEach(f => firstForm[index_type].options.push(f))
             }).catch((err) => {
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         }
     },

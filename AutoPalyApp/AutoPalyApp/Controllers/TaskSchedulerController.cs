@@ -7,7 +7,7 @@ namespace AutoPalyApp.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class TaskSchedulerController : ControllerBase
+    public class TaskSchedulerController : MyControllerBase
     {
         private readonly Lazy<IMyTaskSchedulerManager> _myTaskSchedulerManager;
         private readonly Lazy<IMyCommandGroupManager> _myCommandGroupManager;

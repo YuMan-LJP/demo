@@ -5,3 +5,65 @@ $body-color: #111;
 // Then import Bootstrap and BootstrapVue SCSS files (order is important)
 @import 'node_modules/bootstrap/scss/bootstrap.scss';
 @import 'node_modules/bootstrap-vue/src/index.scss';
+
+
+.treeBox {
+    width: 240px;
+    border: 1px solid pink;
+    box-sizing: border-box;
+    padding: 4px 0;
+}
+
+.my-tree-wrap {
+    width: 100%;
+
+    .noData {
+        color: #666;
+        font-size: 14px;
+    }
+}
+
+// 通过css解决树结构缩进问题，且要搭配.my-tree-wrap > .treeNodeItem { padding: 0; } (子元素选择器，并非后代元素选择器)
+.my-tree-wrap>.treeNodeItem {
+    padding: 0; // 优化树节点缩进效果，可注释掉看效果
+}
+
+.treeNodeItem {
+    width: 100%;
+    height: auto;
+    // 通过css解决树结构缩进问题，且要搭配.my-tree-wrap > .treeNodeItem { padding: 0; } (子元素选择器，并非后代元素选择器)
+    padding-left: 12px;
+
+    .iconAndName {
+        width: 100%;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-sizing: border-box;
+
+        .treeNodeItemIcon {
+            margin-right: 4px;
+        }
+
+        .treeNodeItemName {
+            color: #666;
+            word-break: keep-all; // 不换行
+        }
+
+        // 位置对齐一下
+        .noChildrenIcon {
+            margin-left: 20px;
+        }
+    }
+
+    .iconAndName:hover {
+        background-color: #f5f7fa;
+    }
+
+    // 搭配tabindex='-1'设置选中聚焦时的背景色
+    .iconAndName:focus {
+        background-color: #f5f7fa;
+    }
+}

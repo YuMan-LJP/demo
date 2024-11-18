@@ -9,48 +9,54 @@ import Helper from '../components/Helper'
 import CommandGroup from '../components/CommandGroup'
 import TaskScheduler from '../components/TaskScheduler'
 import CommandLog from '../components/CommandLog'
+import StartConfigure from '../components/StartConfigure'
 
 //创建并暴露一个路由器
 export default new VueRouter({
-    routes:[
+    routes: [
         {
-            path:'/helloworld',
-            component:HelloWorld
+            path: '/helloworld',
+            component: HelloWorld
         },
         {
-            path:'/about',
+            path: '/about',
             name: 'about',
-            component:About
+            component: About
         },
         {
-            path:'/home',
+            path: '/home',
             name: 'home',
-            component:Home
+            component: Home
         },
         {
-            path:'/',
+            path: '/',
             name: 'index',
-            component:Index
+            component: Index
         },
         {
-            path:'/helper',
+            path: '/helper',
             name: 'helper',
-            component:Helper
+            component: Helper
         },
         {
-            path:'/commandGroup',
+            path: '/commandGroup',
             name: 'commandGroup',
-            component:CommandGroup
+            component: CommandGroup
         },
         {
-            path:'/taskScheduler',
+            path: '/taskScheduler',
             name: 'taskScheduler',
-            component:TaskScheduler
+            component: TaskScheduler
         },
         {
-            path:'/commandLog',
+            path: '/commandLog',
             name: 'commandLog',
-            component:CommandLog
+            component: CommandLog
+        },
+        {
+            path: '/startConfigure',
+            name: 'startConfigure',
+            component: StartConfigure
         }
     ]
 })

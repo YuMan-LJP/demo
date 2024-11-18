@@ -1,5 +1,6 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AutoPalyApp.Helper;
 using System.Reflection;
 
 namespace AutoPalyApp

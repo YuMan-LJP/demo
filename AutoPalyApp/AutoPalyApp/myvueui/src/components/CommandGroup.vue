@@ -7,6 +7,8 @@
                 <b-button-group class="mx-1">
                     <b-button variant="success" @click="newMainModal">{{ $t("app.create") }}</b-button>
                     <b-button variant="success" @click="getMainTable">{{ $t("app.refresh") }}</b-button>
+                    <b-button variant="secondary" @click="$router.push('startConfigure')">{{
+                        $t("commandGroup.StartConfigure") }}</b-button>
                 </b-button-group>
             </b-button-toolbar>
 
@@ -53,7 +55,20 @@
                                 <b-button variant="success" @click="newItemModal(row.item.id)">
                                     {{ $t("app.create") + ' Command' }}</b-button>
                             </b-button-group>
+                            <b-button-group class="mx-1">
+                                <b-button variant="primary" @click="itemChangeShow(row.item.id)">显示转换</b-button>
+                            </b-button-group>
                         </b-button-toolbar>
+
+                        <div class="treeBox" v-if="treeData.length>0 && isShowTree">
+                            <div class="text-sm-left">
+                            <b-button-group size="sm">
+                                <b-button variant="success" @click="expandTree = true">+</b-button>
+                                <b-button variant="danger" @click="expandTree = false">-</b-button>
+                            </b-button-group>
+                            </div>
+                            <MyTree :treeData="treeData" nameField="name" childrenField="commands" :expandTree="expandTree" @fold="fold" @clickTree="clickTree" clickNameClose></MyTree>
+                        </div>
 
                         <div>
                             <b-table striped small hover :ref="'itemTable' + row.index" :fields="itemTableColumns"
@@ -146,11 +161,13 @@
 
 <script>
 import MyForm from './Common/MyTagForm.vue'
+import MyTree from "./Common/MyTree"
 
 export default {
     name: 'About',
     components: {
-        MyForm
+        MyForm,
+        MyTree
     },
     data() {
         return {
@@ -336,6 +353,10 @@ export default {
             curParentId: '',
             curItemId: '',
             detailTableRows: [],
+
+            isShowTree: false,
+            treeData:[],
+            expandTree: true,
         }
     },
     methods: {
@@ -347,8 +368,6 @@ export default {
                 this.mainTableRows = response.data;
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         },
         newMainModal() {
@@ -385,8 +404,6 @@ export default {
                             }
                         }).catch((err) => {
                             this.$clearBusy();
-                            console.log(err)
-                            this.$messageError('System Tip', err)
                         })
                     }
                 })
@@ -422,8 +439,6 @@ export default {
                 }
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', 'Save Fail')
             })
         },
 
@@ -476,8 +491,6 @@ export default {
                             }
                         }).catch((err) => {
                             this.$clearBusy();
-                            console.log(err)
-                            this.$messageError('System Tip', err)
                         })
                     }
                 })
@@ -533,8 +546,6 @@ export default {
                 }
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', 'Save Fail')
             })
         },
         onItemReset() {
@@ -559,6 +570,17 @@ export default {
             this.$refs.itemForm.updateFormItem('content', true, true);
             this.$refs.itemForm.setFormValue(data);
         },
+        itemChangeShow(parentId) {
+            this.isShowTree = !this.isShowTree;
+            var mainRow = this.mainTableRows.filter(f => f.id === parentId)[0];
+            this.treeData = mainRow.commands
+        },
+        fold(params, key) {
+            console.log("fold", params, key);
+        },
+        clickTree(params) {
+            console.log("clickTree", params);
+        },
 
 
         showDetail(parentId, itemId) {
@@ -577,8 +599,6 @@ export default {
                 this.$refs['childmodal'].show()
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         },
         hideDetailModal() {
@@ -629,8 +649,6 @@ export default {
                             }
                         }).catch((err) => {
                             this.$clearBusy();
-                            console.log(err)
-                            this.$messageError('System Tip', err)
                         })
                     }
                 })
@@ -691,8 +709,6 @@ export default {
                 }
             }).catch((err) => {
                 this.$clearBusy();
-                console.log(err)
-                this.$messageError('System Tip', 'Save Fail')
             })
         },
         runNow(parentId) {
@@ -704,8 +720,6 @@ export default {
                     this.$messageWarn('System Tip', 'Fail')
                 }
             }).catch((err) => {
-                console.log(err)
-                this.$messageError('System Tip', err)
             })
         },
 

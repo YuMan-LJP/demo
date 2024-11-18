@@ -1,0 +1,40 @@
+{
+  //--通用的
+  "app.title": "LJP App",
+  "app.home": "Home",
+  "app.about": "About",
+  "app.helper": "Helper",
+  "app.languages": "Languages",
+  "app.search": "Search",
+  "app.selected": "Selected {number}",
+  "app.total": "Total {total}",
+  "app.pageNo": "Page {number}",
+  "app.number": "Line {number}",
+  "app.prepage": "{number} rows per page",
+  "app.create": "Create",
+  "app.edit": "Edit",
+  "app.delete": "Delete",
+  "app.selectall": "Select all",
+  "app.unselectall": "Clear selected",
+  "app.switch": "Switch",
+  "app.save": "Save",
+  "app.refresh": "Refresh",
+  "app.systemTips": "System Tips",
+  //--通用的
+
+  //--命令组
+  "commandGroup.title": "Command Group",
+  "commandGroup.runNow": "Run Now",
+  "commandGroup.StartConfigure": "Start Configure",
+  //--命令组
+
+  //--任务调度
+  "taskScheduler.title": "Task Scheduler",
+  //--任务调度
+
+  //--命令日志
+  "commandLog.title": "Command Log",
+  //--命令日志
+
+  "appStartNotOpen": "The app is not open"
+}

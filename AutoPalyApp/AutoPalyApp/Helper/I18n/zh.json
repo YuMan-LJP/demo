@@ -1,0 +1,40 @@
+{
+  //--通用的
+  "app.title": "LJP 应用程序",
+  "app.home": "主页",
+  "app.about": "关于",
+  "app.helper": "帮助",
+  "app.languages": "语言",
+  "app.search": "查询",
+  "app.selected": "已选择 {number} 行",
+  "app.total": "共 {total} 条",
+  "app.pageNo": "第 {number} 页",
+  "app.number": "第 {number} 行",
+  "app.prepage": "{number} 行每页",
+  "app.create": "创建",
+  "app.edit": "编辑",
+  "app.delete": "删除",
+  "app.selectall": "选择全部",
+  "app.unselectall": "取消已选",
+  "app.switch": "切换",
+  "app.save": "保存",
+  "app.refresh": "刷新",
+  "app.systemTips": "系统提示",
+  //--通用的
+
+  //--命令组
+  "commandGroup.title": "命令组",
+  "commandGroup.runNow": "立即运行",
+  "commandGroup.StartConfigure": "开始配置",
+  //--命令组
+
+  //--任务调度
+  "taskScheduler.title": "任务调度",
+  //--任务调度
+
+  //--命令日志
+  "commandLog.title": "命令日志",
+  //--命令日志
+
+  "appStartNotOpen": "没有开启App"
+}

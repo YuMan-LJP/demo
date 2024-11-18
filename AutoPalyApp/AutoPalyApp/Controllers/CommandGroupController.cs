@@ -7,7 +7,7 @@ namespace AutoPalyApp.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class CommandGroupController : ControllerBase
+    public class CommandGroupController : MyControllerBase
     {
         private readonly Lazy<IMyCommandGroupManager> _myCommandGroupManager;
 

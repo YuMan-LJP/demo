@@ -54,6 +54,15 @@ export default {
       // 根据监听改变获取到的值去数组里找到对应的值
       localStorage.setItem('lang', lang)
       this.$i18n.locale = lang//切换字典文件
+      this.$axios.get("/api/myConfigure/setLang?lang=" + lang);
+    },
+    getI18nLanguages() {
+      // 统一后端配置翻译，这里会合并前后端的翻译一起
+      this.$axios.get("/api/myConfigure/getI18nLanguages").then((response)=>{
+        this.$i18n.mergeLocaleMessage('en', response.data.en)
+        this.$i18n.mergeLocaleMessage('zh', response.data.zh)
+        this.$axios.get("/api/myConfigure/setLang?lang=" + this.language);
+      }).catch((err)=>{ });
     },
   },
   created() {
@@ -64,6 +73,7 @@ export default {
     } else {
       localStorage.setItem('lang', this.language)
     }
+    this.getI18nLanguages();
   },
   mounted() {
     //初始化WebView后端消息通讯

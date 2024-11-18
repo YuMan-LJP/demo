@@ -6,11 +6,11 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import VueRouter from "vue-router";
 import router from './router'//引入路由器
-import VueI18n from 'vue-i18n'
 import VueToastr from 'vue-toastr';
 import BlockUI from 'vue-blockui'
 import common from './utils/common'
 //import alert from './components/Common/alert'
+import i18n from './components/Common/i18n'
 import axios from './components/Common/axios'
 import message from './components/Common/message'
 import loading from './components/Common/loading'
@@ -23,21 +23,6 @@ Vue.use(IconsPlugin)
 
 // 注册vue-router中的所有组件
 Vue.use(VueRouter);
-
-//多语言使用方法：
-// $t：普通词
-// $tc：单复数
-// $te：check 翻译key是否存在
-// $d：时间日期
-// $n：货币数字
-Vue.use(VueI18n);
-const i18n = new VueI18n({
-  locale: localStorage.getItem('lang') || 'zh',
-  messages: {
-      'zh': require('./i18n/zh'),
-      'en': require('./i18n/en')
-  }
-})
 
 
 //http://s4l1h.github.io/vue-toastr/

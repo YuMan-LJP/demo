@@ -21,7 +21,7 @@ namespace AutoPalyApp.Core.Dto
             return config;
         }
 
-        public static IQueryable<TDestination> ProjectToEx<TDestination>(this IQueryable source, object parameters = null)
+        public static IQueryable<TDestination> ProjectToEx<TDestination>(this IQueryable source, object? parameters = null)
         {
             return source.ProjectTo<TDestination>(Get(), parameters);
         }

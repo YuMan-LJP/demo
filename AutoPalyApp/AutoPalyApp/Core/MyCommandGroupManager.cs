@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoPalyApp.Core
 {
-    public class MyCommandGroupManager : IMyCommandGroupManager
+    public class MyCommandGroupManager : MyManagerBase, IMyCommandGroupManager
     {
         public async Task<MyCommandGroupDto> GetCommandGroupByIdAsync(string jodId, bool isIncludeItem = false)
         {

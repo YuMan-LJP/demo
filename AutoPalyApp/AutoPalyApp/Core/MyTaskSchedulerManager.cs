@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoPalyApp.Core
 {
-    public class MyTaskSchedulerManager : IMyTaskSchedulerManager
+    public class MyTaskSchedulerManager : MyManagerBase, IMyTaskSchedulerManager
     {
         private readonly Lazy<IMyWorkProgramManager> _myWorkProgramManager;
 

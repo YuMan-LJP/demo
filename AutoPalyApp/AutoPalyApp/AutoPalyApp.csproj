@@ -42,6 +42,10 @@
 		<None Update="Helper\PaddleOCR-json_v1.4.1\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<!--复制I18n文件夹-->
+		<None Update="Helper\I18n\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
