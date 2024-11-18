@@ -8,7 +8,7 @@ $body-color: #111;
 
 
 .treeBox {
-    width: 240px;
+    width: 100%;
     border: 1px solid pink;
     box-sizing: border-box;
     padding: 4px 0;
@@ -56,10 +56,18 @@ $body-color: #111;
         .noChildrenIcon {
             margin-left: 20px;
         }
+
+        .treeNodeItemBtn {
+            margin-left: 10px;
+        }
+
+        .treenItemBtn:hover {
+            background-color: #c0f7c0;
+        }
     }
 
     .iconAndName:hover {
-        background-color: #f5f7fa;
+        background-color: #a0c5fc;
     }
 
     // 搭配tabindex='-1'设置选中聚焦时的背景色

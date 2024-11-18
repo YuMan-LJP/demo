@@ -2,17 +2,26 @@
   <!-- 每一个树节点包含：图标部分、名字部分，因为考虑到递归，所以再拆分一个部分，即有树子节点部分childrenTreeNode -->
   <div class="treeNodeItem">
     <!-- 图标和名字部分，设置tabindex="-1"就可设置:focus的样式了 -->
-    <div class="iconAndName" tabindex="-1" @click="clickTree">
+    <div class="iconAndName" tabindex="-1">
       <!-- 有树子节点才去渲染图标 -->
-      <b-icon v-if="item[childrenField]" @click.stop="clickIconFold" :icon="isFold ? 'chevron-right' : 'chevron-down'"></b-icon>
-      <span :class="['treeNodeItemName', item[childrenField] ? '' : 'noChildrenIcon']">{{ item[nameField] }}</span>
+      <div  @click="clickTree">
+        <b-icon v-if="item[childrenField]" @click.stop="clickIconFold" :icon="isFold ? 'chevron-right' : 'chevron-down'"></b-icon>
+        <span :class="['treeNodeItemName', item[childrenField] ? '' : 'noChildrenIcon']">{{ GetShowText() }}</span>
+      </div>
+      <div class="treeNodeItemBtn">
+        <b-icon icon="eye" class="treenItemBtn" @click="clickTreeDetail"></b-icon>
+        <b-icon icon="pencil" class="treenItemBtn" @click="clickTreeEdit"></b-icon>
+        <b-icon icon="trash" class="treenItemBtn" @click="clickTreeDelete"></b-icon>
+        <b-icon icon="plus" class="treenItemBtn" @click="clickTreeAdd"></b-icon>
+      </div>
       <!-- 注意上方几个动态样式的使用，可以去掉看效果，更加直观 -->
     </div>
     <!-- 展开折叠通过display: none来控制，进一步延伸为通过变量isFold来控制 -->
     <div :style="{ display: isFold ? 'none' : 'block', }">
       <!-- 存在子节点就遍历并递归调用自身这个组件 -->
       <template v-if="item[childrenField]">
-        <MyTreeItem v-for="(ite, ind) in item[childrenField]" :key="ind" :item="ite" :expandTree="expandTree"
+        <MyTreeItem v-for="(ite, ind) in item[childrenField]" :key="ind" :item="ite" 
+          :showTextFun="showTextFun" :expandTree="expandTree"
           :clickNameClose="clickNameClose" v-on="$listeners" v-bind="$attrs"></MyTreeItem>
       </template>
     </div>
@@ -37,6 +46,10 @@ export default {
     childrenField:{
       type: String,
       default: 'children',
+    },
+    showTextFun:{
+      type: Function,
+      default: undefined,
     },
     expandTree: Boolean, // 默认把树折叠起来
     clickNameClose: Boolean, // 点击树节点名字，也可以折叠展开菜单（本来设置只能点击图标）
@@ -66,6 +79,24 @@ export default {
         this.clickIconFold();
       }
       this.$emit("clickTree", this.item);
+    },
+    clickTreeDetail(){
+      this.$emit("clickTreeDetail", this.item);
+    },
+    clickTreeEdit(){
+      this.$emit("clickTreeEdit", this.item);
+    },
+    clickTreeDelete(){
+      this.$emit("clickTreeDelete", this.item);
+    },
+    clickTreeAdd(){
+      this.$emit("clickTreeAdd", this.item);
+    },
+    GetShowText(){
+      if(this.showTextFun){
+        return this.showTextFun(this.item);
+      }
+      return this.item[this.nameField];
     },
   },
 };

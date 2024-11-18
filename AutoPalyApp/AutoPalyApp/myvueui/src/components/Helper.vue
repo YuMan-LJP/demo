@@ -10,7 +10,12 @@
 
         <div>
             <div class="treeBox">
-                <MyTree :treeData="treeData" :expandTree="expandTree" @fold="fold" @clickTree="clickTree" clickNameClose></MyTree>
+                <MyTree :treeData="treeData" :expandTree="expandTree" @fold="fold" 
+                    @clickTree="clickTree"
+                    @clickTreeDetail="clickTreeDetail"
+                    @clickTreeEdit="clickTreeEdit"
+                    @clickTreeDelete="clickTreeDelete"
+                    @clickTreeAdd="clickTreeAdd" clickNameClose></MyTree>
             </div>
         </div>
     </div>
@@ -115,6 +120,18 @@ export default {
         },
         clickTree(params) {
             console.log("clickTree", params);
+        },
+        clickTreeDetail(params) {
+            console.log("clickTreeDetail", params);
+        },
+        clickTreeEdit(params) {
+            console.log("clickTreeEdit", params);
+        },
+        clickTreeDelete(params) {
+            console.log("clickTreeDelete", params);
+        },
+        clickTreeAdd(params) {
+            console.log("clickTreeAdd", params);
         },
     },
     mounted() {

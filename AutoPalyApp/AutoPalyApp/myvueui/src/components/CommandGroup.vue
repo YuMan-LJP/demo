@@ -67,7 +67,13 @@
                                 <b-button variant="danger" @click="expandTree = false">-</b-button>
                             </b-button-group>
                             </div>
-                            <MyTree :treeData="treeData" nameField="name" childrenField="commands" :expandTree="expandTree" @fold="fold" @clickTree="clickTree" clickNameClose></MyTree>
+                            <MyTree :treeData="treeData" nameField="name" childrenField="commands" :showTextFun="showTextFun" :expandTree="expandTree" 
+                                @fold="fold" 
+                                @clickTree="clickTree"
+                                @clickTreeDetail="clickTreeDetail"
+                                @clickTreeEdit="clickTreeEdit"
+                                @clickTreeDelete="clickTreeDelete"
+                                @clickTreeAdd="clickTreeAdd" clickNameClose></MyTree>
                         </div>
 
                         <div>
@@ -581,7 +587,24 @@ export default {
         clickTree(params) {
             console.log("clickTree", params);
         },
-
+        clickTreeDetail(params) {
+            console.log("clickTreeDetail", params);
+        },
+        clickTreeEdit(params) {
+            console.log("clickTreeEdit", params);
+            this.editItemModal(params.parentId, params.id);
+        },
+        clickTreeDelete(params) {
+            console.log("clickTreeDelete", params);
+            this.deleteItemRow(params.parentId, params.id);
+        },
+        clickTreeAdd(params) {
+            console.log("clickTreeAdd", params);
+            this.showDetail(params.parentId, params.id);
+        },
+        showTextFun(item){
+            return `[${item.myIndex}]${item.name}`;
+        },
 
         showDetail(parentId, itemId) {
             this.curParentId = parentId;

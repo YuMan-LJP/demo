@@ -6,6 +6,7 @@
       <MyTreeItem v-for="(item, index) in treeData" :key="index" :item="item" 
         :nameField="nameField"
         :childrenField="childrenField"
+        :showTextFun="showTextFun"
         :expandTree="expandTree"
         :clickNameClose="clickNameClose" v-on="$listeners" v-bind="$attrs">
       </MyTreeItem>
@@ -34,6 +35,10 @@ export default {
     childrenField:{
       type: String,
       default: 'children',
+    },
+    showTextFun:{
+      type: Function,
+      default: undefined,
     },
     expandTree: Boolean, // 是否统一展开或关闭
     iconName: String, // 树组件的小图标
