@@ -7,5 +7,12 @@ module.exports = {
     "app.systemTips.networkError": "Network error, please try again later",
     "app.systemTips.unexpectedError" : "An unexpected error occurred",
     "app.systemTips.resourceNotFound": "Resource not found",
-    "app.systemTips.responseStatus401" : "access, redirecting to login"
+    "app.systemTips.responseStatus401" : "Access, redirecting to login",
+
+    "app.add": "Add",
+    "app.edit": "Edit",
+    "app.delete": "Delete",
+    "app.confirm": "Confirm",
+    "app.cancel": "Cancel",
+    "app.selectedNumber" : "Selected {num}"
   }
