@@ -9,9 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="myvueui3\**" />
     <Compile Remove="myvueui\**" />
+    <Content Remove="myvueui3\**" />
     <Content Remove="myvueui\**" />
+    <EmbeddedResource Remove="myvueui3\**" />
     <EmbeddedResource Remove="myvueui\**" />
+    <None Remove="myvueui3\**" />
     <None Remove="myvueui\**" />
   </ItemGroup>
 
