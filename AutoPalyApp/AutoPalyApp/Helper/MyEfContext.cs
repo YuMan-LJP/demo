@@ -14,7 +14,6 @@ namespace AutoPalyApp.Helper
 #endif
         }
 
-        public DbSet<MyCommand> MyCommands { get; set; }
         public DbSet<MyCommandGroup> MyCommandGroups { get; set; }
         public DbSet<MyJobInfo> MyJobInfos { get; set; }
         public DbSet<MyTriggerInfo> MyTriggerInfos { get; set; }

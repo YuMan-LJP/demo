@@ -2,6 +2,6 @@
 {
     public interface IMyWorkProgramManager
     {
-        Task RunCommandAsync(string commandGroupId, bool isRecord = false);
+        Task RunCommandAsync(string commandGroupId);
     }
 }

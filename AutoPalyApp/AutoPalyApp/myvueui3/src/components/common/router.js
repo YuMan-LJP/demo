@@ -49,6 +49,11 @@ const routes = [
         path: '/automaticScript',
         name: 'automaticScript',
         component: () => import("../../components/layout/Automatic_Script.vue")
+    },
+    {
+        path: '/sample1',
+        name: 'sample1',
+        component: () => import("../../components/Sample1.vue")
     }
 ]
 

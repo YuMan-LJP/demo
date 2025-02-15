@@ -43,6 +43,7 @@
                 <el-sub-menu index="1-4">
                   <template #title>选项4</template>
                   <el-menu-item index="/summary">Summary概要</el-menu-item>
+                  <el-menu-item index="/sample1">样例1</el-menu-item>
                 </el-sub-menu>
               </el-sub-menu>
               <el-sub-menu index="2">

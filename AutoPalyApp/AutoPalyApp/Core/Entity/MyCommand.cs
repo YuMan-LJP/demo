@@ -1,25 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using AutoPalyApp.Core.Dto;
+﻿using AutoPalyApp.Core.Dto;
+using LiteDB;
 
 namespace AutoPalyApp.Core.Entity
 {
-    [Table("CommandGroup_Item")]
     public class MyCommand
     {
         /// <summary>
-        /// 系统使用的GUID
+        /// 【命令组】ID
         /// </summary>
-        public string ParentId { get; set; } = "";
+        public string GroupId { get; set; } = "";
 
         /// <summary>
         /// 系统使用的GUID
         /// </summary>
+        [BsonId]
         public string Id { get; set; } = "";
-
-        /// <summary>
-        /// 上一级序号，有子集合的时候使用
-        /// </summary>
-        public int? ParentIndex { get; set; }
 
         /// <summary>
         /// 【序号】命令必须按序号从小到大依次执行
@@ -29,7 +24,7 @@ namespace AutoPalyApp.Core.Entity
         /// <summary>
         /// 【命名】用户自定义
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Label { get; set; } = "";
 
         /// <summary>
         /// 【类型】图片地址的方式或文字识别的方式
@@ -72,6 +67,14 @@ namespace AutoPalyApp.Core.Entity
         /// </summary>
         public int GetIndex { get; set; } = 0;
 
+        /// <summary>
+        /// 【备注】
+        /// </summary>
         public string Remark { get; set; } = "";
+
+        /// <summary>
+        /// 嵌套子集
+        /// </summary>
+        public List<MyCommand>? Children { get; set; }
     }
 }

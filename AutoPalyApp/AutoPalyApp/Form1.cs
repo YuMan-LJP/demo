@@ -72,5 +72,25 @@ namespace AutoPalyApp
                 return false;
             }
         }
+
+        private void menuStrip1_Item2_Click(object sender, EventArgs e)
+        {
+            //退出
+        }
+
+        private void menuStrip1_Item3_Click(object sender, EventArgs e)
+        {
+            //重新启动
+        }
+
+        private void menuStrip1_Item1_SubItem1_Click(object sender, EventArgs e)
+        {
+            //配置模拟器，端口等信息，支持多种模拟器，多开
+        }
+
+        private void menuStrip1_Item1_SubItem2_Click(object sender, EventArgs e)
+        {
+            //配置端口，默认5000端口启动后端接口，如果当前端口被占用，启动程序会报错，然后这里可以修改为其他可用端口
+        }
     }
 }

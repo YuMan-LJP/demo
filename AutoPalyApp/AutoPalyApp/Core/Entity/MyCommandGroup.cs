@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoPalyApp.Core.Entity
 {
-    [Table("CommandGroup_Main")]
+    [Table("CommandGroup")]
     public class MyCommandGroup
     {
         /// <summary>
