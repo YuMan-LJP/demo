@@ -2,7 +2,7 @@ var yuman = yuman || {};
 yuman.vuepage = yuman.vuepage || {};
 yuman.vuepage.jobInfo = yuman.vuepage.jobInfo || {};
 function initJobInfo(elId) {
-    yuman.vuepage.contact = new Vue({
+    yuman.vuepage.jobInfo = new Vue({
         el: '#' + elId,
         data: {
             title: "Job Info",
