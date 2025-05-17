@@ -1,0 +1,345 @@
+/*#divApp {*/
+/*   position: absolute;*/
+/*height: auto;
+    min-height: 100%;
+    width: 100%;
+    padding-left: 15px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}*/
+/**为了保证输入框的圆角**/
+/*#divApp #pageBox {*/
+/*    position: absolute;*/
+/*height: auto;
+        min-height: 100%;
+        width: 100%;
+        overflow: hidden;
+        padding-left: 15px;
+    }*/
+#pageBox .mainTable td {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+
+#pageBox .previewimg {
+  width: auto;
+  max-width: 900px;
+  height: auto;
+  max-height: 600px;
+}
+
+#pageBox #tableList .bootstrap-table {
+  min-width: 500px;
+  width: 100%;
+  max-width: calc(100vw);
+}
+
+.modal-header {
+  padding-bottom: 0px;
+}
+
+.error {
+  color: red;
+}
+
+#pageBox .searchInputBox {
+  width: 100%;
+  padding: 5px;
+}
+
+#pageBox .searchInputBox .form-inline {
+  padding: 5px;
+  background-color: #f0f0f0;
+  width: 100%;
+}
+
+.searchInputBox .form-group {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+}
+[v-cloak] {
+  display: none !important;
+}
+.fixed-table-footer {
+  float: left;
+  top: 15px;
+  position: relative;
+  padding-left: 10px;
+  margin-bottom: 25px;
+}
+
+.shrink::before {
+  content: "\002b";
+}
+.extend,
+.shrink {
+  padding: 0px !important;
+  cursor: pointer;
+}
+.extend::before {
+  content: "\2212";
+}
+.extend::before,
+.shrink::before {
+  font-size: 25px;
+  font-weight: bold;
+  color: #3c8dbc;
+}
+.extend:hover::before,
+.shrink:hover::before {
+  opacity: 0.6;
+}
+#exall,
+#coall {
+  cursor: pointer;
+}
+
+#exall:hover,
+#coall:hover {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+#coall {
+  display: none;
+}
+.displayOn {
+  display: table-row;
+}
+.displayNone {
+  display: none;
+}
+.osptable thead th {
+  position: sticky;
+  top: 0;
+  border: 1px solid #fff;
+  text-align: center;
+  line-height: 20px !important;
+}
+.osptable thead th .th-inner {
+  background: #87cefa;
+}
+
+.osptable thead th::before {
+  content: "";
+  height: 2px;
+  width: 100%;
+  background: #fff;
+  position: absolute;
+  left: 0;
+  top: -2px;
+}
+.clearDate {
+  position: absolute;
+  top: 7px;
+  left: 105px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.clearTableDate{
+  position: absolute;
+  top: 0px;
+  right: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.close {
+  position: absolute;
+  right: 20px;
+  top: 12px;
+  font-size: 35px;
+}
+
+.close:active {
+  outline: none;
+}
+
+.autocomplete-suggestions {
+  background: #fff;
+  overflow: auto;
+}
+.autocomplete-suggestion {
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 6px;
+}
+.autocomplete-selected {
+  background: #3c8dbc;
+  color: white;
+  cursor: pointer;
+}
+/* .autocomplete-suggestions strong {
+} */
+.autocomplete-group strong {
+  display: block;
+  border-bottom: 1px solid #000;
+}
+
+/* .autocomplete-group {
+} */
+
+.poTable thead th {
+  position: sticky;
+  top: 0;
+  border: 1px solid #fff;
+  text-align: center;
+  line-height: 23px !important;
+  z-index: 99;
+}
+
+.poTable thead th[class~="sticky"] {
+  z-index: 1000 !important;
+}
+
+.sticky,
+.fix {
+  position: sticky;
+  z-index: 5;
+}
+.whiteline::before {
+  content: "";
+  height: 100%;
+  width: 1px;
+  background: #f4f4f4;
+  position: absolute;
+  left: -1px;
+  top: 0px;
+}
+.whiteline::after {
+  content: "";
+  height: 100%;
+  width: 1px;
+  background: #f4f4f4;
+  position: absolute;
+  right: -1px;
+  top: 0px;
+}
+.lastShadow::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 0;
+  height: 104%;
+  width: 5px;
+  background: linear-gradient(to right, #77777799, transparent);
+}
+th.lastShadow::after {
+  height: 105%;
+}
+
+ul {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+}
+.fixMenu,
+.formatMenu {
+  border: 1px solid #999;
+  box-shadow: 3px 3px 3px #ccc;
+  background-color: #fff;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: none;
+  z-index: 9999999;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.fixMenu li,
+.formatMenu li {
+  height: 40px;
+  line-height: 40px;
+  color: #000;
+  display: block;
+  padding: 0 20px;
+}
+.fixMenu li:hover,
+.formatMenu li:hover {
+  background-color: #d4d4d4;
+  font-weight: bold;
+  cursor: pointer;
+}
+.stickyInput {
+  width: 60px;
+  height: 30px;
+  font-weight: normal;
+  line-height: 30px;
+}
+
+.tr_select_yellow td {
+  background-color: #f7f6d0 !important;
+}
+
+.tableSelect2 .select2-selection {
+  height: 26px;
+  border: 1px solid #767676;
+  border-radius: 3px;
+}
+.tableSelect2 .select2-selection__arrow {
+  top: -2px !important;
+  height: 26px;
+}
+.tableSelect2 .select2-selection__rendered {
+  line-height: 23px !important;
+  text-align: left;
+}
+
+.smallImageLoaded {
+  max-height: 18px !important;
+  max-width: 31px;
+  margin: auto;
+  padding: 0 2px 2px;
+}
+.smallImageLoaded img {
+  height: 19px;
+}
+.smallImageLoading {
+  overflow: hidden;
+  margin: auto;
+  margin-top: 4px;
+}
+.selected td {
+  background-color: #e5e4c1 !important;
+}
+.smallImageLoading {
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.select2-container--default .select2-selection--single {
+  border-radius: 5px !important;
+}
+/* 移动端响应式适配 */
+@media screen and (max-width: 768px) {
+  #pageBox #tableList .bootstrap-table {
+    min-width: unset;
+  }
+}
+
+.ospTableSpan {
+  white-space: pre;
+}
+
+/* 通用在线表格样式 */
+.luckysheet-cols-menu, .luckysheet-modal-dialog-slider, #luckysheet-icon-morebtn-div {
+    z-index: 10001 !important;
+}
+
+.luckysheet-input-box {
+    z-index: 10000 !important;
+    line-height: 24px;
+}
+
+#luckysheet-copy-content {
+    padding-left: 0px !important;
+    opacity: 0 !important;
+    left: -9999999999px !important; /*在线表格在复制的时候有个表格挡住了部分列无法选中，将这个表格移到远远的距离*/
+}
+.textOverflow{
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/*osp-uploadlargefile组件，隐藏掉上传控件文件列表的按钮*/
+.myuploadlargefile .file-input .explorer-frame .file-actions-cell {
+    display: none;
+}

@@ -14,9 +14,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="index.html">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+		<None Update="index.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<!--复制pages文件夹-->
+		<None Update="pages\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<!--复制lib文件夹-->
+		<None Update="lib\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>
