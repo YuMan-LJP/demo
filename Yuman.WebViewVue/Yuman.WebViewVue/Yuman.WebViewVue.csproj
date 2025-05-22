@@ -9,20 +9,28 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="14.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3240.44" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Update="index.html">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="MyDatabase.db">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<!--复制pages文件夹-->
-		<None Update="pages\**">
+		<None Update="_pages\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<!--复制lib文件夹-->
-		<None Update="lib\**">
+		<None Update="_lib\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

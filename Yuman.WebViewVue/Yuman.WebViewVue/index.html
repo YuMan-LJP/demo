@@ -1,76 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
+    <meta charset="GBK" />
     <title>Index</title>
-    <link href="./lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
-    <link href="./lib/bootstrap-table/bootstrap-table.css" rel="stylesheet" />
-    <link href="./lib/select2-4.0.13/css/select2.min.css" rel="stylesheet" />
-    <link href="./lib/toastr/toastr.css" rel="stylesheet" />
-    <link href="./lib/daterangepicker/daterangepicker.css" rel="stylesheet" />
-    <link href="./lib/yuman/vueui.css" rel="stylesheet" />
-    <link href="./lib/yuman/expand.css" rel="stylesheet" />
-    <link href="./pages/_index.css" rel="stylesheet" />
-    <script src="./lib/yuman/webview.js"></script>
+    <link href="./_lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <link href="./_lib/bootstrap-table/bootstrap-table.css" rel="stylesheet" />
+    <link href="./_lib/select2-4.0.13/css/select2.min.css" rel="stylesheet" />
+    <link href="./_lib/toastr/toastr.css" rel="stylesheet" />
+    <link href="./_lib/daterangepicker/daterangepicker.css" rel="stylesheet" />
+    <link href="./_lib/yuman/vueui.css" rel="stylesheet" />
+    <link href="./_lib/yuman/expand.css" rel="stylesheet" />
+    <link href="./_pages/_index.css" rel="stylesheet" />
+    <script src="./_pages/_webview.js"></script>
 </head>
 <body>
     <script id="template" type="text/x-handlebars-template">
-        <header>
-            <h1>{{title}}</h1>
-        </header>
-        <nav>
-            <ul>
+        <div>
+            <header>
+                <h1>{{title}}</h1>
+            </header>
+        </div>
+        <div>
+            <nav>
+                <div>
+                    <ul>
+                        {{#each menus}}
+                        <li><a href="javascript:void(0)" onclick="yuman.index.changeTab('{{{this.id}}}')">{{this.name}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </nav>
+
+            <main>
                 {{#each menus}}
-                <li><a href="javascript:void(0)" onclick="yuman.index.changeTab('{{{this.id}}}')">{{this.name}}</a></li>
+                <section id="{{this.id}}" class="content">
+                    {{{this.html}}}
+                </section>
                 {{/each}}
-            </ul>
-        </nav>
+            </main>
 
-        <main>
-            {{#each menus}}
-            <section id="{{this.id}}" class="content">
-                <!--后端返回html进行拼接-->
-                {{{this.html}}}
-            </section>
-            {{/each}}
-        </main>
-
-        <footer>
-            <p>&copy; {{footer}}</p>
-        </footer>
+            <footer>
+                <p>&copy; {{footer}}</p>
+            </footer>
+        </div>
     </script>
 
-    <script src="./lib/jquery/jquery.min.js"></script>
-    <script src="./lib/vue/vue.min.js"></script>
-    <script src="./lib/moment/moment-with-locales.js"></script>
-    <script src="./lib/moment/moment-timezone-with-data.js"></script>
-    <script src="./lib/bootstrap/js/bootstrap.min.js"></script>
-    <script src="./lib/bootstrap-table/bootstrap-table.js"></script>
-    <script src="./lib/select2-4.0.13/js/select2.min.js"></script>
-    <script src="./lib/blockUI/jquery.blockUI.js"></script>
-    <script src="./lib/toastr/toastr.js"></script>
-    <script src="./lib/sweetalert/sweetalert.min.js"></script>
-    <script src="./lib/spin.js/spin.js"></script>
-    <script src="./lib/spin.js/jquery.spin.js"></script>
-    <script src="./lib/daterangepicker/daterangepicker.js"></script>
-    <script src="./lib/bootstrap-table/extensions/resizable/colResizable-1.6.js"></script>
-    <script src="./lib/bootstrap-table/extensions/resizable/bootstrap-table-resizable.js"></script>
-    <script src="./lib/handlebars/handlebars.js"></script>
+    <script src="./_lib/jquery/jquery.min.js"></script>
+    <script src="./_lib/vue/vue.min.js"></script>
+    <script src="./_lib/moment/moment-with-locales.js"></script>
+    <script src="./_lib/moment/moment-timezone-with-data.js"></script>
+    <script src="./_lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="./_lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="./_lib/select2-4.0.13/js/select2.min.js"></script>
+    <script src="./_lib/blockUI/jquery.blockUI.js"></script>
+    <script src="./_lib/toastr/toastr.js"></script>
+    <script src="./_lib/sweetalert/sweetalert.min.js"></script>
+    <script src="./_lib/spin.js/spin.js"></script>
+    <script src="./_lib/spin.js/jquery.spin.js"></script>
+    <script src="./_lib/daterangepicker/daterangepicker.js"></script>
+    <script src="./_lib/bootstrap-table/extensions/resizable/colResizable-1.6.js"></script>
+    <script src="./_lib/bootstrap-table/extensions/resizable/bootstrap-table-resizable.js"></script>
+    <script src="./_lib/handlebars/handlebars.js"></script>
 
-    <script src="./lib/yuman/spin.expand.js"></script>
-    <script src="./lib/yuman/sweet-alert.expand.js"></script>
-    <script src="./lib/yuman/dateFormatter.js"></script>
-    <script src="./lib/yuman/divCollapsible.js"></script>
-    <script src="./lib/yuman/event.expand.js"></script>
-    <script src="./lib/yuman/toastr.expand.js"></script>
-    <script src="./lib/yuman/vueui.componse.js"></script>
+    <script src="./_lib/yuman/spin.expand.js"></script>
+    <script src="./_lib/yuman/sweet-alert.expand.js"></script>
+    <script src="./_lib/yuman/dateFormatter.js"></script>
+    <script src="./_lib/yuman/divCollapsible.js"></script>
+    <script src="./_lib/yuman/event.expand.js"></script>
+    <script src="./_lib/yuman/toastr.expand.js"></script>
+    <script src="./_lib/yuman/vueui.componse.js"></script>
     <script>
         /* Localizing momentjs */
         moment.locale('zh-Hans');
     </script>
-    <script src="./pages/_index.js"></script>
-    <script src="./pages/home.js"></script>
-    <script src="./pages/jobInfo.js"></script>
-    <script src="./pages/about.js"></script>
+    <script src="./_pages/_index.js"></script>
+    <script src="./_pages/home.js"></script>
+    <script src="./_pages/jobInfo.js"></script>
+    <script src="./_pages/about.js"></script>
 </body>
 </html>

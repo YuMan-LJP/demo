@@ -1,17 +1,19 @@
+using System.Text;
+using Yuman.WebViewVue.Helper;
+
 namespace Yuman.WebViewVue
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//Ö§³ÖGB2312±àÂë
+
             ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+            //Application.Run(new Form1());
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(ConfigureHelper.ConfigureServices<Form1>());
         }
     }
 }

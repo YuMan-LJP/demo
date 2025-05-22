@@ -1,0 +1,170 @@
+/*自定义弹窗样式*/
+.sweetAlertCustomsCss {
+    width: auto; /*原始宽度478px*/
+    min-width: 478px;
+    max-width: 95%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+}
+/*自定义弹窗样式-适应手机界面*/
+@media (max-width: 499px) {
+    .sweetAlertCustomsCss {
+        width: calc(100% - 20px) !important; /*原始宽度478px*/
+        min-width: 200px !important;
+    }
+
+    .sweetAlertCustomsCss_title_left {
+        width: calc(100% - 20px) !important; /*原始宽度478px*/
+        min-width: 200px !important;
+    }
+
+    .sweetAlertCustomsCss_title_right {
+        width: calc(100% - 20px) !important; /*原始宽度478px*/
+        min-width: 200px !important;
+    }
+}
+/*自定义弹窗样式-标题居左*/
+.sweetAlertCustomsCss_title_left {
+    width: auto;
+    min-width: 478px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+}
+
+    .sweetAlertCustomsCss_title_left .swal-title {
+        text-align: left
+    }
+/*自定义弹窗样式-标题居右*/
+.sweetAlertCustomsCss_title_right {
+    width: auto;
+    min-width: 478px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+}
+
+    .sweetAlertCustomsCss_title_right .swal-title {
+        text-align: right
+    }
+
+/*统一设置模态框垂直居中*/
+.modal:after {
+    display: inline-block;
+    height: 100%;
+    margin-left: -0.05em;
+    content: "";
+    vertical-align: middle;
+}
+
+.modal {
+    text-align: center;
+}
+
+    .modal .modal-header {
+        border-bottom-color: #e5e5e5;
+    }
+
+    .modal .modal-footer {
+        border-top-color: #e5e5e5;
+    }
+
+.modal-dialog {
+    text-align: left;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.center-vertical {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.center-horizontal {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/**搜索框样式***/
+
+/**为了保证输入框的圆角**/
+
+.searchForm {
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+}
+
+.form-group label
+.form-group select,
+.form-group input,
+.form-group .select2-container--default .select2-selection--single {
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+}
+
+.form-group select,
+.form-group input,
+.form-group .select2-container--default .select2-selection--multiple {
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+}
+
+/*bootstrapTable拓展样式-支持多级按钮*/
+.dropdown-submenu {
+    position: relative;
+}
+
+    .dropdown-submenu > .dropdown-menu {
+        top: -5px;
+        left: 100%;
+        margin-top: -6px;
+        margin-left: -1px;
+        -webkit-border-radius: 0 6px 6px 6px;
+        -moz-border-radius: 0 6px 6px;
+        border-radius: 0 6px 6px 6px;
+    }
+
+    .dropdown-submenu:hover > .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-submenu .dropdown-menu a {
+        background-color: white;
+    }
+
+    .dropdown-submenu > a:after {
+        display: block;
+        content: " ";
+        float: right;
+        width: 0;
+        height: 0;
+        border-color: transparent;
+        border-style: solid;
+        border-width: 5px 0 5px 5px;
+        border-left-color: #ccc;
+        margin-top: 5px;
+        margin-right: -10px;
+    }
+
+    .dropdown-submenu:hover {
+        cursor: pointer;
+    }
+
+        .dropdown-submenu:hover > a:after {
+            border-left-color: #fff;
+        }
+
+    .dropdown-submenu.pull-left {
+        float: none;
+    }
+
+        .dropdown-submenu.pull-left > .dropdown-menu {
+            left: -100%;
+            margin-left: 10px;
+            -webkit-border-radius: 6px 0 6px 6px;
+            -moz-border-radius: 6px 0 6px 6px;
+            border-radius: 6px 0 6px 6px;
+        }

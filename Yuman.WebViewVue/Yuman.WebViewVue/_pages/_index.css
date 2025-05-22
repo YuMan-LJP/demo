@@ -1,0 +1,68 @@
+body {
+    background-color: #ecf0f5;
+}
+
+nav {
+    background-color: #333;
+    padding: 1rem;
+    width: 100px; /* 固定导航栏宽度 */
+    height: 100vh; /* 全屏高度 */
+    position: fixed; /* 固定定位 */
+    left: 0;
+    top: 50;
+}
+
+    nav ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column; /* 改为竖向排列 */
+        gap: 1rem;
+        margin: 0;
+        padding: 0;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        font-size: 1.2rem;
+        display: block; /* 让链接占满整个宽度 */
+        padding: 0.5rem;
+    }
+
+        nav a:hover {
+            color: #000; /* 悬停字体色 */
+            background-color: #77d2fd; /* 悬停背景色 */
+            border-radius: 4px;
+        }
+
+header {
+    margin-left: 10px; /* 避开左侧导航栏 */
+    background-color: white;
+    margin-right: 10px;
+}
+
+    header h1 {
+        margin-top: 10px;
+    }
+
+main {
+    margin-left: 110px; /* 避开左侧导航栏 */
+    background-color: white;
+    margin-right: 10px;
+}
+
+footer {
+    position: fixed;
+    bottom: 0px;
+    left: 110px;
+}
+
+/* 内容区域微调 */
+.content {
+    padding: 2rem;
+    display: none;
+}
+
+.active {
+    display: block;
+}

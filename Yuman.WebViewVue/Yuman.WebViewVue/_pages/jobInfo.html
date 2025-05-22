@@ -1,0 +1,54 @@
+<h1>{{title}}</h1>
+
+<div class="searchInputBox">
+    <div class="form-inline searchBoxFlex">
+        <template>
+            <div class="form-inline">
+                <yuman-ser-input v-bind="search.name"></yuman-ser-input>
+                <yuman-ser-search-reset :searchobj="button.search" :resetobj="button.reset" :dosearch="doSearch" :doreset="doReset" :search="search"></yuman-ser-search-reset>
+            </div>
+        </template>
+    </div>
+</div>
+
+<div style="margin:4px">
+    <div class="body table-responsive" id="tableList" style="overflow: visible">
+        <yuman-table v-bind="table" v-on:pagechange="pageChange" ref="mainTable">
+        </yuman-table>
+    </div>
+</div>
+
+<div id="addEditModal">
+    <yuman-modal v-bind="addEditModal" v-on:onclose="closeModal" ref="modal">
+        <template v-slot:body>
+            <div>
+                <label>ID</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" placeholder="ID" title="ID" v-model.trim="inputDto.id" disabled="true" />
+            </div>
+
+            <div>
+                <label>分组</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" placeholder="分组" title="分组" v-model.trim="inputDto.group" />
+            </div>
+
+            <div>
+                <label>名称</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" placeholder="名称" title="名称" v-model.trim="inputDto.name" />
+            </div>
+
+            <div>
+                <label>描述</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" placeholder="描述" title="描述" v-model.trim="inputDto.description" />
+            </div>
+        </template>
+
+        <template v-slot:footer>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="addEditModal.closeTitle" v-on:click="closeModal"></yuman-button>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="addEditModal.saveTitle" v-on:click="saveModal"></yuman-button>
+        </template>
+    </yuman-modal>
+</div>
