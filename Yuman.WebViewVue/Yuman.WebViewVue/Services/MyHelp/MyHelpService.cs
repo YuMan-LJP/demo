@@ -2,7 +2,7 @@
 
 namespace Yuman.WebViewVue.Services.MyHelp
 {
-    public class MyHelpService : IMyHelpService
+    public class MyHelpService : MyBaseService, IMyHelpService
     {
         public MyHelpService()
         {

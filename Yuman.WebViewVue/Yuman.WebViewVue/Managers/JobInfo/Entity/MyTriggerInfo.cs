@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Yuman.WebViewVue.Helper;
 
 namespace Yuman.WebViewVue.Managers.JobInfo.Entity
 {
@@ -8,27 +9,31 @@ namespace Yuman.WebViewVue.Managers.JobInfo.Entity
         /// <summary>
         /// 关联JobInfo的Id
         /// </summary>
+        [MyRequiredField]
         public string JobInfoId { get; set; } = "";
 
         /// <summary>
         /// GUID
         /// </summary>
+        [MyRequiredField(TranslationKey = "TriggerInfo.Id")]
         public string Id { get; set; } = "";
 
         /// <summary>
         /// 分组
         /// </summary>
+        [MyRequiredField(TranslationKey = "TriggerInfo.Group")]
         public string Group { get; set; } = "";
 
         /// <summary>
         /// 名称
         /// </summary>
+        [MyRequiredField(TranslationKey = "TriggerInfo.Name")]
         public string Name { get; set; } = "";
 
         /// <summary>
         /// 描述
         /// </summary>
-        public string Description { get; set; } = "";
+        public string? Description { get; set; }
 
         /// <summary>
         /// 是否的简单触发器
@@ -38,17 +43,17 @@ namespace Yuman.WebViewVue.Managers.JobInfo.Entity
         /// <summary>
         /// 非简单触发器时配置Cron表达式
         /// </summary>
-        public string Cron { get; set; } = "";
+        public string? Cron { get; set; }
 
         /// <summary>
         /// 简单触发器时配置间隔时间
         /// </summary>
-        public string Interval { get; set; } = "";
+        public string? Interval { get; set; }
 
         /// <summary>
         /// 见到那触发器时配置执行次数
         /// 如果是-1，表示无限执行
         /// </summary>
-        public int RunCount { get; set; }
+        public int? RunCount { get; set; }
     }
 }

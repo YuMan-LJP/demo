@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Reflection;
 using Yuman.WebViewVue.Helper;
 using Yuman.WebViewVue.Services.Dto;
 using Yuman.WebViewVue.Services.MyHelp;
@@ -12,7 +13,7 @@ namespace Yuman.WebViewVue.Services
     /// 特别注意，使用hostObjects的方法时，传入参数和返回值都是要是简单类型，不能是复杂类型（引用类型：对象之类的），不然处理起来非常麻烦，前端得到的是一个代理对象，后端返回值每个属性在前端都要单独取值，非常繁琐
     /// </summary>
     /// <returns></returns>
-    public class OpenApiService : IOpenApiService
+    public class OpenApiService : MyBaseService, IOpenApiService
     {
         private readonly IMyHelpService _myHelpService;
         private readonly IServiceProvider _serviceProvider;
@@ -94,10 +95,38 @@ namespace Yuman.WebViewVue.Services
                         var param = methodParams[i];
                         if (parameters.TryGetValue(param.Name!, out var value))
                         {
-                            args[i] = System.Text.Json.JsonSerializer.Deserialize(value, param.ParameterType, new System.Text.Json.JsonSerializerOptions
+                            object? inputObj;
+                            try
                             {
-                                PropertyNameCaseInsensitive = true//忽略大小写，属性名不管大小写，前端属性名首字母都是小写，这里忽略大小写才能读到
-                            });
+                                inputObj = System.Text.Json.JsonSerializer.Deserialize(value, param.ParameterType, new System.Text.Json.JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true//忽略大小写，属性名不管大小写，前端属性名首字母都是小写，这里忽略大小写才能读到
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"【{param.Name}】传入参数反序列化失败：{value}", ex);
+                            }
+
+                            var missFields = new HashSet<string>();
+                            var inputObjProperties = param.ParameterType.GetProperties();
+                            foreach (var inputObjProperty in inputObjProperties)
+                            {
+                                var description = inputObjProperty.GetCustomAttributes<MyRequiredFieldAttribute>().FirstOrDefault();
+                                if (description != null)
+                                {
+                                    if (string.IsNullOrWhiteSpace(inputObjProperty.GetValue(inputObj)?.ToString()))
+                                    {
+                                        missFields.Add(L(description.TranslationKey));
+                                    }
+                                }
+                            }
+                            if (missFields.Count > 0)
+                            {
+                                throw new Exception(L("RequiredButIsNull", string.Join(" | ", missFields)));
+                            }
+
+                            args[i] = inputObj;
                         }
                         else if (param.HasDefaultValue)
                         {

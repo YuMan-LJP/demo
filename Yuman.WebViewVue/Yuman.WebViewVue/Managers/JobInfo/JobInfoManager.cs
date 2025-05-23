@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 using Yuman.WebViewVue.Managers.JobInfo.Entity;
 
 namespace Yuman.WebViewVue.Managers.JobInfo
 {
-    public class JobInfoManager : IJobInfoManager
+    public class JobInfoManager : MyBaseManager, IJobInfoManager
     {
         public async Task<List<MyJobInfo>> GetJobInfosAsync(string name, int skipCount, int maxResultCount)
         {
@@ -64,6 +63,12 @@ namespace Yuman.WebViewVue.Managers.JobInfo
             }
             else
             {
+                //Group+Name唯一，同一个分组下不能出现相同的名称
+                var isExists = await db.MyJobInfos.AnyAsync(a => a.Id != jobInfo.Id && a.Group == jobInfo.Group && a.Name == jobInfo.Name);
+                if (isExists)
+                {
+                    throw new Exception(L("KeyExists", $"{L("JobInfo.Group")}+{L("JobInfo.Name")}"));
+                }
                 db.MyJobInfos.Update(jobInfo);
             }
             var res = await db.SaveChangesAsync();
@@ -80,6 +85,12 @@ namespace Yuman.WebViewVue.Managers.JobInfo
             }
             else
             {
+                //Group+Name唯一，同一个分组下不能出现相同的名称
+                var isExists = await db.MyTriggerInfos.AnyAsync(a => a.JobInfoId != triggerInfo.JobInfoId && a.Id != triggerInfo.Id && a.Group == triggerInfo.Group && a.Name == triggerInfo.Name);
+                if (isExists)
+                {
+                    throw new Exception(L("KeyExists", $"{L("JobInfo.Group")}+{L("JobInfo.Name")}"));
+                }
                 db.MyTriggerInfos.Update(triggerInfo);
             }
             var res = await db.SaveChangesAsync();

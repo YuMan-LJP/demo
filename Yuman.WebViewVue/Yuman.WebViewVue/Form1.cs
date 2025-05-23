@@ -137,7 +137,7 @@ namespace Yuman.WebViewVue
                 js.AppendLine($"        resolve(result.data);");
                 js.AppendLine($"      }}");
                 js.AppendLine($"      else {{");
-                js.AppendLine($"        yuman.message.error(result.errorMessage);");
+                js.AppendLine($"        yuman.message.error(result.errorMessage, L('SystemTips'));");
                 js.AppendLine($"        reject(result.errorMessage);");
                 js.AppendLine($"      }}");
                 js.AppendLine($"    }})");

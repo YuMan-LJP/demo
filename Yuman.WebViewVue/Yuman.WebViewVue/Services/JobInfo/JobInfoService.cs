@@ -5,7 +5,7 @@ using Yuman.WebViewVue.Services.JobInfo.Dto;
 
 namespace Yuman.WebViewVue.Services.JobInfo
 {
-    public class JobInfoService : IJobInfoService
+    public class JobInfoService : MyBaseService, IJobInfoService
     {
         private readonly IJobInfoManager _jobInfoManager;
 
