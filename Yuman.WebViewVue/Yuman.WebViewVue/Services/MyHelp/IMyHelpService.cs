@@ -1,4 +1,4 @@
-﻿using Yuman.WebViewVue.Helper;
+﻿using Yuman.WebViewVue.Helper.BasicConfigure;
 using Yuman.WebViewVue.Services.MyHelp.Dto;
 
 namespace Yuman.WebViewVue.Services.MyHelp

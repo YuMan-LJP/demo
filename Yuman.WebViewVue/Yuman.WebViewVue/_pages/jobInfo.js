@@ -5,7 +5,7 @@ function initJobInfo(elId) {
     yuman.vuepage.jobInfo = new Vue({
         el: '#' + elId,
         data: {
-            title: "Job Info",
+            title: L("JobInfo"),
             search: {
                 name: {
                     name: "name",
@@ -23,10 +23,10 @@ function initJobInfo(elId) {
             table: {
                 rows: [],
                 columns: [
-                    { field: "id", title: "ID", },
-                    { field: "group", title: "·Ö×é", },
-                    { field: "name", title: "Ãû³Æ", },
-                    { field: "description", title: "ÃèÊö", },
+                    { field: "id", title: L("JobInfo.Id"), },
+                    { field: "group", title: L("JobInfo.Group"), },
+                    { field: "name", title: L("JobInfo.Name"), },
+                    { field: "description", title: L("JobInfo.Description"), },
                 ],
                 page: {
                     pageSize: 10,

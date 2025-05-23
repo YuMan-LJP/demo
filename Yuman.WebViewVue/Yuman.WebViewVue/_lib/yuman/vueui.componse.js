@@ -630,7 +630,6 @@ var yumanSearchRadio = Vue.component('yuman-ser-radio', {
         `
 })
 
-
 // 定义名为 yuman-select2 的新组件
 var yumanSearchSelect2 = Vue.component('yuman-ser-select2', {
     // model: {
@@ -1030,7 +1029,6 @@ var yumanSearchSelect2FloatLabel = Vue.component('yuman-ser-select2-float-label'
     `
 })
 
-
 // 定义名为 yuman-dates 的新组件 ，双时间选择器
 var yumanSearchDates = Vue.component('yuman-ser-dates', {
     props: {
@@ -1143,7 +1141,6 @@ var yumanSearchDates = Vue.component('yuman-ser-dates', {
     </div>
     `
 })
-
 
 var yumanSearchDatesFloatLabel = Vue.component('yuman-ser-dates-float-label', {
     props: {
@@ -1399,7 +1396,6 @@ var yumanSearchShortDate = Vue.component('yuman-ser-date', {
     </div>
     `
 })
-
 
 // 定义名为 yuman-table 的新组件 表格
 var yumanSearchTableOld = Vue.component('yuman-table-Old', {
@@ -3320,9 +3316,6 @@ var yumanSearchTable = Vue.component('yuman-table', {
     `
 })
 
-
-
-
 // 定义名为 yuman-btn-search 的新组件
 var yumanRowTxt = Vue.component('yuman-table-txt', {
     props: {
@@ -3543,7 +3536,7 @@ var yumanRowTxt = Vue.component('yuman-table-txt', {
                     inputWastage.validity.tooShort ||
                     inputWastage.validity.typeMismatch ||
                     inputWastage.validity.valueMissing) {
-                    inputWastage.setCustomValidity(L("VansPoInformation.IntegerFormatError", L("ReleaseOrder.WastagePercent")));
+                    inputWastage.setCustomValidity(L("IntegerFormatError", this.col.title));
                 } else {
                     inputWastage.setCustomValidity("");//注意一定要清空自定义错误，不然输入什么都是错误的
                 }
@@ -3675,7 +3668,6 @@ var yumanRowTxt = Vue.component('yuman-table-txt', {
     </template>
     `
 })
-
 
 var yumanRowSelect2 = Vue.component('yuman-table-select2', {
     props: {
@@ -3859,7 +3851,6 @@ var yumanRowSelect2 = Vue.component('yuman-table-select2', {
     `
 })
 
-
 // 定义名为 yuman-btn-search 的新组件
 var yumanRowBtn = Vue.component('yuman-table-btn', {
     props: {
@@ -3918,9 +3909,6 @@ var yumanRowBtn = Vue.component('yuman-table-btn', {
     template: `<button type="button" v-if="getVisiabled()"  :disabled="getDisabled()" :title="btn.title" :name="btn.name" v-on:click="onclick" class="btn btn-xs" :class="btn.css" :style="btn.style" style="margin:0 3px;"><i :class="btn.licss"></i>{{btn.title}}</button>`
 })
 
-
-
-
 // 定义名为 yuman-table-toolbar 的新组件
 var yumanTableToolbar = Vue.component('yuman-tab-toolbar', {
     props: {
@@ -3976,7 +3964,6 @@ var yumanTableToolbar = Vue.component('yuman-tab-toolbar', {
     `
 })
 
-
 // 定义名为 yuman-btn-search 的新组件
 var yumanButton = Vue.component('yuman-button', {
     props: {
@@ -4030,7 +4017,6 @@ var yumanButton = Vue.component('yuman-button', {
     `
 })
 
-
 // 定义名为 yuman-btn-search 的新组件
 var yumanSearchButton = Vue.component('yuman-ser-search', {
     props: {
@@ -4081,7 +4067,6 @@ var yumanSearchButton = Vue.component('yuman-ser-search', {
     </div>
     `
 })
-
 
 // 定义名为 yuman-btn-search 的新组件
 var yumanResetButton = Vue.component('yuman-ser-reset', {
@@ -4170,7 +4155,6 @@ var yumanSearchResetButton = Vue.component('yuman-ser-search-reset', {
     `
 })
 
-
 yuman.vueui.yumanDatePicker = function (yumanobj, options, events) {
 
     var timepickeroption = {
@@ -4202,6 +4186,7 @@ yuman.vueui.yumanDatePicker = function (yumanobj, options, events) {
     yumanobj.daterangepicker(yumanSetting, events);
     return yumanobj;
 };
+
 yuman.vueui.yumanDatePickerShort = function (yumanobj, options, events) {
     var timepickeroption = {
         singleDatePicker: true, //单日历
@@ -4229,135 +4214,6 @@ yuman.vueui.yumanDatePickerShort = function (yumanobj, options, events) {
     return yumanobj;
 };
 
-
-//弃用
-yuman.vueui.getSearch = function (obj, page) {
-
-
-    var yumanParam = {
-        conditions: [],
-        //sort: { key: "Id", sort: "DESC" }
-    };
-    if (page.sort) {
-        yumanParam.sort = page.sort;
-    }
-    yumanParam.maxResultCount = page.pageSize;
-    yumanParam.skipCount = (page.pageIndex - 1) * page.pageSize;
-    if (obj == null) { }
-    else {
-        var keys = Object.keys(obj);
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];
-            var yumanKey = obj[key].fied;
-            if (!yumanKey) continue;
-            let unlocal = obj[key].unLocalize || false
-            var operator = obj[key].type;
-            if (obj[key].undeal && obj[key].value.value) {
-                yumanParam.conditions.push({ key: yumanKey, value: JSON.stringify(obj[key].value.value), operator: operator });
-                continue
-            }
-            var val = null;
-            //时间类型，添加两条
-            if (operator === 'Between') {
-                if (!obj[key].value.start && !obj[key].value.end)
-                    val = ""
-                else {
-                    let timeEND = obj[key].value.end
-                    if (obj[key].value.end) {    // end +1 day
-                        dateLast = new Date(obj[key].value.end)
-                        timeEND = new Date((dateLast / 1000 + 86400) * 1000).format('yyyy-MM-dd');
-                    }
-                    startDate = obj[key].value.start || ""
-                    timeEND = timeEND || ""
-                    if (startDate !== "" && unlocal === false) {
-                        try {
-                            startDate = moment.tz(startDate, 'YYYY-MM-DD', true, 'Asia/Shanghai').format();
-                        } catch (exe) { }
-                        startDate = (new Date(startDate).getTime())
-                    }
-                    if (timeEND !== "" && unlocal === false) {
-                        try {
-                            timeEND = moment.tz(timeEND, 'YYYY-MM-DD', true, 'Asia/Shanghai').format();
-                        } catch (exe) { }
-                        timeEND = new Date(timeEND).getTime()
-                    }
-                    val = startDate + "," + timeEND;
-                    // if (obj[key].value.start) {
-                    // } else {
-                    //     val = '';
-                    // }
-                }
-            }
-            else if (operator === 'In') {
-                var yumanValue = obj[key].value.value;
-                if (yumanValue == null || yumanValue == '' || yumanValue.length == 0) { continue; }
-
-                if (Array.isArray(yumanValue)) {
-                    val = yumanValue.join(',');//将数组元素连接起来以构建一个字符串
-                } else {
-                    if (yumanValue && yumanValue.length > 0) {
-                        val = yumanValue.replace(/[\r\n]/g, ",");
-                    }
-                }
-            } else {
-                var yumanValue = obj[key].value.value;
-                if (yumanValue == null || yumanValue === '' || yumanValue.length == 0) { continue; }
-
-                val = yumanValue + '';
-            }
-            const format = obj[key].format || ""
-            if (format === "YYYY-MM-DD" && operator !== "Between" && unlocal == false) {
-                try {
-                    val = moment.tz(val, 'YYYY-MM-DD', true, 'Asia/Shanghai').format();
-                } catch (exx) { }
-                val = (new Date(val).getTime())
-            }
-            if (typeof (val) == "string")
-                val = val.trim();
-            if (val == null || val == '' || val.length == 0) { continue; }
-            yumanParam.conditions.push({ key: yumanKey, value: val, operator: operator });
-        }
-    }
-    return yumanParam;
-
-}
-
-
-//弃用
-yuman.vueui.setReset = function (obj) {
-    var vm = this;
-    var keys = Object.keys(obj);
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        var item = obj[key];
-        var operator = item.type;
-
-        //时间类型，时间类型的不变化
-        if (operator === 'Between') {
-            item.value.start = item.start.text;
-            item.value.end = item.end.text;
-        }
-        else if (operator === 'In') {
-            var yumanValue = item.value.value;
-            if (Array.isArray(yumanValue)) {
-                item.value.value = [];
-            }
-            else {
-                item.value.value = null;
-            }
-        } else {
-            var yumanValue = item.value.value;
-            item.value.value = null;
-        }
-        if (item.datas && Array.isArray(item.datas) && item.datas.length > 0) {
-            item.datas = [];
-            if (item.onInit) { item.onInit(vm); }
-        }
-
-    }
-    return;
-
-}
 // 获取指定query值
 yuman.vueui.getQueryString = function (name) {
     let reg = `(^|&)${name}=([^&]*)(&|$)`
@@ -4517,8 +4373,6 @@ var yumanHorTab = Vue.component('yuman-hor-tab', {
     `
 })
 
-
-
 // 定义名为 yuman-form-label 的新组件
 var yumanForm = Vue.component('yuman-form', {
     props: {
@@ -4561,9 +4415,6 @@ var yumanForm = Vue.component('yuman-form', {
     </form>
     `
 })
-
-
-
 
 // 定义名为 yuman-form-label 的新组件
 var yumanModal = Vue.component('yuman-modal', {
@@ -4670,7 +4521,6 @@ var yumanModal = Vue.component('yuman-modal', {
 </div>
     `
 })
-
 
 // 定义名为 yuman-form-label 的新组件
 var yumanFormLabel = Vue.component('yuman-form-label', {
@@ -4800,7 +4650,6 @@ var yumanFormNumber = Vue.component('yuman-form-number', {
     </div>
     `
 })
-
 
 // 定义名为 yuman-search-radios 的新组件
 var yumanFormRadio = Vue.component('yuman-form-radio', {
@@ -5032,9 +4881,6 @@ var yumanFormSelect2 = Vue.component('yuman-form-select2', {
     `
 })
 
-
-
-
 // 定义名为 yuman-search-input 的新组件
 var yumanFormInput = Vue.component('yuman-form-input', {
     props: {
@@ -5095,222 +4941,6 @@ var yumanFormInput = Vue.component('yuman-form-input', {
     `
 })
 
-var yumanInputAutoComplete = Vue.component('yuman-input-autocomplete', {
-    props: {
-        ajaxurl: {
-            type: String,
-            default: ''
-        },
-        type: {
-            type: String,
-            default: 'text'
-        },
-        title: {
-            type: String,
-            default: ''
-        },
-        value: {
-            type: String,
-            default: ''
-        },
-        name: String,
-        cache: {
-            type: Boolean,
-            default: true
-        },
-        length: {
-            type: Number,
-            default: 220
-        },
-        otherParams: {
-            type: Object,//需要额外传递的接口参数；格式按key:value的形式，如：{ factoryCode:'XXX',factoryId:1 }
-        }
-    },
-    data: function () {
-        return {
-            inputValue: ''
-        }
-    },
-    methods: {
-        setAutoComplete: function () {
-            let that = this;
-            $('.' + this.name).autocomplete({
-                serviceUrl: this.ajaxurl,
-                paramName: 'searchString',
-                noCache: !this.cache,
-                dataType: 'json',
-                onSearchStart: function (params) {
-                    if (that.otherParams) {
-                        try {
-                            for (var paramKey in that.otherParams) {
-                                params[paramKey] = that.otherParams[paramKey];
-                            }
-                        }
-                        catch (ex) { console.log(ex) }
-                    }
-                },
-                transformResult: function (response) {
-                    return {
-                        suggestions: $.map((response.result ? response.result.data : response.data), function (dataItem) {
-                            return {
-                                value: dataItem.value,
-                                data: dataItem.data
-                            };
-                        })
-                    };
-                },
-                onSelect: (suggestion) => {
-                    this.$emit('input', suggestion.data)
-                    this.$emit("changeval", suggestion.data)
-                }
-            })
-        },
-        changeValue: function () {
-            this.$emit('input', this.inputValue)
-            this.$emit("changeval", this.inputValue)
-        },
-        setValue: function (value) {
-            this.inputValue = value;
-            this.changeValue();
-        },
-        getLen: function () {
-            return "width:" + this.length + "px"
-        },
-        clearInput: function () {
-            this.inputValue = ""
-        },
-        keyupHandle: function () {
-            this.$emit("handleenter")
-        }
-    },
-    mounted: function () {
-        this.inputValue = this.value
-        this.setAutoComplete()
-    },
-    template: ` <div class="form-group">
-                    <input :type="type" :style="getLen()" class="form-control input_borderradius" 
-                            :class="name" :placeholder="title" :title="title" v-on:change="changeValue" 
-                            v-model="inputValue" v-on:keyup.enter="keyupHandle">
-                </div>`
-})
-
-var yumanInputAutoCompleteFloatLabel = Vue.component('yuman-input-autocomplete-float-label', {
-    props: {
-        ajaxurl: {
-            type: String,
-            default: ''
-        },
-        type: {
-            type: String,
-            default: 'text'
-        },
-        title: {
-            type: String,
-            default: ''
-        },
-        //value: {
-        //    type: String,
-        //    default: ''
-        //},
-        value: {
-            type: Object,
-        },
-        name: String,
-        cache: {
-            type: Boolean,
-            default: true
-        },
-        length: {
-            type: Number,
-            default: 220
-        },
-        inputClear:
-        {
-            type: Object,
-            default: function () {
-                return { 'title': L("Clear"), 'type': 'input', 'show': true }
-            }
-        }
-    },
-    //data: function () {
-    //    return {
-    //        inputValue: ''
-    //    }
-    //},
-    methods: {
-        setAutoComplete: function () {
-            let that = this;
-            $('.' + this.name).autocomplete({
-                deferRequestBy: 500,//延迟 Ajax 请求的毫秒数
-                serviceUrl: this.ajaxurl,
-                paramName: 'searchString',
-                noCache: !this.cache,
-                dataType: 'json',
-                onSearchStart: function (params) {
-                    if (that.otherParams) {
-                        try {
-                            for (var paramKey in that.otherParams) {
-                                params[paramKey] = that.otherParams[paramKey];
-                            }
-                        }
-                        catch (ex) { console.log(ex) }
-                    }
-                },
-                transformResult: function (response) {
-                    return {
-                        suggestions: $.map((response.result ? response.result.data : response.data), function (dataItem) {
-                            return {
-                                value: dataItem.value,
-                                data: dataItem.data
-                            };
-                        })
-                    };
-                },
-                onSelect: (suggestion) => {
-                    this.$emit('input', suggestion.data)
-                    this.$emit("changeval", suggestion.data)
-                    this.value.value = suggestion.data;
-                }
-            })
-        },
-        changeValue: function () {
-            this.$emit('input', this.value.value)
-            this.$emit("changeval", this.value.value)
-        },
-        getLen: function () {
-            return "width:" + this.length + "px"
-        },
-        //clearInput: function () {
-        //    this.inputValue = ""
-        //},
-        keyupHandle: function () {
-            this.$emit("handleenter")
-        }
-    },
-    mounted: function () {
-        //this.inputValue = this.value.value;
-        this.setAutoComplete();
-        var self = this;
-        if (this.inputClear && this.inputClear.show) {
-            $('.has-float-label .' + this.name).inputClear({
-                title: this.inputClear.title,
-                type: this.inputClear.type,
-                callback: function ($input) {
-                    self.value.value = "";
-                }
-            });
-        }
-    },
-    template: ` <div class="form-group">
-                <label class="has-float-label">
-                    <input  :style="getLen()" class="form-control input_borderradius" 
-                            :class="name" :placeholder="title" :title="title" v-on:change="changeValue" 
-                            :value="value.value" v-model.trim="value.value" v-on:keyup.enter="keyupHandle">
-                    <span :title="title">{{title}}</span>
-                </label>
-                </div>`
-})
-
 yuman.vueui.setBusy = function (selector, call, time, error) {
     var uibusy = {};
     uibusy.id = selector;
@@ -5346,6 +4976,7 @@ yuman.vueui.setBusy = function (selector, call, time, error) {
 
     return uibusy;
 }
+
 yuman.vueui.setBusyEx = function (selector, call, time, error) {
     var uibusy = {};
     uibusy.id = selector;

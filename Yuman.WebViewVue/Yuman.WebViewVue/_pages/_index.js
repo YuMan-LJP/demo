@@ -1,25 +1,25 @@
 var yuman = yuman || {};
 yuman.index = yuman.index || {};
-yuman.index.title = "Welcome to My Website"
+yuman.index.title = L("Heard.Title")
 yuman.index.menus = [
     {
         id: "home",
-        name: "Home",
+        name: L("Home"),
     },
     {
         id: "jobInfo",
-        name: "Job Info",
+        name: L("JobInfo"),
     },
     {
         id: "about",
-        name: "About",
+        name: L("About"),
     },
 ];
-yuman.index.footer = new Date().getFullYear() + " My Website"
+yuman.index.footer = new Date().getFullYear() + " Yuman"
 
 document.addEventListener('DOMContentLoaded', function () {
     yuman.index.menus.forEach(f => {
-        f.html = window.initialPages[f.id];//window.initialPages是后端返回的全局变量，给这里拼接html使用
+        f.html = yuman.initialPages[f.id];//yuman.initialPages是后端返回的全局变量，给这里拼接html使用
     });
     var navigationProvider = {
         title: yuman.index.title,

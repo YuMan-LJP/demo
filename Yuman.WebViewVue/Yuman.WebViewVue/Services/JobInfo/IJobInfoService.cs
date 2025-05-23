@@ -1,4 +1,4 @@
-﻿using Yuman.WebViewVue.Helper;
+﻿using Yuman.WebViewVue.Helper.BasicConfigure;
 using Yuman.WebViewVue.Managers.JobInfo.Entity;
 using Yuman.WebViewVue.Services.Dto;
 using Yuman.WebViewVue.Services.JobInfo.Dto;

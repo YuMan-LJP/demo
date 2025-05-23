@@ -1,6 +1,7 @@
 using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
 using System.Text;
+using Yuman.WebViewVue.Helper.MultipleLanguages;
 using Yuman.WebViewVue.Services;
 
 namespace Yuman.WebViewVue
@@ -84,7 +85,7 @@ namespace Yuman.WebViewVue
                 var files = new DirectoryInfo(path).GetFiles("*.html");
                 foreach (var file in files)
                 {
-                    using StreamReader sr = new(file.FullName, Encoding.GetEncoding("gb2312"));
+                    using StreamReader sr = new(file.FullName, Encoding.GetEncoding("gb2312"));//注意按GB2312读取，不然中文乱码
                     var html = new StringBuilder();
                     string line;
                     while ((line = sr.ReadLine()) != null)
@@ -94,12 +95,12 @@ namespace Yuman.WebViewVue
                     pageHtmls.Add(Path.GetFileNameWithoutExtension(file.Name), html.ToString());
                 }
 
-                return $"window.initialPages = {JsonConvert.SerializeObject(pageHtmls)}";
+                return $"var yuman = yuman || {{}};yuman.initialPages = {JsonConvert.SerializeObject(pageHtmls)}";
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return "window.initialPages = null";
+                return "var yuman = yuman || {};yuman.initialPages = null";
             }
         }
 
@@ -156,13 +157,18 @@ namespace Yuman.WebViewVue
         private string LoadLanguages()
         {
             var languages = new StringBuilder();//后续可以拓展多语言
+            var langDic = LanguageHelper.GetAllLanguages();
+            languages.AppendLine($"yuman.languages = {JsonConvert.SerializeObject(langDic)};");
+            languages.AppendLine($"yuman.currentLanguage = '{Thread.CurrentThread.CurrentUICulture.Name}';");
             languages.AppendLine("function L() {");
-            languages.AppendLine("  var result = '';");
+            languages.AppendLine("  if(!yuman.languages[yuman.currentLanguage]) return arguments[0];");
+            languages.AppendLine("  if(!yuman.languages[yuman.currentLanguage][arguments[0]]) return arguments[0];");
+            languages.AppendLine("  var translation = yuman.languages[yuman.currentLanguage][arguments[0]];");
             languages.AppendLine("  for (let i = 0; i < arguments.length;i++) {");
-            languages.AppendLine("    if (result) result += \",\"");
-            languages.AppendLine("    result += arguments[i]");
+            languages.AppendLine("    if (i == 0) continue;");
+            languages.AppendLine("    translation = translation.replace('{' + (i - 1) + '}', arguments[i]);");
             languages.AppendLine("  }");
-            languages.AppendLine("  return result;");
+            languages.AppendLine("  return translation;");
             languages.AppendLine("}");
             return languages.ToString();
         }

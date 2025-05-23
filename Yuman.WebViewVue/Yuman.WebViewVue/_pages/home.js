@@ -5,7 +5,7 @@ function initHome(elId) {
     yuman.vuepage.home = new Vue({
         el: '#' + elId,
         data: {
-            title: "Home",
+            title: L("Home"),
         },
         methods: {
             test: (name) => {

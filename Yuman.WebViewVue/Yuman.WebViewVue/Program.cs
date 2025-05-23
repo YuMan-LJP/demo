@@ -1,5 +1,5 @@
 using System.Text;
-using Yuman.WebViewVue.Helper;
+using Yuman.WebViewVue.Helper.BasicConfigure;
 
 namespace Yuman.WebViewVue
 {

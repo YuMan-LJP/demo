@@ -2,7 +2,7 @@
 using System.Reflection;
 using Yuman.WebViewVue.Managers;
 
-namespace Yuman.WebViewVue.Helper
+namespace Yuman.WebViewVue.Helper.BasicConfigure
 {
     public static class ConfigureHelper
     {

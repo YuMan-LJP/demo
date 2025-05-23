@@ -5,7 +5,7 @@ function initAbout(elId) {
     yuman.vuepage.about = new Vue({
         el: '#' + elId,
         data: {
-            title: "About",
+            title: L("About"),
         },
         methods: {
             test: (name) => {

@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using Yuman.WebViewVue.Helper;
+using Yuman.WebViewVue.Helper.BasicConfigure;
 
 namespace Yuman.WebViewVue.Services
 {

@@ -66,3 +66,13 @@ footer {
 .active {
     display: block;
 }
+
+.table thead {
+    background-color: lightskyblue !important;
+    color: white !important;
+}
+
+/* 必填标记显示红色 */
+.required {
+    color: red;
+}

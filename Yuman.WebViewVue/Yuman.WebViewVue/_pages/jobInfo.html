@@ -4,7 +4,7 @@
     <div class="form-inline searchBoxFlex">
         <template>
             <div class="form-inline">
-                <yuman-ser-input v-bind="search.name"></yuman-ser-input>
+                <yuman-ser-input-float-label v-bind="search.name"></yuman-ser-input-float-label>
                 <yuman-ser-search-reset :searchobj="button.search" :resetobj="button.reset" :dosearch="doSearch" :doreset="doReset" :search="search"></yuman-ser-search-reset>
             </div>
         </template>
@@ -22,27 +22,27 @@
     <yuman-modal v-bind="addEditModal" v-on:onclose="closeModal" ref="modal">
         <template v-slot:body>
             <div>
-                <label>ID</label><span class="required"> * </span>
+                <label>{{L('JobInfo.Id')}}</label><span class="required"> * </span>
                 <br>
-                <input class="form-control input_borderradius inputradius" placeholder="ID" title="ID" v-model.trim="inputDto.id" disabled="true" />
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Id')" :title="L('JobInfo.Id')" v-model.trim="inputDto.id" disabled="true" />
             </div>
 
             <div>
-                <label>分组</label><span class="required"> * </span>
+                <label>{{L('JobInfo.Group')}}</label><span class="required"> * </span>
                 <br>
-                <input class="form-control input_borderradius inputradius" placeholder="分组" title="分组" v-model.trim="inputDto.group" />
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Group')" :title="L('JobInfo.Group')" v-model.trim="inputDto.group" />
             </div>
 
             <div>
-                <label>名称</label><span class="required"> * </span>
+                <label>{{L('JobInfo.Name')}}</label><span class="required"> * </span>
                 <br>
-                <input class="form-control input_borderradius inputradius" placeholder="名称" title="名称" v-model.trim="inputDto.name" />
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Name')" :title="L('JobInfo.Name')" v-model.trim="inputDto.name" />
             </div>
 
             <div>
-                <label>描述</label><span class="required"> * </span>
+                <label>{{L('JobInfo.Description')}}</label><span class="required"> * </span>
                 <br>
-                <input class="form-control input_borderradius inputradius" placeholder="描述" title="描述" v-model.trim="inputDto.description" />
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Description')" :title="L('JobInfo.Description')" v-model.trim="inputDto.description" />
             </div>
         </template>
 
