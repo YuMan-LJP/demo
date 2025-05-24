@@ -4,6 +4,11 @@ namespace Yuman.WebViewVue.Services
 {
     public class MyBaseService
     {
+        public string L(string key)
+        {
+            return LanguageHelper.L(key);
+        }
+
         public string L(string key, params string[] args)
         {
             return LanguageHelper.L(key, args);

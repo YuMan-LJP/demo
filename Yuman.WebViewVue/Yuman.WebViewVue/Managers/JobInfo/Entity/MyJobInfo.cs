@@ -9,19 +9,19 @@ namespace Yuman.WebViewVue.Managers.JobInfo.Entity
         /// <summary>
         /// GUID
         /// </summary>
-        [MyRequiredField(TranslationKey = "JobInfo.Id")]
+        [MyRequired(TranslationKey = "JobInfo.Id")]
         public string Id { get; set; } = "";
 
         /// <summary>
         /// 分组
         /// </summary>
-        [MyRequiredField(TranslationKey = "JobInfo.Group")]
+        [MyRequired(TranslationKey = "JobInfo.Group")]
         public string Group { get; set; } = "";
 
         /// <summary>
         /// 名称
         /// </summary>
-        [MyRequiredField(TranslationKey = "JobInfo.Name")]
+        [MyRequired(TranslationKey = "JobInfo.Name")]
         public string Name { get; set; } = "";
 
         /// <summary>

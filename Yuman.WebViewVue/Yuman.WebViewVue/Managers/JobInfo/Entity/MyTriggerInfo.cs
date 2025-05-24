@@ -9,25 +9,25 @@ namespace Yuman.WebViewVue.Managers.JobInfo.Entity
         /// <summary>
         /// 关联JobInfo的Id
         /// </summary>
-        [MyRequiredField]
+        [MyRequired]
         public string JobInfoId { get; set; } = "";
 
         /// <summary>
         /// GUID
         /// </summary>
-        [MyRequiredField(TranslationKey = "TriggerInfo.Id")]
+        [MyRequired(TranslationKey = "TriggerInfo.Id")]
         public string Id { get; set; } = "";
 
         /// <summary>
         /// 分组
         /// </summary>
-        [MyRequiredField(TranslationKey = "TriggerInfo.Group")]
+        [MyRequired(TranslationKey = "TriggerInfo.Group")]
         public string Group { get; set; } = "";
 
         /// <summary>
         /// 名称
         /// </summary>
-        [MyRequiredField(TranslationKey = "TriggerInfo.Name")]
+        [MyRequired(TranslationKey = "TriggerInfo.Name")]
         public string Name { get; set; } = "";
 
         /// <summary>

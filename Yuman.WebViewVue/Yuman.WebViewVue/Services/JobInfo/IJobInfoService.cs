@@ -2,6 +2,7 @@
 using Yuman.WebViewVue.Managers.JobInfo.Entity;
 using Yuman.WebViewVue.Services.Dto;
 using Yuman.WebViewVue.Services.JobInfo.Dto;
+using static Yuman.WebViewVue.Services.JobInfo.JobInfoService;
 
 namespace Yuman.WebViewVue.Services.JobInfo
 {

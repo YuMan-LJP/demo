@@ -61,29 +61,29 @@ namespace Yuman.WebViewVue.Helper.MultipleLanguages
 
             if (_languageDic == null)
             {
-                return "";
+                return key;
             }
 
             var isExist = _languageDic.TryGetValue(lang, out Dictionary<string, string>? langDic);
             if (!isExist)
             {
-                return "";
+                return key;
             }
 
             if (langDic == null)
             {
-                return "";
+                return key;
             }
 
             isExist = langDic.TryGetValue(key, out string? translation);
             if (!isExist)
             {
-                return "";
+                return key;
             }
 
             if (translation == null)
             {
-                return "";
+                return key;
             }
 
             if (args == null)

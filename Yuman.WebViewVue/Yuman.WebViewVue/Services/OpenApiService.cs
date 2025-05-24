@@ -108,22 +108,11 @@ namespace Yuman.WebViewVue.Services
                                 throw new Exception($"【{param.Name}】传入参数反序列化失败：{value}", ex);
                             }
 
-                            var missFields = new HashSet<string>();
-                            var inputObjProperties = param.ParameterType.GetProperties();
-                            foreach (var inputObjProperty in inputObjProperties)
+                            //自动校验标记了必填字段的属性
+                            var emptyFields = ValidationHelper.CheckForEmptyProperties(inputObj, L);
+                            if (emptyFields.Count > 0)
                             {
-                                var description = inputObjProperty.GetCustomAttributes<MyRequiredFieldAttribute>().FirstOrDefault();
-                                if (description != null)
-                                {
-                                    if (string.IsNullOrWhiteSpace(inputObjProperty.GetValue(inputObj)?.ToString()))
-                                    {
-                                        missFields.Add(L(description.TranslationKey));
-                                    }
-                                }
-                            }
-                            if (missFields.Count > 0)
-                            {
-                                throw new Exception(L("RequiredButIsNull", string.Join(" | ", missFields)));
+                                throw new Exception(L("RequiredButIsNull", string.Join(" | ", emptyFields)));
                             }
 
                             args[i] = inputObj;

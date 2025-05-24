@@ -54,8 +54,8 @@
   "AddSuccess": "新增成功！",
   "EditSuccess": "编辑成功！",
   "SystemTips": "系统消息",
-  "RequiredButIsNull": "{0}字段必填但是为空",
-  "KeyExists": "{0}已存在",
+  "RequiredButIsNull": "“{0}”字段必填但是为空",
+  "KeyExists": "“{0}”已存在",
 
   "Heard.Title": "Yuman的网站",
   "Home": "首页",

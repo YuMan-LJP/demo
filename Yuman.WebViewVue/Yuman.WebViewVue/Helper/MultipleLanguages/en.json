@@ -54,8 +54,8 @@
   "AddSuccess": "Add Success!",
   "EditSuccess": "Edit Success!",
   "SystemTips": "System Message",
-  "RequiredButIsNull": "The {0} fields are required but empty",
-  "KeyExists": "{0} already exists",
+  "RequiredButIsNull": "The \"{0}\" fields are required but empty",
+  "KeyExists": "\"{0}\" already exists",
 
   "Heard.Title": "Yuman's Website",
   "Home": "Home",
