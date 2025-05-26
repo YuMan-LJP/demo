@@ -51,7 +51,7 @@
             ClientSize = new Size(800, 450);
             Controls.Add(webView21);
             Name = "Form1";
-            Text = "Form1";
+            Text = "Yuman.WebViewVue";
             ((System.ComponentModel.ISupportInitialize)webView21).EndInit();
             ResumeLayout(false);
         }

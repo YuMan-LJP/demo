@@ -90,7 +90,7 @@ namespace Yuman.WebViewVue
                         Content: ms,
                         StatusCode: 200,
                         ReasonPhrase: "OK",
-                        Headers: $"Content-Type: {mime}; charset=utf-8");
+                        Headers: $"Content-Type: {mime}; charset=GBK");
                     // Ìí¼Ó CORS Í·
                     response.Headers.AppendHeader("Access-Control-Allow-Origin", "*");
                     response.Headers.AppendHeader("Referrer-Policy", "strict-origin-when-cross-origin");

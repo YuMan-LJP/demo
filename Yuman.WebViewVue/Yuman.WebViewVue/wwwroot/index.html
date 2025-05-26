@@ -19,19 +19,12 @@
 <body>
     <script id="template" type="text/x-handlebars-template">
         <div>
-            <header>
-                <h1>{{title}}</h1>
-            </header>
-        </div>
-        <div>
             <nav>
-                <div>
-                    <ul>
-                        {{#each menus}}
-                        <li><a href="javascript:void(0)" onclick="yuman.index.changeTab('{{{this.id}}}')">{{this.name}}</a></li>
-                        {{/each}}
-                    </ul>
-                </div>
+                <ul>
+                    {{#each menus}}
+                    <li><a href="javascript:void(0)" onclick="yuman.index.changeTab('{{{this.id}}}')">{{this.name}}</a></li>
+                    {{/each}}
+                </ul>
             </nav>
 
             <main>
@@ -41,10 +34,6 @@
                 </section>
                 {{/each}}
             </main>
-
-            <footer>
-                <p>&copy; {{footer}}</p>
-            </footer>
         </div>
     </script>
 

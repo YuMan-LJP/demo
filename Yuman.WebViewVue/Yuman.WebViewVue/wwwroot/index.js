@@ -15,7 +15,6 @@ yuman.index.menus = [
         name: L("About"),
     },
 ];
-yuman.index.footer = new Date().getFullYear() + " Yuman"
 
 document.addEventListener('DOMContentLoaded', function () {
     yuman.index.menus.forEach(f => {
@@ -24,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var navigationProvider = {
         title: yuman.index.title,
         menus: yuman.index.menus,
-        footer: yuman.index.footer
     }
     const templateSource = document.getElementById('template').innerHTML;
     const template = Handlebars.compile(templateSource);
