@@ -1,0 +1,56 @@
+.input_clear_btn {
+    background: #ffffff;
+    border: 0 none;
+    cursor: pointer;
+    margin-top: -3px;
+    padding: 0;
+    color: #000000;
+    opacity: 0.2;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+.input_date_clear_btn {
+    position: absolute !important;
+    left: 100px !important;
+    top: 6px !important;
+    cursor: pointer !important;
+    font-weight: bold !important;
+    color: black !important;
+    font-size: 14px !important;
+    background: transparent; /* 设置背景透明 */
+    border: none; /* 隐藏边框 */
+    outline: none; /* 去除点击按钮时产生的轮廓 */
+}
+
+
+.input_clear_btn:hover{
+    opacity: 0.4;
+}
+
+.input_clear_focus {
+    border-color: #66afe9 !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6) !important;
+    outline: 0 none !important;
+}
+
+
+.input_clear_span {
+    position: absolute !important;
+    left: 90% !important;
+    top: 10px !important;
+    cursor: pointer !important;
+    font-weight: bold !important;
+    color: black !important;
+    font-size: 14px !important;
+}
+
+.input_date_clear_span {
+    position: absolute !important;
+    left: 85% !important;
+    top: 10px !important;
+    cursor: pointer !important;
+    font-weight: bold !important;
+    color: black !important;
+    font-size: 14px !important;
+}

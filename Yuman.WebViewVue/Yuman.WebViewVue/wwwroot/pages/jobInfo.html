@@ -1,0 +1,54 @@
+<h1>{{title}}</h1>
+
+<div class="searchInputBox">
+    <div class="form-inline searchBoxFlex">
+        <template>
+            <div class="form-inline">
+                <yuman-ser-input-float-label v-bind="search.name"></yuman-ser-input-float-label>
+                <yuman-ser-search-reset :searchobj="button.search" :resetobj="button.reset" :dosearch="doSearch" :doreset="doReset" :search="search"></yuman-ser-search-reset>
+            </div>
+        </template>
+    </div>
+</div>
+
+<div style="margin:4px">
+    <div class="body table-responsive" id="tableList" style="overflow: visible">
+        <yuman-table v-bind="table" v-on:pagechange="pageChange" ref="mainTable">
+        </yuman-table>
+    </div>
+</div>
+
+<div id="addEditModal">
+    <yuman-modal v-bind="addEditModal" v-on:onclose="closeModal" ref="modal">
+        <template v-slot:body>
+            <div>
+                <label>{{L('JobInfo.Id')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Id')" :title="L('JobInfo.Id')" v-model.trim="inputDto.id" disabled="true" />
+            </div>
+
+            <div>
+                <label>{{L('JobInfo.Group')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Group')" :title="L('JobInfo.Group')" v-model.trim="inputDto.group" />
+            </div>
+
+            <div>
+                <label>{{L('JobInfo.Name')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Name')" :title="L('JobInfo.Name')" v-model.trim="inputDto.name" />
+            </div>
+
+            <div>
+                <label>{{L('JobInfo.Description')}}</label>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('JobInfo.Description')" :title="L('JobInfo.Description')" v-model.trim="inputDto.description" />
+            </div>
+        </template>
+
+        <template v-slot:footer>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="addEditModal.closeTitle" v-on:click="closeModal"></yuman-button>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="addEditModal.saveTitle" v-on:click="saveModal"></yuman-button>
+        </template>
+    </yuman-modal>
+</div>

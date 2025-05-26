@@ -11,11 +11,15 @@
 	<ItemGroup>
 	  <None Remove="Helper\MultipleLanguages\en.json" />
 	  <None Remove="Helper\MultipleLanguages\zh-CN.json" />
+	  <None Remove="wwwroot\favicon32.ico" />
+	  <None Remove="wwwroot\favicon48.ico" />
+	  <None Remove="wwwroot\favicon64.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Helper\MultipleLanguages\en.json" />
 	  <EmbeddedResource Include="Helper\MultipleLanguages\zh-CN.json" />
+	  <EmbeddedResource Include="wwwroot\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,19 +33,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="index.html">
+		<!--复制wwwroot文件夹-->
+		<!--<None Update="wwwroot\**">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+		</None>-->
 		<None Update="MyDatabase.db">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<!--复制pages文件夹-->
-		<None Update="_pages\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<!--复制lib文件夹-->
-		<None Update="_lib\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
