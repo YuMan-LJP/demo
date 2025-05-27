@@ -16,6 +16,11 @@ namespace Yuman.WebViewVue.Managers
             return LanguageHelper.L(lang, key, args);
         }
 
+        /// <summary>
+        /// 枚举类转集合
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         protected virtual async Task<List<Select2ItemDto>> GetSelectData<T>()
         {
             var output = new List<Select2ItemDto>();

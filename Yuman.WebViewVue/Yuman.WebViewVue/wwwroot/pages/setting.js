@@ -8,7 +8,7 @@ function initSetting(elId) {
             title: L("Setting"),
             setting: {
                 systemSetting_JobIsDefaultStart: false,
-                language: '',
+                systemSetting_Language: '',
             },
             languageSelect: {
                 name: 'selectLanguage',
@@ -18,7 +18,8 @@ function initSetting(elId) {
                 multiple: false,
                 allowClear: false,
                 title: L("Setting.SwitchLanguages"),
-                label: L("Setting.SwitchLanguages")
+                label: L("Setting.SwitchLanguages"),
+                isHasBr: false,//标题和下拉框不用换行
             },
         },
         methods: {
@@ -52,13 +53,13 @@ function initSetting(elId) {
                         yuman.ui.clearBusy();
                         if (res) {
                             yuman.message.success(L("SaveSuccess"), L("SystemTips"));
-                            this.tryChangeLanguage(this.setting.language);
+                            this.tryChangeLanguage(this.setting.systemSetting_Language);
                         }
                     })
                 )
             },
             languageSelectChange() {
-                this.setting.language = this.languageSelect.value.value
+                this.setting.systemSetting_Language = this.languageSelect.value.value
             },
             tryChangeLanguage(lang) {
                 if (yuman.currentLanguage == lang) {

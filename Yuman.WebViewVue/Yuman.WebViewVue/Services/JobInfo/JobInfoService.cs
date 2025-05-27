@@ -18,8 +18,8 @@ namespace Yuman.WebViewVue.Services.JobInfo
         public async Task<PagedResultDto<MyJobInfo>> GetMianTableAsync(GetMainTableInputDto inputDto)
         {
             var output = new PagedResultDto<MyJobInfo>();
-            output.Items = await _jobInfoManager.GetJobInfosAsync(inputDto.Name, inputDto.SkipCount, inputDto.MaxResultCount);
-            output.TotalCount = await _jobInfoManager.GetJobInfosCountAsync(inputDto.Name);
+            output.Items = await _jobInfoManager.GetJobInfosAsync(inputDto.Group, inputDto.Name, inputDto.SkipCount, inputDto.MaxResultCount);
+            output.TotalCount = await _jobInfoManager.GetJobInfosCountAsync(inputDto.Group, inputDto.Name);
             return output;
         }
 

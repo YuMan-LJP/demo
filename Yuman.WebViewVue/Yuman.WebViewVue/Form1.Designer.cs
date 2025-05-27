@@ -40,7 +40,7 @@
             webView21.Dock = DockStyle.Fill;
             webView21.Location = new Point(0, 0);
             webView21.Name = "webView21";
-            webView21.Size = new Size(884, 561);
+            webView21.Size = new Size(939, 616);
             webView21.TabIndex = 0;
             webView21.ZoomFactor = 1D;
             // 
@@ -48,7 +48,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(884, 561);
+            ClientSize = new Size(939, 616);
             Controls.Add(webView21);
             Name = "Form1";
             Text = "Yuman.WebViewVue";

@@ -6,7 +6,7 @@ namespace Yuman.WebViewVue.Managers.SystemSetting
 {
     public class SystemSettingManager : MyBaseManager, ISystemSettingManager
     {
-        private static Dictionary<string, string>? SystemSettingDic;
+        private static Dictionary<string, string>? SystemSettingDic;//静态缓存，如果数据变更就清空，读取时会重新查
 
         public async Task<Dictionary<string, string>> LoadAllSystemSettingsAsync()
         {
@@ -16,13 +16,13 @@ namespace Yuman.WebViewVue.Managers.SystemSetting
             }
 
             var mySystemSettings = new List<MySystemSetting>();
-            var fields = typeof(MyConsts).GetFields();
+            var fields = typeof(MyConsts.SystemSetting).GetFields();
             foreach (var field in fields)
             {
                 mySystemSettings.Add(new MySystemSetting
                 {
                     Key = field.Name,
-                    Value = field.GetValue(new MyConsts()).ToStringEx()
+                    Value = field.GetValue(new MyConsts.SystemSetting()).ToStringEx()
                 });
             }
 
@@ -106,7 +106,12 @@ namespace Yuman.WebViewVue.Managers.SystemSetting
             }
 
             var res = await db.SaveChangesAsync();
-            return res > 0;
+            var isOK = res > 0;
+            if (isOK)
+            {
+                SystemSettingDic = null;//清空缓存，到时候取值的时候重新查
+            }
+            return isOK;
         }
     }
 }

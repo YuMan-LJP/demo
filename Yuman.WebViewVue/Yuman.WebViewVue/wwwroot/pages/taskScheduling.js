@@ -1,11 +1,11 @@
 var yuman = yuman || {};
 yuman.vuepage = yuman.vuepage || {};
-yuman.vuepage.about = yuman.vuepage.about || {};
-function initAbout(elId) {
-    yuman.vuepage.about = new Vue({
+yuman.vuepage.taskScheduling = yuman.vuepage.taskScheduling || {};
+function initTaskScheduling(elId) {
+    yuman.vuepage.TaskScheduling = new Vue({
         el: '#' + elId,
         data: {
-            title: L("About"),
+            title: L("TaskScheduling"),
         },
         methods: {
             test(name) {
@@ -16,5 +16,5 @@ function initAbout(elId) {
             console.log(this.title);
         },
     })
-    return yuman.vuepage.about;
+    return yuman.vuepage.taskScheduling;
 }

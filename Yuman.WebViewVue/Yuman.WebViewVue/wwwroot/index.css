@@ -35,9 +35,9 @@ nav {
             border-radius: 4px;
         }
 
-    header h1 {
-        margin-top: 10px;
-    }
+header h1 {
+    margin-top: 10px;
+}
 
 main {
     margin-left: 110px; /* 避开左侧导航栏 */
@@ -65,4 +65,20 @@ main {
 /* 必填标记显示红色 */
 .required {
     color: red;
+}
+
+/* 模态框宽带默认占屏幕一半 */
+.modal-body {
+    width: 50vw;
+}
+
+/* select2下拉框的高度统一调高一点 */
+.select2-container--default .select2-selection--single,
+.select2-selection .select2-selection--single {
+    padding: 3px 6px;
+    height: 34px;
+}
+.select2-container--default .select2-selection__arrow,
+.select2-selection .select2-selection__arrow {
+    top: 4px !important;
 }

@@ -25,19 +25,24 @@ NuGet包引入WebView2，将WebView2控件挂到Form1，然后建立index.html�
 6.3.html页面的script和link的地址改为指定域名
 6.4.监听里面实现去嵌入资源读取并返回（这里特别注意一点：嵌入资源文件命名空间中，也就是文件夹中含有“ - ”将被转为“ _ ”，即短杠转成了下划线，所以读取资源文件的时候也转换一下）
 6.5.其他读取本地文件的地方也改成读取嵌入资源（例如：读取分页html）
+6.6.实现自动加载pages文件夹里面的css和js文件（命名不要加横杠，若要使用改用下划线）
 
 ## 7.支持多语言
 7.1.建立翻译文件，用json格式，然后建立静态类，统一封装读取json，并提供翻译方法
 7.2.WebView2初始化的时候也加载进入前端，也封装一个统一L方法提供翻译
 7.3.Services和Manager层提供一个基类，里面提供统一L方法，全部Services和Manager的类继续该基类就可以用L方法了
 
+## 8.实现系统参数功能
+提供系统参数功能，在常量类MyConsts.SystemSetting中增加常量，启动程序会自动插入对应参数到数据库中，完成初始化，最终以数据库中的参数为准
+
 
 # 后续正常开发流程
-## 1.在index.js里面配菜单名称
-## 2.在pages创建页面、js、css
-## 3.在index.html引入js和css，记得按统一域名（http://embedded.res就相当于wwwroot）
+## 1.在wwwroot/index.js里面配菜单名称
+## 2.在wwwroot/pages创建页面、js、css（命名不要加横杠，若要使用改用下划线）
+## 3.在wwwroot/index.html引入js和css，记得按统一域名（http://embedded.res就相当于wwwroot）（这步可以不用做了，已经实现自动化）
 ## 4.在Services实现后端接口
 ## 5.在Managers实现业务逻辑，给接口调用
+## 6.在Helper/MultipleLanguages的en.json和zh-CN.json增加对应翻译
 
 
 # 开发注意的一些原则

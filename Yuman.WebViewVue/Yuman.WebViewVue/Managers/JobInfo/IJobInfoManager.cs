@@ -10,8 +10,8 @@ namespace Yuman.WebViewVue.Managers.JobInfo
         Task<bool> DeleteTriggerInfoAsync(string id);
         Task<List<Select2ItemDto>> GetIntervalUnitSelect();
         Task<MyJobInfo?> GetJobInfoByIdAsync(string id);
-        Task<List<MyJobInfo>> GetJobInfosAsync(string name, int skipCount, int maxResultCount);
-        Task<int> GetJobInfosCountAsync(string name);
+        Task<List<MyJobInfo>> GetJobInfosAsync(string group, string name, int skipCount, int maxResultCount);
+        Task<int> GetJobInfosCountAsync(string group, string name);
         Task<MyTriggerInfo?> GetTriggerInfoByIdAsync(string id);
         Task<List<MyTriggerInfo>> GetTriggerInfosByJobIdAsync(string jobInfoId);
         Task<List<Select2ItemDto>> GetTriggerTypeSelect();

@@ -6,23 +6,27 @@ namespace Yuman.WebViewVue.Managers.JobInfo
 {
     public class JobInfoManager : MyBaseManager, IJobInfoManager
     {
-        public async Task<List<MyJobInfo>> GetJobInfosAsync(string name, int skipCount, int maxResultCount)
+        public async Task<List<MyJobInfo>> GetJobInfosAsync(string group, string name, int skipCount, int maxResultCount)
         {
             using var db = new MyEfContext();
-            var query = await QueryJobInfosAsync(db, name);
+            var query = await QueryJobInfosAsync(db, group, name);
             return await query.Skip(skipCount).Take(maxResultCount).AsNoTracking().ToListAsync();
         }
 
-        public async Task<int> GetJobInfosCountAsync(string name)
+        public async Task<int> GetJobInfosCountAsync(string group, string name)
         {
             using var db = new MyEfContext();
-            var query = await QueryJobInfosAsync(db, name);
+            var query = await QueryJobInfosAsync(db, group, name);
             return await query.CountAsync();
         }
 
-        protected virtual async Task<IQueryable<MyJobInfo>> QueryJobInfosAsync(MyEfContext db, string name)
+        protected virtual async Task<IQueryable<MyJobInfo>> QueryJobInfosAsync(MyEfContext db, string group, string name)
         {
             var query = db.MyJobInfos.Select(s => s);
+            if (!string.IsNullOrWhiteSpace(group))
+            {
+                query = query.Where(w => w.Group.Contains(group));
+            }
             if (!string.IsNullOrWhiteSpace(name))
             {
                 query = query.Where(w => w.Name.Contains(name));

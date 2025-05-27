@@ -6,7 +6,7 @@ namespace Yuman.WebViewVue.Helper.MultipleLanguages
 {
     public static class LanguageHelper
     {
-        private static string CurrentLanguageName = "";
+        private static string CurrentLanguageName = "";//系统当前语言
         private readonly static Dictionary<string, Dictionary<string, string>> _languageDic = [];
 
         private static void LoadLanguages()
@@ -116,7 +116,7 @@ namespace Yuman.WebViewVue.Helper.MultipleLanguages
         {
             if (string.IsNullOrWhiteSpace(CurrentLanguageName))
             {
-                return MyConsts.Language;
+                return MyConsts.SystemSetting.SystemSetting_Language;
             }
             return CurrentLanguageName;
         }

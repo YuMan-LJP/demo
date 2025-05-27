@@ -4794,6 +4794,10 @@ var yumanFormSelect2 = Vue.component('yuman-form-select2', {
             type: Object,
             default: true,
         },
+        isHasBr: {
+            type: Boolean,
+            default: true
+        },
     },
     methods: {
         onfocus: function () {
@@ -4874,6 +4878,7 @@ var yumanFormSelect2 = Vue.component('yuman-form-select2', {
     template: `
         <div class="form-group" :class="css" v-if="getVisiabled()" >
             <label v-if="label != null">{{label}}</label>
+            <br v-if="isHasBr" />
             <select class="form-control input_borderradius" :title="title" :placeholder="title" :name="name" :style="getStyle()" :disabled="getDisabled()" >
             </select>
             <slot name="footer"></slot>

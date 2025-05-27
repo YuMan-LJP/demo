@@ -43,6 +43,8 @@
   "Cancel": "取消",
   "Save": "保存",
   "OK": "OK",
+  "Search": "查询",
+  "Reset": "重置",
 
   "Add": "新增",
   "Edit": "编辑",
@@ -91,5 +93,7 @@
   "TriggerInfo.MyIntervalUnitEnum.Days": "天数",
 
   "Setting.SwitchLanguages": "切换语言",
-  "Setting.JobIsDefaultStart": "Job是否默认启动"
+  "Setting.JobIsDefaultStart": "Job是否默认启动",
+
+  "TaskScheduling": "任务调度"
 }

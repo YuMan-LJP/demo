@@ -8,7 +8,7 @@ function initHome(elId) {
             title: L("Home"),
         },
         methods: {
-            test: (name) => {
+            test(name) {
                 console.log(name);
             },
         },

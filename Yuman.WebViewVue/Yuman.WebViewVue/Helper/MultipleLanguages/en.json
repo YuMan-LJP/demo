@@ -43,6 +43,8 @@
   "Cancel": "Cancel",
   "Save": "Save",
   "OK": "OK",
+  "Search": "Search",
+  "Reset": "Reset",
 
   "Add": "Add",
   "Edit": "Edit",
@@ -91,5 +93,7 @@
   "TriggerInfo.MyIntervalUnitEnum.Days": "Days",
 
   "Setting.SwitchLanguages": "Switch languages",
-  "Setting.JobIsDefaultStart": "Job bIs Default Start"
+  "Setting.JobIsDefaultStart": "Job bIs Default Start",
+
+  "TaskScheduling": "Task Scheduling"
 }

@@ -38,10 +38,10 @@ namespace Yuman.WebViewVue
         /// </summary>
         private async void InitLanguageAsync()
         {
-            var defaultLanguage = await _systemSettingManager.GetSystemSettingAsync(nameof(MyConsts.Language));
+            var defaultLanguage = await _systemSettingManager.GetSystemSettingAsync(nameof(MyConsts.SystemSetting.SystemSetting_Language));
             if (string.IsNullOrWhiteSpace(defaultLanguage))
             {
-                defaultLanguage = MyConsts.Language;
+                defaultLanguage = MyConsts.SystemSetting.SystemSetting_Language;
             }
             LanguageHelper.ChangeCurrentLanguage(defaultLanguage);
         }
@@ -199,6 +199,7 @@ namespace Yuman.WebViewVue
             scripts.AppendLine(LoadLanguages());
             scripts.AppendLine(LoadPages());
             scripts.AppendLine(LoadApis());
+            scripts.AppendLine(LoadPageCssAndJsFiles());
             return scripts.ToString();
         }
 
@@ -215,7 +216,7 @@ namespace Yuman.WebViewVue
                 //var path = Path.Combine(AppContext.BaseDirectory, Path.Combine("wwwroot", "pages"));
                 //var files = new DirectoryInfo(path).GetFiles("*.html");
                 var assembly = Assembly.GetExecutingAssembly();
-                var files = Assembly.GetExecutingAssembly()
+                var files = assembly
                     .GetManifestResourceNames()
                     .Where(w => w.Contains(".html"))
                     .Where(w => w.StartsWith("Yuman.WebViewVue.wwwroot.pages"))
@@ -323,6 +324,42 @@ namespace Yuman.WebViewVue
             languages.AppendLine("  return translation;");
             languages.AppendLine("}");
             return languages.ToString();
+        }
+
+        /// <summary>
+        /// 加载pages文件夹里面的css和js
+        /// </summary>
+        /// <returns></returns>
+        private string LoadPageCssAndJsFiles()
+        {
+            var files = Assembly.GetExecutingAssembly()
+                .GetManifestResourceNames()
+                .Where(w => w.StartsWith("Yuman.WebViewVue.wwwroot.pages"))
+                .Where(w => w.EndsWith(".js") || w.EndsWith(".css"))
+                .ToList();
+            var cssFiles = files.Where(w => w.EndsWith(".css")).ToList();
+            var jsFiles = files.Where(w => w.EndsWith(".js")).ToList();
+            var cssNames = new HashSet<string>();
+            foreach (var cssFile in cssFiles)
+            {
+                cssNames.Add(cssFile.Replace("Yuman.WebViewVue.wwwroot.pages.", "http://embedded.res/pages/"));
+            }
+            var jsNames = new HashSet<string>();
+            foreach (var jsFile in jsFiles)
+            {
+                jsNames.Add(jsFile.Replace("Yuman.WebViewVue.wwwroot.pages.", "http://embedded.res/pages/"));
+            }
+
+            var jsonSetting = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()//设置为驼峰命名，也就是前端属性名首字母开头都是小写
+            };
+            var allJs = new StringBuilder();
+            allJs.AppendLine("var yuman = yuman || {};");
+            allJs.AppendLine("yuman.pageFile = yuman.pageFile || {};");
+            allJs.AppendLine($"yuman.pageFile.css = {JsonConvert.SerializeObject(cssNames, jsonSetting)};");
+            allJs.AppendLine($"yuman.pageFile.js = {JsonConvert.SerializeObject(jsNames, jsonSetting)};");
+            return allJs.ToString();
         }
     }
 }

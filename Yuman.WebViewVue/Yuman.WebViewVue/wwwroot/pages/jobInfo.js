@@ -7,13 +7,21 @@ function initJobInfo(elId) {
         data: {
             title: L("JobInfo"),
             search: {
+                group: {
+                    name: "group",
+                    value: {
+                        value: ''
+                    },
+                    length: 200,
+                    title: L("JobInfo.Group"),
+                },
                 name: {
                     name: "name",
                     value: {
                         value: ''
                     },
                     length: 200,
-                    title: L("Name"),
+                    title: L("JobInfo.Name"),
                 }
             },
             button: {
@@ -140,7 +148,7 @@ function initJobInfo(elId) {
                 name: 'selectTriggerType',
                 value: { value: "" },
                 datas: [],
-                length: 200,
+                length: '100%',
                 multiple: false,
                 allowClear: false,
                 title: L("TriggerInfo.TriggerType"),
@@ -150,7 +158,7 @@ function initJobInfo(elId) {
                 name: 'selectIntervalUnit',
                 value: { value: "" },
                 datas: [],
-                length: 100,
+                length: '100%',
                 multiple: false,
                 allowClear: false,
                 title: L("TriggerInfo.IntervalUnit"),

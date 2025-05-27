@@ -4,6 +4,7 @@
     <div class="form-inline searchBoxFlex">
         <template>
             <div class="form-inline">
+                <yuman-ser-input-float-label v-bind="search.group"></yuman-ser-input-float-label>
                 <yuman-ser-input-float-label v-bind="search.name"></yuman-ser-input-float-label>
                 <yuman-ser-search-reset :searchobj="button.search" :resetobj="button.reset" :dosearch="doSearch" :doreset="doReset" :search="search"></yuman-ser-search-reset>
             </div>
@@ -116,7 +117,7 @@
                 <label>{{L('TriggerInfo.RunCount')}}</label><span class="required"> * </span>
                 <br>
                 <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.RunCount')" :title="L('TriggerInfo.RunCount')" v-model.trim="inputTriggerDto.runCount" :disabled="addEditTriggerModal.isRunForever" />
-                {{L('TriggerInfo.IsRunForever')}}<input type="checkbox" v-model.trim="addEditTriggerModal.isRunForever" v-on:change="isRunForeverChange" />
+                <input type="checkbox" v-model.trim="addEditTriggerModal.isRunForever" v-on:change="isRunForeverChange" />{{L('TriggerInfo.IsRunForever')}}
             </div>
         </template>
 

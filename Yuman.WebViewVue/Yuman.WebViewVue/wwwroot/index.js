@@ -2,7 +2,53 @@ var yuman = yuman || {};
 yuman.index = yuman.index || {};
 
 document.addEventListener('DOMContentLoaded', function () {
-    loadMyPage('home')//默认跳转首页
+    yuman.ui.setBusy();
+    //自动加载pages文件夹下的css文件
+    try {
+        if (yuman.pageFile.css) {
+            for (var i = 0; i < yuman.pageFile.css.length; i++) {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = yuman.pageFile.css[i];
+                document.head.appendChild(link);
+                console.log('自动加载：' + link.href);
+            }
+        }
+    }
+    catch (ex) { console.error(ex) }
+
+    //自动加载pages文件夹下的js文件
+    try {
+        if (yuman.pageFile.js) {
+            for (var i = 0; i < yuman.pageFile.js.length; i++) {
+                var script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = yuman.pageFile.js[i];
+                document.body.appendChild(script);
+                console.log('自动加载：' + script.src);
+            }
+        }
+    }
+    catch (ex) { console.error(ex) }
+
+    //定时判断yuman.vuepage是否加载完成，加载完成开始渲染页面
+    var timer = setInterval(function () {
+        try {
+            if (yuman.vuepage) {
+                console.log('找到vuepage，开始初始化');
+                yuman.ui.clearBusy();
+                loadMyPage('home')//默认跳转首页
+                clearInterval(timer);
+            }
+            else {
+                console.log('没找到vuepage');
+            }
+        }
+        catch (ex) {
+            console.error(ex);
+            clearInterval(timer);
+        }
+    }, 1);
 });
 
 function loadMyPage(showPage) {
@@ -16,6 +62,10 @@ function loadMyPage(showPage) {
             {
                 id: "jobInfo",
                 name: L("JobInfo"),
+            },
+            {
+                id: "taskScheduling",
+                name: L("TaskScheduling"),
             },
             {
                 id: "about",
