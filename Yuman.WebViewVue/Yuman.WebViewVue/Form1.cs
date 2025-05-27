@@ -1,10 +1,14 @@
 using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using Yuman.WebViewVue.Helper.MultipleLanguages;
+using Yuman.WebViewVue.Managers;
+using Yuman.WebViewVue.Managers.SystemSetting;
 using Yuman.WebViewVue.Services;
+using Yuman.WebViewVue.Services.Dto;
 
 namespace Yuman.WebViewVue
 {
@@ -14,14 +18,32 @@ namespace Yuman.WebViewVue
         private const string ResourceNamespace = "Yuman.WebViewVue.wwwroot"; // 替换为实际命名空间
 
         private readonly IOpenApiService _openApiService;
+        private readonly ISystemSettingManager _systemSettingManager;
 
         // 通过构造函数注入依赖
-        public Form1(IOpenApiService openApiService)
+        public Form1(
+            IOpenApiService openApiService,
+            ISystemSettingManager systemSettingManager)
         {
             _openApiService = openApiService;
+            _systemSettingManager = systemSettingManager;
 
+            InitLanguageAsync();
             InitializeComponent();
             InitWebViewAsync();
+        }
+
+        /// <summary>
+        /// 初始化语言
+        /// </summary>
+        private async void InitLanguageAsync()
+        {
+            var defaultLanguage = await _systemSettingManager.GetSystemSettingAsync(nameof(MyConsts.Language));
+            if (string.IsNullOrWhiteSpace(defaultLanguage))
+            {
+                defaultLanguage = MyConsts.Language;
+            }
+            LanguageHelper.ChangeCurrentLanguage(defaultLanguage);
         }
 
         /// <summary>
@@ -239,16 +261,18 @@ namespace Yuman.WebViewVue
             {
                 var parameters = api.MethodInfo.GetParameters()
                     .Select(p => p.Name)
-                    .ToArray(); ;
+                    .ToArray();
+                var optionsArgString = parameters?.Length > 0 ? ",options" : "options";
                 var js = new StringBuilder();
                 js.AppendLine($"yuman.webview.{api.Type.Name} = yuman.webview.{api.Type.Name} || {{}};");
-                js.AppendLine($"yuman.webview.{api.Type.Name}.{api.MethodInfo.Name} = function({string.Join(", ", parameters)}){{");
+                js.AppendLine($"yuman.webview.{api.Type.Name}.{api.MethodInfo.Name} = function({string.Join(", ", parameters)}{optionsArgString}){{");
                 js.AppendLine($"  return new Promise(function (resolve, reject){{");
                 js.AppendLine($"    var myApiInputDto = {{ Class: \"{api.Type.Name}\", Method: \"{api.MethodInfo.Name}\" }}");
                 foreach (var parameter in parameters)
                 {
-                    js.AppendLine($"    myApiInputDto.{parameter} = JSON.stringify({parameter})");
+                    js.AppendLine($"    myApiInputDto.{parameter} = JSON.stringify({parameter});");
                 }
+                js.AppendLine($"    if (options) {{ $.extend(myApiInputDto, options); }}");
                 //js.AppendLine($"    console.log(\"api接口参数\", myApiInputDto);");
                 js.AppendLine($"    window.chrome.webview.hostObjects.openApi.MyApi(JSON.stringify(myApiInputDto)).then(res => {{");//构造事件监听，实现异步
                 //js.AppendLine($"      console.log(\"{api.MethodInfo.Name}\", res);");
@@ -267,7 +291,8 @@ namespace Yuman.WebViewVue
                 js.AppendLine($"}}");
                 allJs.Append(js.ToString());
             }
-            return allJs.ToString();
+            var jsString = allJs.ToString();
+            return jsString;
         }
 
         /// <summary>
@@ -276,11 +301,17 @@ namespace Yuman.WebViewVue
         /// <returns></returns>
         private string LoadLanguages()
         {
+            var jsonSetting = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()//设置为驼峰命名，也就是前端属性名首字母开头都是小写
+            };
+
             var languages = new StringBuilder();//后续可以拓展多语言
             var langDic = LanguageHelper.GetAllLanguages();
             languages.AppendLine("var yuman = yuman || {};");
             languages.AppendLine($"yuman.languages = {JsonConvert.SerializeObject(langDic)};");
-            languages.AppendLine($"yuman.currentLanguage = '{Thread.CurrentThread.CurrentUICulture.Name}';");
+            languages.AppendLine($"yuman.languageSelect = {JsonConvert.SerializeObject(langDic.Select(s => new Select2ItemDto(s.Key, s.Key)), jsonSetting)};");
+            languages.AppendLine($"yuman.currentLanguage = '{LanguageHelper.GetCurrentLanguageName()}';");
             languages.AppendLine("function L() {");
             languages.AppendLine("  if(!yuman.languages[yuman.currentLanguage]) return arguments[0];");
             languages.AppendLine("  if(!yuman.languages[yuman.currentLanguage][arguments[0]]) return arguments[0];");

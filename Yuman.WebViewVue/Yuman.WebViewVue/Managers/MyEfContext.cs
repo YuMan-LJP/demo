@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Yuman.WebViewVue.Managers.JobInfo.Entity;
+using Yuman.WebViewVue.Managers.SystemSetting.Entity;
 
 namespace Yuman.WebViewVue.Managers
 {
@@ -16,5 +17,6 @@ namespace Yuman.WebViewVue.Managers
 
         public DbSet<MyJobInfo> MyJobInfos { get; set; }
         public DbSet<MyTriggerInfo> MyTriggerInfos { get; set; }
+        public DbSet<MySystemSetting> MySystemSettings { get; set; }
     }
 }

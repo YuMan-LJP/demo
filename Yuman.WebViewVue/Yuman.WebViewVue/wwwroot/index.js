@@ -1,31 +1,55 @@
 var yuman = yuman || {};
 yuman.index = yuman.index || {};
-yuman.index.title = L("Heard.Title")
-yuman.index.menus = [
-    {
-        id: "home",
-        name: L("Home"),
-    },
-    {
-        id: "jobInfo",
-        name: L("JobInfo"),
-    },
-    {
-        id: "about",
-        name: L("About"),
-    },
-];
 
 document.addEventListener('DOMContentLoaded', function () {
-    yuman.index.menus.forEach(f => {
+    loadMyPage('home')//默认跳转首页
+});
+
+function loadMyPage(showPage) {
+    var navigationProvider = {
+        title: L("Heard.Title"),
+        menus: [
+            {
+                id: "home",
+                name: L("Home"),
+            },
+            {
+                id: "jobInfo",
+                name: L("JobInfo"),
+            },
+            {
+                id: "about",
+                name: L("About"),
+            },
+            {
+                id: "setting",
+                name: L("Setting"),
+            },
+        ],
+    }
+    navigationProvider.menus.forEach(f => {
         f.html = yuman.initialPages[f.id];//yuman.initialPages是后端返回的全局变量，给这里拼接html使用
     });
-    var navigationProvider = {
-        title: yuman.index.title,
-        menus: yuman.index.menus,
-    }
-    const templateSource = document.getElementById('template').innerHTML;
-    const template = Handlebars.compile(templateSource);
+
+    var htmlTemplateSource = `
+        <div>
+            <nav>
+                <ul>
+                    {{#each menus}}
+                    <li><a href="javascript:void(0)" onclick="yuman.index.changeTab('{{{this.id}}}')">{{this.name}}</a></li>
+                    {{/each}}
+                </ul>
+            </nav>
+
+            <main>
+                {{#each menus}}
+                <section id="{{this.id}}" class="content">
+                    {{{this.html}}}
+                </section>
+                {{/each}}
+            </main>
+        </div>`;
+    const template = Handlebars.compile(htmlTemplateSource);
     const html = template(navigationProvider);
     document.body.innerHTML = html;
 
@@ -44,5 +68,13 @@ document.addEventListener('DOMContentLoaded', function () {
         var initObj = eval(code);//执行构造的代码
         yuman.index.loaded[id] = initObj;
     }
-    yuman.index.changeTab('home');//默认显示首页
-});
+    if (!showPage) {
+        showPage = 'home';//如果没有声明就默认跳首页
+    }
+    yuman.index.changeTab(showPage);//默认显示首页
+}
+function reloadMyPage(showPage) {
+    yuman.index.loaded = {};//清除缓存
+    yuman.vuepage = {};//销毁
+    loadMyPage(showPage)
+}

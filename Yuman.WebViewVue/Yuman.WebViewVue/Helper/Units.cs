@@ -362,5 +362,10 @@ namespace Yuman.WebViewVue.Helper
             }
             return result;
         }
+
+        public static bool EqualsIgnoreCase(this string str, string str2)
+        {
+            return str.ToStringEx().Equals(str2.ToStringEx(), StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 }

@@ -1,0 +1,14 @@
+<h1>{{title}}</h1>
+
+<div>
+    <div>
+        <label>{{L('Setting.JobIsDefaultStart')}}</label>
+        <input type="checkbox" v-model.trim="setting.systemSetting_JobIsDefaultStart" />
+    </div>
+    <div>
+        <yuman-form-select2 v-bind="languageSelect" ref="selectLanguage" v-on:change="languageSelectChange"></yuman-form-select2>
+    </div>
+
+    <br>
+    <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="L('Save')" v-on:click="saveData"></yuman-button>
+</div>

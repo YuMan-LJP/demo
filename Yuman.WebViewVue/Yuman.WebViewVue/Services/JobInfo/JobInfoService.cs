@@ -9,12 +9,13 @@ namespace Yuman.WebViewVue.Services.JobInfo
     {
         private readonly IJobInfoManager _jobInfoManager;
 
-        public JobInfoService(IJobInfoManager jobInfoManager)
+        public JobInfoService(
+            IJobInfoManager jobInfoManager)
         {
             _jobInfoManager = jobInfoManager;
         }
 
-        public async Task<PagedResultDto<MyJobInfo>> GetMianTable(GetMainTableInputDto inputDto)
+        public async Task<PagedResultDto<MyJobInfo>> GetMianTableAsync(GetMainTableInputDto inputDto)
         {
             var output = new PagedResultDto<MyJobInfo>();
             output.Items = await _jobInfoManager.GetJobInfosAsync(inputDto.Name, inputDto.SkipCount, inputDto.MaxResultCount);
@@ -22,17 +23,17 @@ namespace Yuman.WebViewVue.Services.JobInfo
             return output;
         }
 
-        public async Task<bool> AddJobInfo(AddOrEditJobInfoInputDto inputDto)
+        public async Task<bool> AddJobInfoAsync(AddOrEditJobInfoInputDto inputDto)
         {
             return await _jobInfoManager.SaveJobInfoAsync(inputDto);
         }
 
-        public async Task<bool> EditJobInfo(AddOrEditJobInfoInputDto inputDto)
+        public async Task<bool> EditJobInfoAsync(AddOrEditJobInfoInputDto inputDto)
         {
             return await _jobInfoManager.SaveJobInfoAsync(inputDto);
         }
 
-        public async Task<bool> DeleteJobInfo(string id)
+        public async Task<bool> DeleteJobInfoAsync(string id)
         {
             return await _jobInfoManager.DeleteJobInfoAsync(id);
         }
@@ -42,27 +43,27 @@ namespace Yuman.WebViewVue.Services.JobInfo
             return await _jobInfoManager.GetTriggerInfosByJobIdAsync(jobInfoId);
         }
 
-        public async Task<bool> AddTriggerInfo(AddOrEditTriggerInfoInputDto inputDto)
+        public async Task<bool> AddTriggerInfoAsync(AddOrEditTriggerInfoInputDto inputDto)
         {
             return await _jobInfoManager.SaveTriggerInfoAsync(inputDto);
         }
 
-        public async Task<bool> EditTriggerInfo(AddOrEditTriggerInfoInputDto inputDto)
+        public async Task<bool> EditTriggerInfoAsync(AddOrEditTriggerInfoInputDto inputDto)
         {
             return await _jobInfoManager.SaveTriggerInfoAsync(inputDto);
         }
 
-        public async Task<bool> DeleteTriggerInfo(string id)
+        public async Task<bool> DeleteTriggerInfoAsync(string id)
         {
             return await _jobInfoManager.DeleteTriggerInfoAsync(id);
         }
 
-        public async Task<List<Select2ItemDto>> GetTriggerTypeSelect()
+        public async Task<List<Select2ItemDto>> GetTriggerTypeSelectAsync()
         {
             return await _jobInfoManager.GetTriggerTypeSelect();
         }
 
-        public async Task<List<Select2ItemDto>> GetIntervalUnitSelect()
+        public async Task<List<Select2ItemDto>> GetIntervalUnitSelectAsync()
         {
             return await _jobInfoManager.GetIntervalUnitSelect();
         }

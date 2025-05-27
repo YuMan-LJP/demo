@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
-using System.Globalization;
 using System.Reflection;
+using Yuman.WebViewVue.Managers;
 
 namespace Yuman.WebViewVue.Helper.MultipleLanguages
 {
     public static class LanguageHelper
     {
+        private static string CurrentLanguageName = "";
         private readonly static Dictionary<string, Dictionary<string, string>> _languageDic = [];
 
         private static void LoadLanguages()
@@ -48,7 +49,7 @@ namespace Yuman.WebViewVue.Helper.MultipleLanguages
 
         public static string GetCurLanTranslation(string key, params object[]? args)
         {
-            var curLan = Thread.CurrentThread.CurrentUICulture.Name;
+            var curLan = GetCurrentLanguageName();
             return GetTranslation(curLan, key, args);
         }
 
@@ -104,19 +105,20 @@ namespace Yuman.WebViewVue.Helper.MultipleLanguages
 
         public static void ChangeCurrentLanguage(string lang)
         {
-            Thread.CurrentThread.CurrentUICulture = GetCultureInfoByChecking(lang);
+            if (CurrentLanguageName == lang)
+            {
+                return;
+            }
+            CurrentLanguageName = lang;
         }
 
-        public static CultureInfo GetCultureInfoByChecking(string name)
+        public static string GetCurrentLanguageName()
         {
-            try
+            if (string.IsNullOrWhiteSpace(CurrentLanguageName))
             {
-                return CultureInfo.GetCultureInfo(name);
+                return MyConsts.Language;
             }
-            catch (CultureNotFoundException)
-            {
-                return CultureInfo.CurrentCulture;
-            }
+            return CurrentLanguageName;
         }
     }
 }

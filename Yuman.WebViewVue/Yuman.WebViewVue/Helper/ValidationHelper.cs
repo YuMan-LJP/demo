@@ -8,7 +8,14 @@ namespace Yuman.WebViewVue.Helper
     {
         public static List<string>? CheckForEmptyProperties(object obj, Func<string, string>? L)
         {
-            return CheckForEmptyPropertiesRecursive(obj, L, null);
+            try
+            {
+                return CheckForEmptyPropertiesRecursive(obj, L, null);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"CheckForEmptyProperties异常：{ex.Message}", ex);
+            }
         }
 
         private static List<string>? CheckForEmptyPropertiesRecursive(

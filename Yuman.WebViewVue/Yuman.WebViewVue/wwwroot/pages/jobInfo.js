@@ -182,7 +182,7 @@ function initJobInfo(elId) {
 
                 yuman.ui.setBusy(
                     "#tableList",
-                    yuman.webview.IJobInfoService.GetMianTable(this.pageParam).then(res => {
+                    yuman.webview.IJobInfoService.GetMianTableAsync(this.pageParam).then(res => {
                         yuman.ui.clearBusy("tableList");
                         this.table.rows = res.items
                         this.table.total = parseInt(res.totalCount);
@@ -228,10 +228,12 @@ function initJobInfo(elId) {
                     if (isConfirmed) {
                         yuman.ui.setBusy(
                             $('#tableList'),
-                            yuman.webview.IJobInfoService.DeleteJobInfo(row.id).then((res) => {
+                            yuman.webview.IJobInfoService.DeleteJobInfoAsync(row.id).then((res) => {
                                 yuman.ui.clearBusy("tableList");
-                                this.pageList();
-                                yuman.message.success(L("DeleteSuccess"), L("SystemTips"));
+                                if (res) {
+                                    this.pageList();
+                                    yuman.message.success(L("DeleteSuccess"), L("SystemTips"));
+                                }
                             })
                         )
                     }
@@ -243,21 +245,25 @@ function initJobInfo(elId) {
                 if (this.addEditModal.type == 1) {//新增
                     yuman.ui.setBusy(
                         $('#tableList'),
-                        yuman.webview.IJobInfoService.AddJobInfo(inputDto).then((res) => {
+                        yuman.webview.IJobInfoService.AddJobInfoAsync(inputDto).then((res) => {
                             yuman.ui.clearBusy("tableList");
-                            yuman.message.success(L("AddSuccess"), L("SystemTips"));
-                            this.closeModal();
-                            this.pageList();
+                            if (res) {
+                                yuman.message.success(L("AddSuccess"), L("SystemTips"));
+                                this.closeModal();
+                                this.pageList();
+                            }
                         })
                     )
                 } else if (this.addEditModal.type == 2) {//编辑
                     yuman.ui.setBusy(
                         $('#tableList'),
-                        yuman.webview.IJobInfoService.EditJobInfo(inputDto).then((res) => {
+                        yuman.webview.IJobInfoService.EditJobInfoAsync(inputDto).then((res) => {
                             yuman.ui.clearBusy("tableList");
-                            yuman.message.success(L("EditSuccess"), L("SystemTips"));
-                            this.closeModal();
-                            this.pageList();
+                            if (res) {
+                                yuman.message.success(L("EditSuccess"), L("SystemTips"));
+                                this.closeModal();
+                                this.pageList();
+                            }
                         })
                     )
                 }
@@ -270,9 +276,9 @@ function initJobInfo(elId) {
             },
 
             setExtend(index) {
-                this.initDetailTable(index, false, true);
+                this.initDetailTable(index, true);
             },
-            initDetailTable(rindex, isSelectAll, isNeedLoading) {
+            initDetailTable(rindex, isNeedLoading) {
                 var self = this;
                 var rowId = this.table.rows[rindex].id;
 
@@ -358,14 +364,16 @@ function initJobInfo(elId) {
                     if (isConfirmed) {
                         yuman.ui.setBusy(
                             $('#tableList'),
-                            yuman.webview.IJobInfoService.DeleteTriggerInfo(row.id).then((res) => {
+                            yuman.webview.IJobInfoService.DeleteTriggerInfoAsync(row.id).then((res) => {
                                 yuman.ui.clearBusy("tableList");
-                                yuman.message.success(L("DeleteSuccess"), L("SystemTips"));
-                                var deleteIndex = this.detailTables[row.jobInfoId].rows.findIndex(f => f.id === row.id);
-                                if (deleteIndex !== -1) {
-                                    this.detailTables[row.jobInfoId].rows.splice(deleteIndex, 1);
-                                    var rindex = this.table.rows.findIndex(f => f.id == row.jobInfoId)
-                                    this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变
+                                if (res) {
+                                    yuman.message.success(L("DeleteSuccess"), L("SystemTips"));
+                                    var deleteIndex = this.detailTables[row.jobInfoId].rows.findIndex(f => f.id === row.id);
+                                    if (deleteIndex !== -1) {
+                                        this.detailTables[row.jobInfoId].rows.splice(deleteIndex, 1);
+                                        var rindex = this.table.rows.findIndex(f => f.id == row.jobInfoId)
+                                        this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变（因为triggerRule这个值实际没有，只是作为表格列声明而已）
+                                    }
                                 }
                             })
                         )
@@ -383,28 +391,32 @@ function initJobInfo(elId) {
                 if (this.addEditTriggerModal.type == 1) {//新增
                     yuman.ui.setBusy(
                         $('#tableList'),
-                        yuman.webview.IJobInfoService.AddTriggerInfo(inputTriggerDto).then((res) => {
+                        yuman.webview.IJobInfoService.AddTriggerInfoAsync(inputTriggerDto).then((res) => {
                             yuman.ui.clearBusy("tableList");
-                            yuman.message.success(L("AddSuccess"), L("SystemTips"));
-                            this.detailTables[inputTriggerDto.jobInfoId].rows.push(this.deepCopy(this.inputTriggerDto));
-                            var rindex = this.table.rows.findIndex(f => f.id == this.inputTriggerDto.jobInfoId)
-                            this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变
-                            this.closeTriggerModal();
+                            if (res) {
+                                yuman.message.success(L("AddSuccess"), L("SystemTips"));
+                                this.detailTables[inputTriggerDto.jobInfoId].rows.push(this.deepCopy(this.inputTriggerDto));
+                                var rindex = this.table.rows.findIndex(f => f.id == this.inputTriggerDto.jobInfoId)
+                                this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变（因为triggerRule这个值实际没有，只是作为表格列声明而已）
+                                this.closeTriggerModal();
+                            }
                         })
                     )
                 } else if (this.addEditTriggerModal.type == 2) {//编辑
                     yuman.ui.setBusy(
                         $('#tableList'),
-                        yuman.webview.IJobInfoService.EditTriggerInfo(inputTriggerDto).then((res) => {
+                        yuman.webview.IJobInfoService.EditTriggerInfoAsync(inputTriggerDto).then((res) => {
                             yuman.ui.clearBusy("tableList");
-                            yuman.message.success(L("EditSuccess"), L("SystemTips"));
-                            var updateIndex = this.detailTables[inputTriggerDto.jobInfoId].rows.findIndex(f => f.id === inputTriggerDto.id);
-                            if (updateIndex !== -1) {
-                                this.detailTables[inputTriggerDto.jobInfoId].rows[updateIndex] = this.deepCopy(this.inputTriggerDto);
-                                var rindex = this.table.rows.findIndex(f => f.id == this.inputTriggerDto.jobInfoId)
-                                this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变
+                            if (res) {
+                                yuman.message.success(L("EditSuccess"), L("SystemTips"));
+                                var updateIndex = this.detailTables[inputTriggerDto.jobInfoId].rows.findIndex(f => f.id === inputTriggerDto.id);
+                                if (updateIndex !== -1) {
+                                    this.detailTables[inputTriggerDto.jobInfoId].rows[updateIndex] = this.deepCopy(this.inputTriggerDto);
+                                    var rindex = this.table.rows.findIndex(f => f.id == this.inputTriggerDto.jobInfoId)
+                                    this.$refs['detailTable' + rindex].refresh();//手动刷新一下子表，不然子表的值不会变（因为triggerRule这个值实际没有，只是作为表格列声明而已）
+                                }
+                                this.closeTriggerModal();
                             }
-                            this.closeTriggerModal();
                         })
                     )
                 }
@@ -438,8 +450,8 @@ function initJobInfo(elId) {
         mounted: function () {
             console.log(this.title);
             this.pageChange();
-            yuman.webview.IJobInfoService.GetTriggerTypeSelect().then((res) => { this.triggerTypeSelect.datas = res })
-            yuman.webview.IJobInfoService.GetIntervalUnitSelect().then((res) => { this.intervalUnitSelect.datas = res })
+            yuman.webview.IJobInfoService.GetTriggerTypeSelectAsync().then((res) => { this.triggerTypeSelect.datas = res })
+            yuman.webview.IJobInfoService.GetIntervalUnitSelectAsync().then((res) => { this.intervalUnitSelect.datas = res })
         },
     })
 

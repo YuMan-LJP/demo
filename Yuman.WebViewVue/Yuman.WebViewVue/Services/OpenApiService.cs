@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.Reflection;
 using Yuman.WebViewVue.Helper;
+using Yuman.WebViewVue.Helper.MultipleLanguages;
 using Yuman.WebViewVue.Services.Dto;
 using Yuman.WebViewVue.Services.MyHelp;
 using Yuman.WebViewVue.Services.MyHelp.Dto;
@@ -74,6 +74,7 @@ namespace Yuman.WebViewVue.Services
             try
             {
                 var parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+                parameters.TryGetValue("isIgnoreCheckEmpty", out string isIgnoreCheckEmpty);
 
                 var api = MyServiceHelper.GetAllApis()
                     .Where(w => w.Type.Name == parameters["Class"] && w.MethodInfo.Name == parameters["Method"])
@@ -108,11 +109,14 @@ namespace Yuman.WebViewVue.Services
                                 throw new Exception($"【{param.Name}】传入参数反序列化失败：{value}", ex);
                             }
 
-                            //自动校验标记了必填字段的属性
-                            var emptyFields = ValidationHelper.CheckForEmptyProperties(inputObj, L);
-                            if (emptyFields != null && emptyFields.Count > 0)
+                            if (!isIgnoreCheckEmpty.EqualsIgnoreCase("true"))
                             {
-                                throw new Exception(L("RequiredButIsNull", string.Join(" | ", emptyFields)));
+                                //自动校验标记了必填字段的属性
+                                var emptyFields = ValidationHelper.CheckForEmptyProperties(inputObj, L);
+                                if (emptyFields != null && emptyFields.Count > 0)
+                                {
+                                    throw new Exception(L("RequiredButIsNull", string.Join(" | ", emptyFields)));
+                                }
                             }
 
                             args[i] = inputObj;
@@ -161,6 +165,12 @@ namespace Yuman.WebViewVue.Services
                     ContractResolver = new CamelCasePropertyNamesContractResolver()// 设置为驼峰命名
                 });
             }
+        }
+
+        public async Task ChangeLanguage(string lang)
+        {
+            LanguageHelper.ChangeCurrentLanguage(lang);
+            await Task.CompletedTask;
         }
     }
 }

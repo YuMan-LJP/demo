@@ -4,6 +4,7 @@ namespace Yuman.WebViewVue.Services
 {
     public interface IOpenApiService : ITransientDependency
     {
+        Task ChangeLanguage(string lang);
         string GetTestData();
         string GetTestData2(string arg);
         bool GetTestData3();

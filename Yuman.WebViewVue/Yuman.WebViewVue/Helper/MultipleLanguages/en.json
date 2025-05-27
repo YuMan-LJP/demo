@@ -53,13 +53,16 @@
   "DeleteSuccess": "Delete success!",
   "AddSuccess": "Add Success!",
   "EditSuccess": "Edit Success!",
+  "SaveSuccess": "Save Success!",
   "SystemTips": "System Message",
   "RequiredButIsNull": "The \"{0}\" fields are required but empty",
   "KeyExists": "\"{0}\" already exists",
+  "Language": "Language",
 
   "Heard.Title": "Yuman's Website",
   "Home": "Home",
   "About": "About",
+  "Setting": "Setting",
 
   "JobInfo": "Job Info",
   "JobInfo.Id": "ID",
@@ -85,5 +88,8 @@
   "TriggerInfo.MyIntervalUnitEnum.Seconds": "Seconds",
   "TriggerInfo.MyIntervalUnitEnum.Minutes": "Minutes",
   "TriggerInfo.MyIntervalUnitEnum.Hours": "Hours",
-  "TriggerInfo.MyIntervalUnitEnum.Days": "Days"
+  "TriggerInfo.MyIntervalUnitEnum.Days": "Days",
+
+  "Setting.SwitchLanguages": "Switch languages",
+  "Setting.JobIsDefaultStart": "Job bIs Default Start"
 }
