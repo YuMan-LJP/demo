@@ -65,5 +65,25 @@
   "JobInfo.Id": "ID",
   "JobInfo.Group": "分组",
   "JobInfo.Name": "名称",
-  "JobInfo.Description": "描述"
+  "JobInfo.Description": "描述",
+
+  "TriggerInfo": "触发器信息",
+  "TriggerInfo.Id": "ID",
+  "TriggerInfo.Group": "分组",
+  "TriggerInfo.Name": "名称",
+  "TriggerInfo.Description": "描述",
+  "TriggerInfo.TriggerType": "触发器类型",
+  "TriggerInfo.Cron": "Cron",
+  "TriggerInfo.Interval": "间隔",
+  "TriggerInfo.IntervalUnit": "间隔单位",
+  "TriggerInfo.RunCount": "执行次数",
+  "TriggerInfo.IsRunForever": "是否无限执行",
+  "TriggerInfo.TriggerRule": "触发器规则",
+  "TriggerInfo.MyTriggerTypeEnum.Sample": "简单",
+  "TriggerInfo.MyTriggerTypeEnum.Cron": "Cron",
+  "TriggerInfo.MyIntervalUnitEnum.Milliseconds": "毫秒",
+  "TriggerInfo.MyIntervalUnitEnum.Seconds": "秒",
+  "TriggerInfo.MyIntervalUnitEnum.Minutes": "分钟",
+  "TriggerInfo.MyIntervalUnitEnum.Hours": "小时",
+  "TriggerInfo.MyIntervalUnitEnum.Days": "天数"
 }

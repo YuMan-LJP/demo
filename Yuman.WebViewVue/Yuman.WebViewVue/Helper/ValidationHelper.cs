@@ -1,25 +1,35 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections;
 using System.Reflection;
 
 namespace Yuman.WebViewVue.Helper
 {
     public static class ValidationHelper
     {
-        public static List<string> CheckForEmptyProperties(object obj, Func<string, string>? L)
+        public static List<string>? CheckForEmptyProperties(object obj, Func<string, string>? L)
         {
             return CheckForEmptyPropertiesRecursive(obj, L, null);
         }
 
-        private static List<string> CheckForEmptyPropertiesRecursive(
+        private static List<string>? CheckForEmptyPropertiesRecursive(
             object obj,
             Func<string, string>? L,
             string parentPath)
         {
             List<string> emptyProperties = new List<string>();
             if (obj == null) return emptyProperties;
+            else if (IsCollectionType(obj.GetType()))
+            {
+                // 处理集合类型
+                HandleCollection(obj, "List", emptyProperties, L);
+            }
+            else if (!IsComplexType(obj.GetType()))
+            {
+                return null;
+            }
 
             PropertyInfo[] properties = obj.GetType().GetProperties(
-                BindingFlags.Public | BindingFlags.Instance);
+            BindingFlags.Public | BindingFlags.Instance);
 
             foreach (PropertyInfo property in properties)
             {

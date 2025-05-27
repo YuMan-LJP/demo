@@ -13,7 +13,16 @@
 
 <div style="margin:4px">
     <div class="body table-responsive" id="tableList" style="overflow: visible">
-        <yuman-table v-bind="table" v-on:pagechange="pageChange" ref="mainTable">
+        <yuman-table v-bind="table" v-on:pagechange="pageChange" v-on:setextend="setExtend" ref="mainTable">
+            <template #extend="{rindex}">
+                <td class="detailTable detailTable-padding tab1" colspan="30">
+                    <div style="padding-left: 30px;" v-if="detailTables[table.rows[rindex].id]">
+                        <yuman-table :extendindex="rindex" :ref="'detailTable'+rindex" v-bind="detailTables[table.rows[rindex].id]" v-bind:buttons="detailTableButtons">
+                        </yuman-table>
+                        <yuman-button :css="'btn btn-xs btn-success'" :licss="''" :title="L('Add')" v-on:click="addTriggerItem(rindex)"></yuman-button>
+                    </div>
+                </td>
+            </template>
         </yuman-table>
     </div>
 </div>
@@ -49,6 +58,71 @@
         <template v-slot:footer>
             <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="addEditModal.closeTitle" v-on:click="closeModal"></yuman-button>
             <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="addEditModal.saveTitle" v-on:click="saveModal"></yuman-button>
+        </template>
+    </yuman-modal>
+</div>
+
+<div id="addEditTriggerModal">
+    <yuman-modal v-bind="addEditTriggerModal" v-on:onclose="closeTriggerModal" ref="triggerModal">
+        <template v-slot:body>
+            <div>
+                <label>{{L('JobInfo')}}{{L('JobInfo.Id')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Id')" :title="L('TriggerInfo.Id')" v-model.trim="inputTriggerDto.jobInfoId" disabled="true" />
+            </div>
+
+            <div>
+                <label>{{L('TriggerInfo.Id')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Id')" :title="L('TriggerInfo.Id')" v-model.trim="inputTriggerDto.id" disabled="true" />
+            </div>
+
+            <div>
+                <label>{{L('TriggerInfo.Group')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Group')" :title="L('TriggerInfo.Group')" v-model.trim="inputTriggerDto.group" />
+            </div>
+
+            <div>
+                <label>{{L('TriggerInfo.Name')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Name')" :title="L('TriggerInfo.Name')" v-model.trim="inputTriggerDto.name" />
+            </div>
+
+            <div>
+                <label>{{L('TriggerInfo.Description')}}</label>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Description')" :title="L('TriggerInfo.Description')" v-model.trim="inputTriggerDto.description" />
+            </div>
+
+            <div>
+                <yuman-form-select2 v-bind="triggerTypeSelect" ref="selectTriggerType" v-on:change="triggerTypeChange"></yuman-form-select2>
+            </div>
+
+            <div v-show="inputTriggerDto.triggerType=='1'" >
+                <label>{{L('TriggerInfo.Cron')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Cron')" :title="L('TriggerInfo.Cron')" v-model.trim="inputTriggerDto.cron" />
+            </div>
+
+            <div v-show="inputTriggerDto.triggerType=='0'">
+                <label>{{L('TriggerInfo.Interval')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Interval')" :title="L('TriggerInfo.Interval')" v-model.trim="inputTriggerDto.interval" />
+                <yuman-form-select2 v-bind="intervalUnitSelect" ref="selectIntervalUnit" v-on:change="intervalUnitChange"></yuman-form-select2>
+            </div>
+
+            <div v-show="inputTriggerDto.triggerType=='0'">
+                <label>{{L('TriggerInfo.RunCount')}}</label><span class="required"> * </span>
+                <br>
+                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.RunCount')" :title="L('TriggerInfo.RunCount')" v-model.trim="inputTriggerDto.runCount" :disabled="addEditTriggerModal.isRunForever" />
+                {{L('TriggerInfo.IsRunForever')}}<input type="checkbox" v-model.trim="addEditTriggerModal.isRunForever" v-on:change="isRunForeverChange" />
+            </div>
+        </template>
+
+        <template v-slot:footer>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="addEditTriggerModal.closeTitle" v-on:click="closeTriggerModal"></yuman-button>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="addEditTriggerModal.saveTitle" v-on:click="saveTriggerModal"></yuman-button>
         </template>
     </yuman-modal>
 </div>

@@ -65,5 +65,25 @@
   "JobInfo.Id": "ID",
   "JobInfo.Group": "Group",
   "JobInfo.Name": "Name",
-  "JobInfo.Description": "Description"
+  "JobInfo.Description": "Description",
+
+  "TriggerInfo": "Trigger Info",
+  "TriggerInfo.Id": "ID",
+  "TriggerInfo.Group": "Group",
+  "TriggerInfo.Name": "Name",
+  "TriggerInfo.Description": "Description",
+  "TriggerInfo.TriggerType": "Trigger Type",
+  "TriggerInfo.Cron": "Cron",
+  "TriggerInfo.Interval": "Interval",
+  "TriggerInfo.IntervalUnit": "Interval Unit",
+  "TriggerInfo.RunCount": "Run Count",
+  "TriggerInfo.IsRunForever": "Is Run Forever",
+  "TriggerInfo.TriggerRule": "Trigger Rule",
+  "TriggerInfo.MyTriggerTypeEnum.Sample": "Sample",
+  "TriggerInfo.MyTriggerTypeEnum.Cron": "Cron",
+  "TriggerInfo.MyIntervalUnitEnum.Milliseconds": "Milliseconds",
+  "TriggerInfo.MyIntervalUnitEnum.Seconds": "Seconds",
+  "TriggerInfo.MyIntervalUnitEnum.Minutes": "Minutes",
+  "TriggerInfo.MyIntervalUnitEnum.Hours": "Hours",
+  "TriggerInfo.MyIntervalUnitEnum.Days": "Days"
 }

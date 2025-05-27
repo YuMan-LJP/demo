@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
+using System.Drawing.Imaging;
 using Yuman.WebViewVue.Managers.JobInfo.Entity;
+using Yuman.WebViewVue.Services.Dto;
 
 namespace Yuman.WebViewVue.Managers.JobInfo
 {
@@ -125,6 +128,35 @@ namespace Yuman.WebViewVue.Managers.JobInfo
                 return res > 0;
             }
             return false;
+        }
+
+        public async Task<List<Select2ItemDto>> GetTriggerTypeSelect()
+        {
+            return await GetSelectData<MyTriggerTypeEnum>();
+        }
+
+        public async Task<List<Select2ItemDto>> GetIntervalUnitSelect()
+        {
+            return await GetSelectData<MyIntervalUnitEnum>();
+        }
+
+        protected virtual async Task<List<Select2ItemDto>> GetSelectData<T>()
+        {
+            var output = new List<Select2ItemDto>();
+            foreach (var value in Enum.GetValues(typeof(T)))
+            {
+                object[] objAttrs = value.GetType().GetField(value.ToString()).GetCustomAttributes(typeof(DescriptionAttribute), true);
+                if (objAttrs != null && objAttrs.Length > 0)
+                {
+                    var descAttr = objAttrs[0] as DescriptionAttribute;
+                    output.Add(new Select2ItemDto(Convert.ToInt32(value).ToString(), L(descAttr.Description)));
+                }
+                else
+                {
+                    output.Add(new Select2ItemDto(Convert.ToInt32(value).ToString(), value.ToString()));
+                }
+            }
+            return await Task.FromResult(output);
         }
     }
 }

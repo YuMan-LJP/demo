@@ -36,5 +36,35 @@ namespace Yuman.WebViewVue.Services.JobInfo
         {
             return await _jobInfoManager.DeleteJobInfoAsync(id);
         }
+
+        public async Task<List<MyTriggerInfo>> GetTriggerInfosByJobIdAsync(string jobInfoId)
+        {
+            return await _jobInfoManager.GetTriggerInfosByJobIdAsync(jobInfoId);
+        }
+
+        public async Task<bool> AddTriggerInfo(AddOrEditTriggerInfoInputDto inputDto)
+        {
+            return await _jobInfoManager.SaveTriggerInfoAsync(inputDto);
+        }
+
+        public async Task<bool> EditTriggerInfo(AddOrEditTriggerInfoInputDto inputDto)
+        {
+            return await _jobInfoManager.SaveTriggerInfoAsync(inputDto);
+        }
+
+        public async Task<bool> DeleteTriggerInfo(string id)
+        {
+            return await _jobInfoManager.DeleteTriggerInfoAsync(id);
+        }
+
+        public async Task<List<Select2ItemDto>> GetTriggerTypeSelect()
+        {
+            return await _jobInfoManager.GetTriggerTypeSelect();
+        }
+
+        public async Task<List<Select2ItemDto>> GetIntervalUnitSelect()
+        {
+            return await _jobInfoManager.GetIntervalUnitSelect();
+        }
     }
 }

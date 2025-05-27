@@ -110,7 +110,7 @@ namespace Yuman.WebViewVue.Services
 
                             //自动校验标记了必填字段的属性
                             var emptyFields = ValidationHelper.CheckForEmptyProperties(inputObj, L);
-                            if (emptyFields.Count > 0)
+                            if (emptyFields != null && emptyFields.Count > 0)
                             {
                                 throw new Exception(L("RequiredButIsNull", string.Join(" | ", emptyFields)));
                             }
