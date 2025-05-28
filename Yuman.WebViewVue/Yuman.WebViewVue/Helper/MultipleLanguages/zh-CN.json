@@ -91,6 +91,8 @@
   "TriggerInfo.MyIntervalUnitEnum.Minutes": "分钟",
   "TriggerInfo.MyIntervalUnitEnum.Hours": "小时",
   "TriggerInfo.MyIntervalUnitEnum.Days": "天数",
+  "TriggerInfo.Cron.FormatError": "Cron的格式错误",
+  "TriggerInfo.Cron.AntiParsing": "反解析",
 
   "Setting.SwitchLanguages": "切换语言",
   "Setting.JobIsDefaultStart": "Job是否默认启动",

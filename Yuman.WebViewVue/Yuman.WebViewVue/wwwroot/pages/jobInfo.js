@@ -143,6 +143,13 @@ function initJobInfo(elId) {
                 intervalUnit: 0,
                 runCount: 0,
             },
+            cronModal: {
+                isShow: false,
+                hasHeader: true,
+                title: L("TriggerInfo.Cron"),
+                closeTitle: L("Close"),
+                saveTitle: L("Save"),
+            },
 
             triggerTypeSelect: {
                 name: 'selectTriggerType',
@@ -435,6 +442,17 @@ function initJobInfo(elId) {
                 })
                 this.addEditTriggerModal.isShow = false;
                 this.addEditTriggerModal.isRunForever = false;
+            },
+
+            openCronMoodal() {
+                this.cronModal.isShow = true;
+            },
+            saveCronModal() {
+                this.inputTriggerDto.cron = this.$refs.cronCalc.getResult();
+                this.closeCronModal();
+            },
+            closeCronModal() {
+                this.cronModal.isShow = false;
             },
 
             triggerTypeChange() {

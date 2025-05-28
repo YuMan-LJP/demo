@@ -31,17 +31,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     catch (ex) { console.error(ex) }
 
-    //定时判断yuman.vuepage是否加载完成，加载完成开始渲染页面
+    //定时判断initHome是否加载完成，加载完成开始渲染页面
     var timer = setInterval(function () {
         try {
-            if (yuman.vuepage) {
-                console.log('找到vuepage，开始初始化');
+            if (typeof initHome === "function") {
+                console.log('找到initHome，开始初始化');
                 yuman.ui.clearBusy();
                 loadMyPage('home')//默认跳转首页
                 clearInterval(timer);
             }
             else {
-                console.log('没找到vuepage');
+                console.log('没找到initHome');
             }
         }
         catch (ex) {

@@ -232,7 +232,7 @@ namespace Yuman.WebViewVue
                     //}
                     //pageHtmls.Add(Path.GetFileNameWithoutExtension(file.Name), html.ToString());
                     using var stream = assembly.GetManifestResourceStream(file);
-                    using var reader = new StreamReader(stream);
+                    using var reader = new StreamReader(stream, Encoding.GetEncoding("gb2312"));
                     string htmlContent = reader.ReadToEnd();
                     var name = file.Replace("Yuman.WebViewVue.wwwroot.pages.", "").Replace(".html", "");
                     pageHtmls.Add(name, htmlContent);

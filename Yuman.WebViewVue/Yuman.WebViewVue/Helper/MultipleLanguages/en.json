@@ -91,6 +91,8 @@
   "TriggerInfo.MyIntervalUnitEnum.Minutes": "Minutes",
   "TriggerInfo.MyIntervalUnitEnum.Hours": "Hours",
   "TriggerInfo.MyIntervalUnitEnum.Days": "Days",
+  "TriggerInfo.Cron.FormatError": "Cron's format is wrong",
+  "TriggerInfo.Cron.AntiParsing": "Anti-parsing",
 
   "Setting.SwitchLanguages": "Switch languages",
   "Setting.JobIsDefaultStart": "Job bIs Default Start",

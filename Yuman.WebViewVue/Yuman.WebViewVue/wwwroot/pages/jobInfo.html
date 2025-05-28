@@ -100,10 +100,15 @@
                 <yuman-form-select2 v-bind="triggerTypeSelect" ref="selectTriggerType" v-on:change="triggerTypeChange"></yuman-form-select2>
             </div>
 
-            <div v-show="inputTriggerDto.triggerType=='1'" >
+            <div v-show="inputTriggerDto.triggerType=='1'">
                 <label>{{L('TriggerInfo.Cron')}}</label><span class="required"> * </span>
                 <br>
-                <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Cron')" :title="L('TriggerInfo.Cron')" v-model.trim="inputTriggerDto.cron" />
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" v-on:click="openCronMoodal"><i class="fa fa-edit"></i></button>
+                    </span>
+                    <input class="form-control input_borderradius inputradius" :placeholder="L('TriggerInfo.Cron')" :title="L('TriggerInfo.Cron')" v-model.trim="inputTriggerDto.cron" />
+                </div>
             </div>
 
             <div v-show="inputTriggerDto.triggerType=='0'">
@@ -124,6 +129,19 @@
         <template v-slot:footer>
             <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="addEditTriggerModal.closeTitle" v-on:click="closeTriggerModal"></yuman-button>
             <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="addEditTriggerModal.saveTitle" v-on:click="saveTriggerModal"></yuman-button>
+        </template>
+    </yuman-modal>
+</div>
+
+<div id="cronModal">
+    <yuman-modal v-bind="cronModal" v-on:onclose="closeCronModal" ref="cronModal">
+        <template v-slot:body>
+            <yuman-cron :cronexp="inputTriggerDto.cron" ref="cronCalc" v-if="cronModal.isShow"></yuman-cron>
+        </template>
+
+        <template v-slot:footer>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-default save-button waves-effect'" :title="cronModal.closeTitle" v-on:click="closeCronModal"></yuman-button>
+            <yuman-button :css="'btn-secondary btn-outline-light btn btn-primary save-button waves-effect'" :title="cronModal.saveTitle" v-on:click="saveCronModal"></yuman-button>
         </template>
     </yuman-modal>
 </div>
