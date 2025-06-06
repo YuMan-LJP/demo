@@ -1,13 +1,13 @@
 import { createApp } from 'vue'
-import App from './App.vue'
+import App from './Login.vue'
 import ElementPlus from 'element-plus' //全局引入
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import axios from './components/common/axios'
-import router from './components/common/router'
-import i18n from './components/common/i18n'
-import sweetalert2 from './components/common/sweetalert2'
-import common from './components/common/common'
+import axios from '../../components/axios'
+import router from '../../components/router'
+import i18n from '../../components/i18n'
+import sweetalert2 from '../../components/sweetalert2'
+import common from '../../components/common'
 
 const app = createApp(App)
 

@@ -16,5 +16,19 @@ module.exports = defineConfig({
         }
       }
     }
+  },
+  pages:{
+    index:{
+      entry: "./src/views/index/main.js",
+      template: "./src/views/index/index.html",
+      filename: "index.html",
+      title: "Index",
+    },
+    login:{
+      entry: "./src/views/login/login.js",
+      template: "./src/views/index/login.html",
+      filename: "login.html",
+      title: "Login",
+    }
   }
 })

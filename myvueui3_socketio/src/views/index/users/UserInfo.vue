@@ -21,8 +21,10 @@
                         </template>
                     </el-table-column>
                     <el-table-column label="Id" prop="id" />
-                    <el-table-column label="User Name" prop="username" />
+                    <el-table-column label="User Name" prop="userName" />
+                    <el-table-column label="Nick Name" prop="nickName"></el-table-column>
                     <el-table-column label="Email" prop="email" />
+                    <el-table-column label="User Type" prop="userType" />
                 </el-table>
             </el-main>
 
@@ -45,17 +47,26 @@
                 <el-form-item label="User Name" label-width="140px">
                     <el-input v-model="form.userName" autocomplete="off" />
                 </el-form-item>
+                <el-form-item label="Nick Name" label-width="140px">
+                    <el-input v-model="form.nickName" autocomplete="off" />
+                </el-form-item>
                 <el-form-item label="Email" label-width="140px">
                     <el-input v-model="form.email" autocomplete="off" />
                 </el-form-item>
                 <el-form-item label="Password" label-width="140px">
                     <el-input v-model="form.password" autocomplete="off" />
                 </el-form-item>
+                <el-form-item label="User Type" label-width="140px">
+                    <el-select v-model="form.userType" placeholder="请选择">
+                        <el-option v-for="item in userTypeSelectItems" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
             </el-form>
 
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button @click="createOrEditModal.isVisible = false">{{ $t("app.cancel") }}</el-button>
+                    <el-button @click="closeModal">{{ $t("app.cancel") }}</el-button>
                     <el-button type="success" @click="saveData">{{ $t("app.confirm") }}</el-button>
                 </div>
             </template>
@@ -64,12 +75,12 @@
 </template>
   
 <script>
+import { ElLoading } from 'element-plus';
 export default {
     name: 'UserInfo',
     data() {
         return {
             parentBorder: false,
-            childBorder: false,
             table: {
                 rows: [],
                 currentPage: 1,
@@ -85,9 +96,15 @@ export default {
             },
             form: {
                 userName: '',
+                nickName: '',
                 email: '',
                 password: '',
-            }
+                userType: '',
+            },
+            userTypeSelectItems: [
+                { value: 'general', label: 'general' },
+                { value: 'admin', label: 'admin' },
+            ]
         }
     },
     methods: {
@@ -103,18 +120,20 @@ export default {
 
             if (row) {
                 this.createOrEditModal.rowId = row.id;
-                this.form.userName = row.username
+                this.form.userName = row.userName
+                this.form.nickName = row.nickName
                 this.form.email = row.email
                 this.form.password = row.password
+                this.form.userType = row.userType
             }
             this.createOrEditModal.isVisible = true;
         },
         handleDelete(index, row) {
-            console.log(index, row)
-
             this.$swalConfirm(this.$t("app.systemTips"), "Are you sure to delete it?", (isConfirmed) => {
                 if (isConfirmed) {
-                    this.$post("/api/deleteuser", { id: row.id }).then((response) => {
+                    let loadingInstance = ElLoading.service({ fullscreen: true });
+                    this.$post("/api/deleteUser", { id: row.id }).then((response) => {
+                        loadingInstance.close();
                         if (response.data.isSuccess) {
                             var index = this.table.rows.findIndex(f => f.id == row.id);
                             this.table.rows.splice(index, 1);
@@ -123,6 +142,7 @@ export default {
                             this.$swalError('系统提示', response.data.error);
                         }
                     }).catch((err) => {
+                        loadingInstance.close();
                         this.$swalError('系统提示', err);
                     })
                 }
@@ -139,16 +159,24 @@ export default {
         pageChange() {
             let limit = this.table.pageSize;
             let offset = (this.table.currentPage - 1) * this.table.pageSize;
-            this.$get(`/api/getusers?limit=${limit}&offset=${offset}`).then((response) => {
-                console.log(response.data);
+            let loadingInstance = ElLoading.service({ fullscreen: true });
+            this.$get(`/api/getUsers?limit=${limit}&offset=${offset}`).then((response) => {
+                loadingInstance.close();
                 this.table.rows = response.data.data;
                 this.table.total = this.table.rows.length;
+            }).catch((err) => {
+                loadingInstance.close();
+                this.$swalError('系统提示', err);
             })
         },
         saveData() {
             //数据校验
             if (!this.form.userName) {
                 this.$swalError('系统提示', 'User Name不能为空');
+                return;
+            }
+            if (!this.form.nickName) {
+                this.$swalError('系统提示', 'Nick 不能为空');
                 return;
             }
             if (!this.form.email) {
@@ -159,65 +187,82 @@ export default {
                 this.$swalError('系统提示', 'Password不能为空');
                 return;
             }
+            if (!this.form.userType) {
+                this.$swalError('系统提示', 'User Type不能为空');
+                return;
+            }
 
             if (this.createOrEditModal.rowId) {
 
                 var inputDto = {
                     id: this.createOrEditModal.rowId,
-                    username: this.form.userName,
+                    userName: this.form.userName,
+                    nickName: this.form.nickName,
                     email: this.form.email,
-                    password: this.form.password
+                    password: this.form.password,
+                    userType: this.form.userType,
                 }
-                this.$post("/api/updateuser", inputDto).then((response) => {
-                    console.log(response.data);
-
+                let loadingInstance = ElLoading.service({ fullscreen: true });
+                this.$post("/api/updateUser", inputDto).then((response) => {
+                    loadingInstance.close();
                     if (response.data.isSuccess) {
                         this.pageChange()//做简单一点直接刷新表格即可
                         this.closeModal();
                         // var mainRow = this.table.rows.filter(f => f.id == this.createOrEditModal.rowId)[0];
                         // mainRow.userName = this.form.userName
+                        // mainRow.nickName = this.form.nickName
                         // mainRow.email = this.form.email
                         // mainRow.password = this.form.password
+                        // mainRow.userType = this.form.userType
                     }
                     else {
                         this.$swalError('系统提示', response.data.error);
                     }
                 }).catch((err) => {
+                    loadingInstance.close();
                     this.$swalError('系统提示', err);
                 })
             }
             else {
 
                 var inputDto = {
-                    username: this.form.userName,
+                    userName: this.form.userName,
+                    nickName: this.form.nickName,
                     email: this.form.email,
-                    password: this.form.password
+                    password: this.form.password,
+                    userType: this.form.userType,
                 }
-                this.$post("/api/adduser", inputDto).then((response) => {
-                    console.log(response.data);
+                let loadingInstance = ElLoading.service({ fullscreen: true });
+                this.$post("/api/addUser", inputDto).then((response) => {
+                    loadingInstance.close();
                     if (response.data.isSuccess) {
                         this.pageChange()//做简单一点直接刷新表格即可
                         this.closeModal();
                         // var newRow = {};
                         // //newRow.id = this.$getGuid();//自增Id
                         // newRow.userName = this.form.userName
+                        // newRow.nickName = this.form.nickName
                         // newRow.email = this.form.email
                         // newRow.password = this.form.password
+                        // newRow.userType = this.form.userType
                         // this.table.rows.push(newRow);
                     }
                     else {
                         this.$swalError('系统提示', response.data.error);
                     }
                 }).catch((err) => {
+                    loadingInstance.close();
                     this.$swalError('系统提示', err);
                 })
             }
         },
-        closeModal(){
+        closeModal() {
             this.createOrEditModal.isVisible = false;
             this.form.userName = ""
+            this.form.nickName = ""
             this.form.email = ""
             this.form.password = ""
+            this.form.userType = ""
         }
     },
     mounted() {
