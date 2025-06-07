@@ -22,7 +22,7 @@
                   群申请
                 </el-badge>
               </el-menu-item>
-              <el-menu-item index="3-3">
+              <el-menu-item index="3-3" @click="linkToChatContact">
                 <el-badge :value="chatContactCount" class="item" :offset="[20, 15]" :hidden="chatContactCount == 0">
                   联系人消息
                 </el-badge>
@@ -144,10 +144,16 @@ import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import en from 'element-plus/dist/locale/en.mjs'
 import { ElLoading } from 'element-plus';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 //菜单图标：https://element-plus.org/zh-CN/component/icon
 export default {
+  setup(){
+    const router = useRouter()//特别注意useRouter只能在setup里面引入，否则会是undefined
+    return {
+      router
+    }
+  },
   name: 'App',
   components: {
     ElConfigProvider
@@ -196,10 +202,13 @@ export default {
       window.location.href = "login.html"
     },
     setMenuActive() {
-      // var routeName = window.location.href.split('/').at(-1)
-      // if (routeName) {
-      //   this.activeIndex = '/' + routeName;
-      // }
+      try {
+        var routeName = window.location.href.split('/').at(-1)
+        if (routeName) {
+          this.activeIndex = '/' + routeName;
+        }
+      }
+      catch (ex) { console.log(ex) }
     },
     refreshMessage() {
       this.$get(`/api/getMessageQueues?userId=${this.sessionUser.id}`).then((response) => {
@@ -273,6 +282,10 @@ export default {
         loadingInstance.close();
         this.$swalError('系统提示', err);
       })
+    },
+
+    linkToChatContact() {
+      this.router.push("/chatContact")
     }
   },
   beforeCreate() {
@@ -284,8 +297,6 @@ export default {
     //校验有没有登录，没有就跳转登录页面
     var userJsonStr = sessionStorage.getItem('user')
     if (!userJsonStr) {
-      // var router = useRouter()
-      // router.push({ path: "/login" })
       window.location.href = "login.html"
       return;
     }

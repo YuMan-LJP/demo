@@ -14,7 +14,7 @@ function initSqlite() {
   --用户表
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userName TEXT NOT NULL,
+    userName TEXT NOT NULL UNIQUE,  --登录名唯一
     nickName TEXT NOT NULL,
     email TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -77,6 +77,9 @@ function initSqlite() {
     type TEXT(100) NOT NULL,  --requestcontact联系人申请/requestroom群申请/chatcontact联系人聊天/chatroom群聊天
     createTime NUMERIC NOT NULL
   );
+
+  --初始化数据库时，插入一条管理员数据
+  --INSERT INTO users (userName,nickName,email,password,userType)VALUES ('admin','admin','admin@ljp.com','123qwe!Q','admin');
   `;
     db.run(createTable, (err) => {
       console.log('数据库初始化', err);

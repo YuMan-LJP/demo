@@ -6,7 +6,7 @@
         <el-input v-model="form.userName" />
       </el-form-item>
       <el-form-item label="Password">
-        <el-input v-model="form.password" type="password" placeholder="Please input password" show-password />
+        <el-input v-model="form.password" type="password" placeholder="Please input password" show-password v-on:keyup.enter="login"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="login">Login</el-button>

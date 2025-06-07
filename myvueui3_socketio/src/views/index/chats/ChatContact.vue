@@ -7,7 +7,8 @@
                     style="background-color: lavender;border: 1px solid;border-radius: 5px;margin: 1px;">
                     <div>
                         联系人
-                        <div v-for="item in contacts" @click="showMessage(item)" :class="curContact != null && curContact.friendId == item.friendId ? 'contactActive' : 'contactNoActive'">
+                        <div v-for="item in contacts" @click="showMessage(item)"
+                            :class="curContact != null && curContact.friendId == item.friendId ? 'contactActive' : 'contactNoActive'">
                             <el-badge :value="item.count" class="item" :offset="[20, 0]" :hidden="item.count == 0">
                                 <el-icon v-if="curContact != null && curContact.friendId == item.friendId">
                                     <ChatLineRound />
@@ -17,8 +18,8 @@
                         </div>
                     </div>
                 </el-aside>
-                <el-container>
-                    <el-main style="border: 1px solid;border-radius: 5px;margin: 1px;">
+                <el-container @click="clickChatDiv">
+                    <el-main style="border: 1px solid;border-radius: 5px;margin: 1px;" id="chatMessageDiv">
                         <div style="max-height: calc(100vh - 400px)">
                             <div v-for="item in chatMessages"
                                 style="margin: 5px 10px;background-color: blanchedalmond;padding: 5px;border-radius: 5px;width: fit-content;">
@@ -53,7 +54,7 @@ export default {
             curContact: null,
             chatMessages: [],
 
-            curUser: {},
+            curUser: null,
             socket: null,
             socketid: ''
         }
@@ -77,6 +78,14 @@ export default {
                 this.chatMessages = response.data.data;
                 item.count = 0;
                 this.$bus.emit('messageChange')
+                try {
+                    this.$nextTick(() => {
+                        //将聊天窗口滚到到底部
+                        var div = document.querySelector("#chatMessageDiv")
+                        div.scrollTop = div.scrollHeight
+                    })
+                }
+                catch (ex) { console.error(ex) }
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
@@ -105,6 +114,17 @@ export default {
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
+        },
+        clickChatDiv() {
+            //点击聊天区域时，直接设置当前聊天对象已读
+            if (this.curContact == null) {
+                return;
+            }
+            this.showMessage(this.curContact);
+            var index = this.contacts.findIndex(f => f.id == this.curContact.id)
+            if (index !== -1) {
+                this.contacts[index].count = 0
+            }
         },
         initSocket() {
             //服务器地址
@@ -142,6 +162,10 @@ export default {
             this.socket.on('connect_error', (err) => {
                 console.error('连接失败:', err.message)
             })
+
+            this.socket.on("disconnect", () => {
+                console.log('断开连接', this.socket.id);
+            });
         },
     },
     mounted() {
@@ -149,6 +173,15 @@ export default {
         this.curUser = JSON.parse(sessionStorage.getItem('user'));
         this.loadContacts(true);
         this.initSocket();
+    },
+    beforeUnmount() {
+        console.log('ChatContact beforeUnmount');
+        if (this.socket) {
+            this.socket.disconnect()
+        }
+    },
+    beforeDestroy() {
+        console.log('ChatContact beforeDestroy');
     },
 }
 </script>
@@ -162,6 +195,7 @@ export default {
     padding: 15px;
     cursor: pointer;
 }
+
 .contactActive {
     background-color: #d5d4d2;
     border: 1px solid;
