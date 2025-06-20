@@ -10,21 +10,22 @@
                         <div v-for="item in contacts" @click="showMessage(item)"
                             :class="curContact != null && curContact.friendId == item.friendId ? 'contactActive' : 'contactNoActive'">
                             <el-badge :value="item.count" class="item" :offset="[20, 0]" :hidden="item.count == 0">
+                                <span :style="'color:' + item.onlineStatus">{{ item.nickName }}</span>
                                 <el-icon v-if="curContact != null && curContact.friendId == item.friendId">
                                     <ChatLineRound />
                                 </el-icon>
-                                {{ item.nickName }}
                             </el-badge>
                         </div>
                     </div>
                 </el-aside>
-                <el-container @click="clickChatDiv">
-                    <el-main style="border: 1px solid;border-radius: 5px;margin: 1px;" id="chatMessageDiv">
+                <el-container @click="debounceClickChatDiv">
+                    <el-main style="border: 1px solid;border-radius: 5px;margin: 1px;padding: 5px;" id="chatMessageDiv">
                         <div style="max-height: calc(100vh - 400px)">
                             <div v-for="item in chatMessages"
                                 style="margin: 5px 10px;background-color: blanchedalmond;padding: 5px;border-radius: 5px;width: fit-content;">
                                 <span>{{ item.nickName }}:</span>{{ item.message }}
                             </div>
+                            <p v-if="curContact != null && curContact.isInvalid == 1" style="color: red">您已被对方从联系人中删除</p>
                         </div>
                     </el-main>
                     <el-footer
@@ -56,11 +57,15 @@ export default {
 
             curUser: null,
             socket: null,
-            socketid: ''
+            socketid: '',
+
+            onlineUserIds: [],
+
+            debounceClickChatDiv: () => { },//防抖
         }
     },
     methods: {
-        loadContacts(isSelectOne = false) {
+        loadContacts(isSelectOne = false, callback = null) {
             this.$get(`/api/getContactAndCount?myselfId=${this.curUser.id}`).then((response) => {
                 this.contacts = response.data.data;
 
@@ -68,9 +73,23 @@ export default {
                 if (isSelectOne && this.contacts.length > 0) {
                     this.showMessage(this.contacts[0]);
                 }
+
+                if (callback) {
+                    callback();
+                }
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
+        },
+        scrollChatMessageDiv() {
+            try {
+                this.$nextTick(() => {
+                    //将聊天窗口滚到到底部
+                    var div = document.querySelector("#chatMessageDiv")
+                    div.scrollTop = div.scrollHeight
+                })
+            }
+            catch (ex) { console.error(ex) }
         },
         showMessage(item) {
             this.curContact = item;
@@ -78,14 +97,7 @@ export default {
                 this.chatMessages = response.data.data;
                 item.count = 0;
                 this.$bus.emit('messageChange')
-                try {
-                    this.$nextTick(() => {
-                        //将聊天窗口滚到到底部
-                        var div = document.querySelector("#chatMessageDiv")
-                        div.scrollTop = div.scrollHeight
-                    })
-                }
-                catch (ex) { console.error(ex) }
+                this.scrollChatMessageDiv();
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
@@ -103,14 +115,18 @@ export default {
             var inputDto = {
                 sendUserId: this.curContact.myselfId,
                 receiveUserId: this.curContact.friendId,
-                nickName: this.curUser.nickName,
+                nickName: this.curUser.nickName,//触发消息的时候使用
                 message: this.sendText,
             }
-            var inputDtos = [inputDto];
 
-            this.$post(`/api/addContactMessages`, inputDtos).then((response) => {
-                this.socket.emit('send-ContactChatMessage', inputDto);
-                this.sendText = ""
+            this.$post(`/api/addContactMessage`, inputDto).then((response) => {
+                if (response.data.isSuccess) {
+                    this.socket.emit('send-ContactChatMessage', inputDto);
+                    this.sendText = ""
+                    this.scrollChatMessageDiv();
+                } else {
+                    this.$swalError('系统提示', response.data.error);
+                }
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
@@ -151,10 +167,10 @@ export default {
                         nickName: data.nickName,
                         message: data.message
                     });
+                    this.scrollChatMessageDiv();
                 }
-                //接收到新的消息时，如果接收人就是自己触发刷新右上角的消息数量和左边联系人的数量
+                //接收到新的消息时，如果接收人就是自己触发刷新左边联系人的数量
                 if (data.receiveUserId == this.curUser.id) {
-                    this.$bus.emit('messageChange')
                     this.loadContacts()
                 }
             });
@@ -167,21 +183,52 @@ export default {
                 console.log('断开连接', this.socket.id);
             });
         },
+
+        refreshOnlineStatus(rows) {
+            rows.forEach(element => {
+                if (this.onlineUserIds.findIndex(f => f == element.friendId) !== -1) {
+                    element.onlineStatus = 'green'
+                } else {
+                    element.onlineStatus = 'red'
+                }
+            })
+        },
+        getOnlineUserIds() {
+            this.$get(`/api/getOnlineUserIds`).then((response) => {
+                this.onlineUserIds = response.data.data
+                this.refreshOnlineStatus(this.contacts);
+            }).catch((err) => {
+                this.$swalError('系统提示', err);
+            })
+        }
     },
     mounted() {
         console.log("ChatContact mounted");
+        this.debounceClickChatDiv = this.$debounce(this.clickChatDiv, 500);//防抖
         this.curUser = JSON.parse(sessionStorage.getItem('user'));
-        this.loadContacts(true);
+        this.loadContacts(true, this.getOnlineUserIds);
         this.initSocket();
+
+        this.$bus.on('refreshOnlineUserIds', (data) => {
+            this.onlineUserIds = data
+            this.refreshOnlineStatus(this.contacts);
+        })
     },
     beforeUnmount() {
         console.log('ChatContact beforeUnmount');
         if (this.socket) {
+            this.socket.off('chat-ContactMessage') // 移除事件监听
             this.socket.disconnect()
         }
+        this.$bus.off('refreshOnlineUserIds');
     },
     beforeDestroy() {
         console.log('ChatContact beforeDestroy');
+        if (this.socket) {
+            this.socket.off('chat-ContactMessage') // 移除事件监听
+            this.socket.disconnect()
+        }
+        this.$bus.off('refreshOnlineUserIds');
     },
 }
 </script>

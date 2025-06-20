@@ -6,35 +6,41 @@
           <el-menu mode="horizontal" :ellipsis="false" background-color="#545c64" text-color="#fff"
             active-text-color="#ffd04b">
             <el-menu-item index="0" @click="expandOrCollapseMenu">{{ $t('app.title') }}</el-menu-item>
-            <el-sub-menu index="3">
+            <el-sub-menu index="4">
               <template #title>
                 <el-badge :value="messageAllCount" class="item" :offset="[10, 15]" :hidden="messageAllCount == 0">
                   消息
                 </el-badge>
               </template>
-              <el-menu-item index="3-1" @click="openRequsetModal">
+              <el-menu-item index="4-1" @click="openRequsetModal('contact')">
                 <el-badge :value="requestContactCount" class="item" :offset="[20, 15]" :hidden="requestContactCount == 0">
                   联系人申请
                 </el-badge>
               </el-menu-item>
-              <el-menu-item index="3-2">
+              <el-menu-item index="4-2" @click="openRequsetModal('room')">
                 <el-badge :value="requestRoomCount" class="item" :offset="[20, 15]" :hidden="requestRoomCount == 0">
                   群申请
                 </el-badge>
               </el-menu-item>
-              <el-menu-item index="3-3" @click="linkToChatContact">
+              <el-menu-item index="4-3" @click="linkToChatContact">
                 <el-badge :value="chatContactCount" class="item" :offset="[20, 15]" :hidden="chatContactCount == 0">
                   联系人消息
                 </el-badge>
               </el-menu-item>
-              <el-menu-item index="3-4">
+              <el-menu-item index="4-4" @click="linkToChatRoom">
                 <el-badge :value="chatRoomCount" class="item" :offset="[20, 15]" :hidden="chatRoomCount == 0">
                   群消息
                 </el-badge>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="2" @click="toggleLang">{{ $t("app.switchLanguage") }}</el-menu-item>
-            <el-menu-item index="1" @click="logout">[<span v-html="sessionUserName"></span>]退出</el-menu-item>
+            <el-menu-item index="3" @click="toggleLang">{{ $t("app.switchLanguage") }}</el-menu-item>
+            <el-menu-item index="2">
+              <el-icon>
+                <UserFilled :color="onlineStatus" />
+              </el-icon>
+              [<span v-html="sessionUserName"></span>]
+            </el-menu-item>
+            <el-menu-item index="1" @click="logout">退出</el-menu-item>
           </el-menu>
         </el-header>
         <el-container>
@@ -73,8 +79,7 @@
                   <el-menu-item index="/chatContact">消息</el-menu-item>
                 </el-menu-item-group>
                 <el-menu-item-group title="群聊">
-                  <el-menu-item index="/room">群管理</el-menu-item>
-                  <el-menu-item index="/chatRoom">群聊</el-menu-item>
+                  <el-menu-item index="/room">群聊</el-menu-item>
                 </el-menu-item-group>
               </el-sub-menu>
               <el-sub-menu index="3">
@@ -108,25 +113,29 @@
       </el-container>
     </el-config-provider>
 
-    <el-dialog v-model="requestModal.isVisible" title="申请" width="800">
+    <el-dialog v-model="requestModal.isVisible" title="申请" width="900">
       <div>
         <el-table ref="requestTable" stripe row-key="id" :data="requestTable.rows" style="width: 100%">
           <el-table-column type="index" width="50" />
           <el-table-column label="Operations">
             <template #default="scope">
-              <el-button size="small" :disabled="scope.row.progress != 'waiting'" type="primary"
+              <el-button size="small" v-if="scope.row.receiveUserId == sessionUserId"
+                :disabled="scope.row.progress != 'waiting'" type="primary"
                 @click="handleRequsetPass(scope.$index, scope.row)">
                 同意
               </el-button>
-              <el-button size="small" :disabled="scope.row.progress != 'waiting'" type="danger"
+              <el-button size="small" v-if="scope.row.receiveUserId == sessionUserId"
+                :disabled="scope.row.progress != 'waiting'" type="danger"
                 @click="handleRequsetRefuse(scope.$index, scope.row)">
                 拒绝
               </el-button>
             </template>
           </el-table-column>
           <el-table-column label="Progress" prop="progress" />
-          <el-table-column label="Nick Name" prop="nickName" />
-          <el-table-column label="Email" prop="email" />
+          <el-table-column label="Type" prop="type" />
+          <el-table-column label="Send User Name" prop="sendUserName" />
+          <el-table-column label="Receive User Name" prop="receiveUserName" />
+          <el-table-column label="Room Name" prop="roomName" />
           <el-table-column label="Remark" prop="remark" />
         </el-table>
       </div>
@@ -145,10 +154,11 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import en from 'element-plus/dist/locale/en.mjs'
 import { ElLoading } from 'element-plus';
 import { useRouter } from 'vue-router'
+import io from 'socket.io-client';
 
 //菜单图标：https://element-plus.org/zh-CN/component/icon
 export default {
-  setup(){
+  setup() {
     const router = useRouter()//特别注意useRouter只能在setup里面引入，否则会是undefined
     return {
       router
@@ -165,6 +175,7 @@ export default {
       activeIndex: '/',//页面加载时默认激活菜单的 index
       isMenuCollapse: false,
       sessionUser: {},
+      sessionUserId: '',
       sessionUserName: '',
       isAdmin: false,
 
@@ -180,7 +191,10 @@ export default {
       requestTable: {
         rows: [],
         disabled: false,
-      }
+      },
+
+      socket: null,
+      onlineStatus: 'red'//green在线/red离线
     }
   },
   methods: {
@@ -199,6 +213,7 @@ export default {
     },
     logout() {
       sessionStorage.removeItem('user');
+      this.socket.emit('userquit', this.sessionUserId);
       window.location.href = "login.html"
     },
     setMenuActive() {
@@ -212,7 +227,6 @@ export default {
     },
     refreshMessage() {
       this.$get(`/api/getMessageQueues?userId=${this.sessionUser.id}`).then((response) => {
-        console.log(response.data.data);
         this.messageAllCount = 0;
         this.requestContactCount = 0;
         this.requestRoomCount = 0;
@@ -236,13 +250,12 @@ export default {
       })
     },
 
-    openRequsetModal() {
+    openRequsetModal(type) {
       this.requestModal.isVisible = true
 
       let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$get(`/api/getRequests?receiveUserId=${this.sessionUser.id}`).then((response) => {
+      this.$get(`/api/getRequests?userId=${this.sessionUser.id}&type=${type}`).then((response) => {
         loadingInstance.close();
-        console.log(response.data.data);
         this.requestTable.rows = response.data.data;
       }).catch((err) => {
         loadingInstance.close();
@@ -253,22 +266,46 @@ export default {
       this.requestModal.isVisible = false
     },
     handleRequsetPass(index, row) {
-      var inputDto = {
-        requestId: row.id,
-        myselfId: row.receiveUserId,
-        friendId: row.sendUserId
-      }
-      let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$post(`/api/addContact`, inputDto).then((response) => {
-        loadingInstance.close();
-        if (response.data.isSuccess) {
-          row.progress = 'pass'
-          this.$bus.emit('messageChange')
+      if (row.type === 'contact') {
+        var inputDto = {
+          requestId: row.id,
+          myselfId: row.receiveUserId,
+          friendId: row.sendUserId
         }
-      }).catch((err) => {
-        loadingInstance.close();
-        this.$swalError('系统提示', err);
-      })
+        let loadingInstance = ElLoading.service({ fullscreen: true });
+        this.$post(`/api/addContact`, inputDto).then((response) => {
+          loadingInstance.close();
+          if (response.data.isSuccess) {
+            row.progress = 'pass'
+            this.$bus.emit('messageChange')
+          }
+        }).catch((err) => {
+          loadingInstance.close();
+          this.$swalError('系统提示', err);
+        })
+      }
+      else if (row.type === 'room') {
+        var inputDto = {
+          requestId: row.id,
+          roomId: row.receiveRoomId,
+          myselfId: row.receiveUserId,
+          friendId: row.sendUserId
+        }
+        let loadingInstance = ElLoading.service({ fullscreen: true });
+        this.$post(`/api/addRoomUser`, inputDto).then((response) => {
+          loadingInstance.close();
+          if (response.data.isSuccess) {
+            row.progress = 'pass'
+            this.$bus.emit('messageChange')
+          }
+        }).catch((err) => {
+          loadingInstance.close();
+          this.$swalError('系统提示', err);
+        })
+      }
+      else {
+        this.$swalError('系统提示', row.type + '类型错误');
+      }
     },
     handleRequsetRefuse(index, row) {
       let loadingInstance = ElLoading.service({ fullscreen: true });
@@ -286,10 +323,61 @@ export default {
 
     linkToChatContact() {
       this.router.push("/chatContact")
+    },
+    linkToChatRoom() {
+      this.router.push("/room")
+    },
+
+    initSocket() {
+      //服务器地址
+      this.socket = io('http://192.168.1.234:5005/', {
+        query: {
+          userId: this.sessionUserId,
+          userName: this.sessionUserName,
+          roomId: null
+        }
+      });
+      this.socket.on('connect', () => {
+        console.log('Connected to server', this.socket.connected, this.socket.id);
+      });
+      // 接收消息
+      this.socket.on('getuserlogin', (data) => {
+        console.log('getuserlogin', data);
+        this.$bus.emit('refreshOnlineUserIds', data)
+      });
+      this.socket.on('getuserquit', (data) => {
+        console.log('getuserquit', data);
+        this.$bus.emit('refreshOnlineUserIds', data)
+      });
+      this.socket.on('getdisconnect', (data) => {
+        console.log('getdisconnect', data);
+        this.$bus.emit('refreshOnlineUserIds', data)
+      });
+      this.socket.on('chat-ContactMessage', (data) => {
+        console.log('chat-ContactMessage', data);
+        if (data.receiveUserId == this.sessionUserId) {
+          this.$bus.emit('messageChange')//接收到新的消息时，如果接收人就是自己就刷新右上角
+        }
+      });
+      this.socket.on('message-RoomChat', (data) => {
+        console.log('message-RoomChat', data);
+        if (data.findIndex(f => f == this.sessionUserId) !== -1) {
+          this.$bus.emit('messageChange')//接收到新的消息时，如果是群聊内的用户就刷新右上角
+        }
+      });
+      // 错误处理
+      this.socket.on('connect_error', (err) => {
+        console.error('connect_error:', err.message)
+      })
+      this.socket.on("disconnect", () => {
+        console.log('disconnect', this.socket.id);
+      });
+
+      this.socket.emit('userlogin', this.sessionUserId);
     }
   },
   beforeCreate() {
-    console.log("App beforeCreate");
+    //console.log("App beforeCreate");
   },
   created() {
     console.log("App created");
@@ -305,14 +393,17 @@ export default {
     var userEntity = JSON.parse(userJsonStr);
     console.log(userEntity);
     this.sessionUser = userEntity;
+    this.sessionUserId = userEntity.id;
     this.sessionUserName = userEntity.userName;
     this.isAdmin = userEntity.userType == "admin";
+    this.onlineStatus = 'green';//在线状态
 
     //sessionStorage.removeItem('user');
     //sessionStorage.clear();
   },
   mounted() {
     console.log("App mounted");
+    this.initSocket();
     this.refreshMessage();
     this.setMenuActive();
 
@@ -321,6 +412,32 @@ export default {
       this.refreshMessage();
     })
   },
+  beforeUnmount() {
+    console.log('App beforeUnmount');
+    // 组件卸载前断开连接
+    if (this.socket) {
+      this.socket.off('getuserlogin') // 移除事件监听
+      this.socket.off('getuserquit') // 移除事件监听
+      this.socket.off('getdisconnect') // 移除事件监听
+      this.socket.off('chat-ContactMessage') // 移除事件监听
+      this.socket.off('message-RoomChat') // 移除事件监听
+      this.socket.disconnect()
+    }
+    this.$bus.off('messageChange');
+  },
+  beforeDestroy() {
+    console.log("App beforeDestroy");
+    // 组件销毁前断开连接
+    if (this.socket) {
+      this.socket.off('getuserlogin') // 移除事件监听
+      this.socket.off('getuserquit') // 移除事件监听
+      this.socket.off('getdisconnect') // 移除事件监听
+      this.socket.off('chat-ContactMessage') // 移除事件监听
+      this.socket.off('message-RoomChat') // 移除事件监听
+      this.socket.disconnect()
+    }
+    this.$bus.off('messageChange');
+  }
 }
 </script>
 

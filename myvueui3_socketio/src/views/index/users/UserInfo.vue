@@ -151,9 +151,13 @@ export default {
 
         handleSizeChange(val) {
             console.log(`${val} items per page`)
+            this.table.pageSize = val;
+            this.pageChange();
         },
         handleCurrentChange(val) {
             console.log(`current page: ${val}`)
+            this.table.currentPage = val;
+            this.pageChange();
         },
 
         pageChange() {
@@ -162,8 +166,8 @@ export default {
             let loadingInstance = ElLoading.service({ fullscreen: true });
             this.$get(`/api/getUsers?limit=${limit}&offset=${offset}`).then((response) => {
                 loadingInstance.close();
-                this.table.rows = response.data.data;
-                this.table.total = this.table.rows.length;
+                this.table.rows = response.data.data.data;
+                this.table.total = response.data.data.count.count;
             }).catch((err) => {
                 loadingInstance.close();
                 this.$swalError('系统提示', err);

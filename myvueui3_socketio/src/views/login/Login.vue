@@ -114,10 +114,8 @@ export default {
       this.$post("/api/addUser", inputDto).then((response) => {
         loadingInstance.close();
         if (response.data.isSuccess) {
-          this.$get("/api/getUserByUserName?username=" + inputDto.userName).then((response2) =>{
-            sessionStorage.setItem('user', JSON.stringify(response2.data.data))
-            window.location.href = "index.html"
-          })
+          sessionStorage.setItem('user', JSON.stringify(response.data.data))
+          window.location.href = "index.html"
         }
         else {
           this.$swalError('系统提示', response.data.error);

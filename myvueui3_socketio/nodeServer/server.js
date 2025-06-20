@@ -1,92 +1,64 @@
 const express = require('express')
-const sqlite3 = require("sqlite3").verbose();
 const url = require("url")
 const { createServer } = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
 const bodyParser = require('body-parser');
+const dal = require('./dal')
 
 //初始化数据库
-const db = new sqlite3.Database("mydb.sqlite");
-function initSqlite() {
-  db.serialize(() => {
-    const createTable = `
-  --用户表
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userName TEXT NOT NULL UNIQUE,  --登录名唯一
-    nickName TEXT NOT NULL,
-    email TEXT NOT NULL,
-    password TEXT NOT NULL,
-    userType TEXT(100) NOT NULL  --general普通用户/admin管理员
-  );
-  --联系人消息表
-  CREATE TABLE IF NOT EXISTS contactMessages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sendUserId INTEGER NOT NULL,
-    receiveUserId INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    createTime NUMERIC NOT NULL
-  );
-  --群消息表
-  CREATE TABLE IF NOT EXISTS contactRooms (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sendUserId INTEGER NOT NULL,
-    receiveRoomId INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    createTime NUMERIC NOT NULL
-  );
-  --房间表
-  CREATE TABLE IF NOT EXISTS rooms (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT NOT NULL,
-    type TEXT(100) NOT NULL,  --群类型，默认是空，后续待开发
-    createUserId INTEGER NOT NULL,
-    createTime NUMERIC NOT NULL
-  );
-  --房间用户表（展示这个房间有哪些人）
-  CREATE TABLE IF NOT EXISTS roomUsers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    roomId INTEGER NOT NULL,
-    userId INTEGER NOT NULL
-  );
-  --联系人表
-  CREATE TABLE IF NOT EXISTS contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    myselfId INTEGER NOT NULL,
-    friendId INTEGER NOT NULL,
-    chatKey TEXT NOT NULL  --自动生成的聊天通讯用的key，保证两个人在同一个房间
-  );
-  --请求表（申请添加联系人或申请加入群）
-  CREATE TABLE IF NOT EXISTS requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sendUserId INTEGER NOT NULL,
-    receiveUserId INTEGER NOT NULL,  --如果是添加联系人那这个就是对方Id，如果是添加群那这个就是房主Id
-    receiveRoomId INTEGER,  --添加群的时候才有
-    type TEXT(100) NOT NULL,  --contact联系人/room群
-    remark TEXT NOT NULL,
-    progress TEXT NOT NULL,  --waiting等待/pass通过/refuse拒绝
-    createTime NUMERIC NOT NULL
-  );
-  --消息队列表，一有消息就插入，用于页面右上角消息提醒
-  CREATE TABLE IF NOT EXISTS messageQueues (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER NOT NULL,  --要通知的人
-    originUserId INTEGER NOT NULL,  --消息来源的人
-    type TEXT(100) NOT NULL,  --requestcontact联系人申请/requestroom群申请/chatcontact联系人聊天/chatroom群聊天
-    createTime NUMERIC NOT NULL
-  );
+dal.initSqlite();
 
-  --初始化数据库时，插入一条管理员数据
-  --INSERT INTO users (userName,nickName,email,password,userType)VALUES ('admin','admin','admin@ljp.com','123qwe!Q','admin');
-  `;
-    db.run(createTable, (err) => {
-      console.log('数据库初始化', err);
-    });
-  })
+function initOnlineSetting() {
+  //当前在线用户Id-socketIds，一个用户Id对应多个socketId，也就是一个用户可以打开多个页面，当这个用户的全部页面都关闭时，才算用户下线
+  let onlineUserKey = {};
+  function AddOnlineUserId(id, socketId) {
+    if (!id) {
+      return;
+    }
+    let key = 'ID_' + id;//转为字符串
+    if (onlineUserKey.hasOwnProperty(key)) {
+      if (onlineUserKey[key].findIndex(f => f == socketId) === -1) {
+        onlineUserKey[key].push(socketId)
+      }
+    } else {
+      onlineUserKey[key] = [socketId]
+    }
+  }
+  function RemoveOnlineUserId(id, socketId) {
+    if (!id) {
+      return;
+    }
+    let key = 'ID_' + id;//转为字符串
+    if (!onlineUserKey.hasOwnProperty(key)) {
+      return
+    }
+    var index = onlineUserKey[key].findIndex(f => f == socketId);
+    if (index !== -1) {
+      onlineUserKey[key].splice(index, 1);
+      if (onlineUserKey[key].length === 0) {
+        Reflect.deleteProperty(onlineUserKey, key);
+      }
+    }
+  }
+  function GetOnlineUserIds() {
+    let onlineUserIds = [];//当前在线用户Id
+    for(var key in onlineUserKey){
+      onlineUserIds.push(key.replace('ID_', ''))
+    }
+    return onlineUserIds;
+  }
+  function GetOnlineUserKey(){
+    return onlineUserKey
+  }
+  return {
+    addOnlineUserId: AddOnlineUserId,
+    removeOnlineUserId: RemoveOnlineUserId,
+    getOnlineUserIds: GetOnlineUserIds,
+    getOnlineUserKey: GetOnlineUserKey
+  }
 }
-initSqlite();
+var onlineSetting = initOnlineSetting();
 
 const app = express()
 const httpServer = createServer(app)
@@ -103,107 +75,111 @@ function initApi() {
   //app.use(express.json());// 允许解析 JSON 数据
   app.use(bodyParser.json());// 使用 body-parser 中间件来解析请求体
 
-  app.get("/api/getUsers", (req, res) => {
-    const obj = url.parse(req.url, true)
-    console.log("/api/getusers", obj.query);
-    var conditions = []
-    var conditionSql = ""
-    if (obj.query.limit !== undefined && obj.query.offset !== undefined) {
-      conditions.push(obj.query.limit);
-      conditions.push(obj.query.offset);
-      conditionSql += 'LIMIT ? OFFSET ?'//OFFSET必须在LIMIT后面使用，如果只需要跳过几条的话，就把LIMIT的值设的非常大即可
-    }
-    if (obj.query.limit === undefined && obj.query.offset !== undefined) {
-      res.json({
-        isSuccess: true,
-        error: 'offset不能单独使用，必须配合limit',
-        data: null
-      })
-      return;
-    }
-    const query = 'SELECT * FROM users ' + conditionSql;
-    db.all(query, conditions, (err, rows) => {
-      if (err) {
-        throw err;
-      }
-      console.log(rows);
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: rows
-      })
+  app.get("/api/getOnlineUserIds", (req, res) => {
+    var ids = onlineSetting.getOnlineUserIds();
+    res.json({
+      isSuccess: true,
+      error: null,
+      data: ids
     });
   })
-  app.get("/api/getUserById", (req, res) => {
-    const obj = url.parse(req.url, true)
-    const query = 'SELECT * FROM users where id=?'
-    db.get(query, [obj.query.id], (err, row) => {
-      if (err) {
-        throw err;
-      }
-      console.log(row);
-      res.json({
-        isSuccess: err == null,
-        error: null,
-        data: row
-      })
-    })
+  app.get("/api/getOnlineUserKey", (req, res) => {
+    var key = onlineSetting.getOnlineUserKey();
+    res.json({
+      isSuccess: true,
+      error: null,
+      data: key
+    });
   })
-  app.get("/api/getUserByUserName", (req, res) => {
-    const obj = url.parse(req.url, true)
-    const query = 'SELECT * FROM users where userName=?'
-    db.get(query, [obj.query.userName], (err, row) => {
-      if (err) {
-        throw err;
-      }
-      console.log(row);
+
+  app.get("/api/getUsers", (req, res) => {
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getusers", obj.query);
+
+      dal.getUsersAsync(obj.query.limit, obj.query.offset)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (error) {
       res.json({
-        isSuccess: err == null,
-        error: null,
-        data: row
-      })
-    })
+        isSuccess: false,
+        error: error.message,
+        data: null
+      });
+    }
   })
   app.get("/api/getUserByUserNameOrEmail", (req, res) => {
-    const obj = url.parse(req.url, true)
-    const query = 'SELECT id,userName,nickName,email FROM users where userName=? or email=?'
-    db.all(query, [obj.query.userNameOrEmail, obj.query.userNameOrEmail], (err, rows) => {
-      if (err) {
-        throw err;
-      }
-      console.log(rows);
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getusers", obj.query);
+
+      dal.getUserByUserNameOrEmailAsync(obj.query.userNameOrEmail, obj.query.myselfId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (error) {
       res.json({
-        isSuccess: err == null,
-        error: null,
-        data: rows
-      })
-    })
+        isSuccess: false,
+        error: error.message,
+        data: null
+      });
+    }
   })
   app.post("/api/checkUserPassword", (req, res) => {
     try {
       console.log("/api/checkuserpassword", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { userName, password } = req.body;
       if (userName === '' || userName === null || userName === undefined) throw "userName不能为空"
-      if (password === '' || password === null || password === undefined) throw "username不能为空"
+      if (password === '' || password === null || password === undefined) throw "password不能为空"
 
-      db.get(`select id,userName,nickName,email,userType from users where userName = ? and password = ?`, [userName, password], (err, row) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: row
-        });
-      })
+      dal.checkUserPasswordAsync(userName, password)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -212,7 +188,7 @@ function initApi() {
     try {
       console.log("/api/adduser", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { userName, nickName, email, password, userType } = req.body;
       if (userName === '' || userName === null || userName === undefined) throw "userName不能为空"
@@ -221,39 +197,26 @@ function initApi() {
       if (password === '' || password === null || password === undefined) throw "password不能为空"
       if (userType === '' || userType === null || userType === undefined) throw "userType不能为空"
 
-      db.get(`select userName from users where userName = ?`, [userName], (err, row) => {
-        if (err) {
-          throw err;
-        }
-
-        if (row) {
-          throw `[${userName}]已存在相同User Name`
-        }
-
-        const insert = `INSERT INTO users (userName, nickName, email, password, userType) VALUES (?, ?, ?, ?, ?)`;
-        db.run(insert, [userName, nickName, email, password, userType], (err2) => {
-          if (err2) {
-            throw err2;
-          }
-
-          db.get('SELECT * FROM users where username=?', [userName], (err3, row2) => {
-            if (err3) {
-              throw err3;
-            }
-
-            res.json({
-              isSuccess: true,
-              error: null,
-              data: row2
-            });
+      dal.addUserAsync(userName, nickName, email, password, userType)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
           })
-        });
-      })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -262,7 +225,7 @@ function initApi() {
     try {
       console.log("/api/updateuser", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { id, userName, nickName, email, password, userType } = req.body;
       if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
@@ -272,39 +235,26 @@ function initApi() {
       if (password === '' || password === null || password === undefined) throw "password不能为空"
       if (userType === '' || userType === null || userType === undefined) throw "userType不能为空"
 
-      db.get(`select userName from users where userName = ? and id != ?`, [userName, id], (err, row) => {
-        if (err) {
-          throw err;
-        }
-
-        if (row) {
-          throw `[${userName}]已存在相同User Name`
-        }
-
-        const update = `UPDATE users SET username=?, nickName=?, email=?, password=?, userType=? WHERE id=?`;
-        db.run(update, [userName, nickName, email, password, userType, id], (err2) => {
-          if (err2) {
-            throw err2;
-          }
-
-          db.get('SELECT * FROM users where username=?', [userName], (err3, row2) => {
-            if (err3) {
-              throw err3;
-            }
-
-            res.json({
-              isSuccess: true,
-              error: null,
-              data: row2
-            });
+      dal.updateUserAsync(id, userName, nickName, email, password, userType)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
           })
-        });
-      })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -313,198 +263,31 @@ function initApi() {
     try {
       console.log("/api/deleteuser", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { id } = req.body;
       if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
-      const deleteQuery = 'DELETE FROM users WHERE id = ?';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: null
-        });
-      });
-    }
-    catch (ex) {
-      res.json({
-        isSuccess: false,
-        error: ex,
-        data: null
-      });
-    }
-  })
 
-  app.get("/api/getRooms", (req, res) => {
-    const obj = url.parse(req.url, true)
-    console.log("/api/getRooms", obj.query);
-    var conditions = []
-    var conditionSql = ""
-    if (obj.query.name !== undefined) {
-      conditionSql += " where name=? "
-      conditions.push(obj.query.name)
-    }
-
-    const query = 'SELECT * FROM rooms ' + conditionSql;
-    db.all(query, conditions, (err, rows) => {
-      if (err) {
-        throw err;
-      }
-      console.log(rows);
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: rows
-      })
-    });
-  })
-  app.post("/api/addRoom", (req, res) => {
-    try {
-      console.log("/api/addRoom", req.body);
-      if (req.body === undefined) {
-        throw '参数不能为空'
-      }
-      const { name, description, type, createUserId } = req.body;
-      if (name === '' || name === null || name === undefined) throw "name不能为空"
-      if (description === '' || description === null || description === undefined) throw "description不能为空"
-      if (type === '' || type === null || type === undefined) throw "type不能为空"
-      if (createUserId === '' || createUserId === null || createUserId === undefined) throw "createUserId不能为空"
-
-      const insert = `INSERT INTO rooms (name, description, type, createUserId, createTime) VALUES (?, ?, ?, ?, dateTime('now'))`;
-      db.run(insert, [name, description, type, createUserId], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: null
-        });
-      });
-    }
-    catch (ex) {
-      res.json({
-        isSuccess: false,
-        error: ex,
-        data: null
-      });
-    }
-  })
-  app.post("/api/deleteRoom", (req, res) => {
-    try {
-      console.log("/api/deleteRoom", req.body);
-      if (req.body === undefined) {
-        throw '参数不能为空'
-      }
-      const { id } = req.body;
-      if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
-      const deleteQuery = 'DELETE FROM rooms WHERE id = ?';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: null
-        });
-      });
-    }
-    catch (ex) {
-      res.json({
-        isSuccess: false,
-        error: ex,
-        data: null
-      });
-    }
-  })
-
-  app.get("/api/getRoomUsers", (req, res) => {
-    try {
-      const obj = url.parse(req.url, true)
-      console.log("/api/getRoomUsers", obj.query);
-      var conditions = []
-      var conditionSql = ""
-      if (obj.query.roomId !== undefined) {
-        conditionSql += " where roomId=? "
-        conditions.push(obj.query.roomId)
-      }
-
-      const query = 'SELECT * FROM roomUsers ' + conditionSql;
-      db.all(query, conditions, (err, rows) => {
-        if (err) {
-          throw err;
-        }
-        console.log(rows);
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: rows
+      dal.deleteUserAsync(id)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
         })
-      });
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
-        data: null
-      });
-    }
-  })
-  app.post("/api/addRoomUser", (req, res) => {
-    try {
-      console.log("/api/addRoomUser", req.body);
-      if (req.body === undefined) {
-        throw '参数不能为空'
-      }
-      const { roomId, userId } = req.body;
-      const insert = `INSERT INTO roomUsers (roomId, userId) VALUES (?, ?)`;
-      db.run(insert, [roomId, userId], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: null
-        });
-      });
-    }
-    catch (ex) {
-      res.json({
-        isSuccess: false,
-        error: ex,
-        data: null
-      });
-    }
-  })
-  app.post("/api/deleteRoomUser", (req, res) => {
-    try {
-      console.log("/api/deleteRoomUser", req.body);
-      if (req.body === undefined) {
-        throw '参数不能为空'
-      }
-      const { id } = req.body;
-      if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
-      const deleteQuery = 'DELETE FROM roomUsers WHERE id = ?';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: null
-        });
-      });
-    }
-    catch (ex) {
-      res.json({
-        isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -514,34 +297,27 @@ function initApi() {
     try {
       const obj = url.parse(req.url, true)
       console.log("/api/getContacts", obj.query);
-      var conditions = []
-      var conditionSql = ""
-      if (obj.query.myselfId !== undefined) {
-        conditionSql += " where myselfId=? "
-        conditions.push(obj.query.myselfId)
-      }
 
-      const query = `
-    select t1.*,t2.nickName,t2.email
-    from contacts as t1
-    left join users as t2 on t2.id=t1.friendId 
-    ` + conditionSql;
-      db.all(query, conditions, (err, rows) => {
-        if (err) {
-          throw err;
-        }
-        console.log(rows);
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: rows
+      dal.getContactsAsync(obj.query.myselfId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
         })
-      });
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -550,39 +326,27 @@ function initApi() {
     try {
       const obj = url.parse(req.url, true)
       console.log("/api/getContactAndCount", obj.query);
-      var conditions = []
-      var conditionSql = ""
-      if (obj.query.myselfId !== undefined) {
-        conditionSql += " where myselfId=? "
-        conditions.push(obj.query.myselfId)
-      }
 
-      const query = `
-      select t1.*,t2.nickName,t2.email,IFNULL(t3.count, 0) as 'count'
-      from contacts as t1
-      left join users as t2 on t2.id=t1.friendId
-      left join (
-          select userId,originUserId,Count(*) as 'count' from messageQueues 
-          where type='chatcontact'
-          group by userId,originUserId
-      ) as t3 on t3.userId=t1.myselfId and t3.originUserId=t1.friendId
-      ` + conditionSql;
-      db.all(query, conditions, (err, rows) => {
-        if (err) {
-          throw err;
-        }
-        console.log(rows);
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: rows
+      dal.getContactAndCountAsync(obj.query.myselfId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
         })
-      });
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -591,37 +355,30 @@ function initApi() {
     try {
       console.log("/api/addContact", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { requestId, myselfId, friendId } = req.body;
 
-      var chatKey = `chatcontact_${myselfId}_${friendId}`;
-      db.serialize(() => {
-        // 开始事务
-        db.run('BEGIN TRANSACTION');
-
-        var stmt = db.prepare(`INSERT INTO contacts (myselfId, friendId, chatKey) VALUES (?, ?, ?),(?, ?, ?)`)
-        stmt.run(myselfId, friendId, chatKey, friendId, myselfId, chatKey)
-
-        var stmt2 = db.prepare(`UPDATE requests SET progress='pass' WHERE id=?`)
-        stmt2.run(requestId)
-
-        var stmt3 = db.prepare(`DELETE FROM messageQueues WHERE userId=? and originUserId=? and type='requestcontact'`)
-        stmt3.run(myselfId, friendId)
-
-        // 提交事务
-        db.run('COMMIT');
-      })
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: null
-      });
+      dal.addContactAsync(requestId, myselfId, friendId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -630,26 +387,31 @@ function initApi() {
     try {
       console.log("/api/deleteContact", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { id } = req.body;
       if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
-      const deleteQuery = 'DELETE FROM contacts WHERE id = ?';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: err === null,
-          error: err,
-          data: null
-        });
-      });
+
+      dal.deleteContactAsync(id)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -659,96 +421,62 @@ function initApi() {
     try {
       const obj = url.parse(req.url, true)
       console.log("/api/getRequests", obj.query);
-      var conditions = []
-      var conditionSql = ""
-      if (obj.query.sendUserId !== undefined) {
-        conditionSql += " where sendUserId=? "
-        conditions.push(obj.query.sendUserId)
-      }
-      if (obj.query.receiveUserId !== undefined) {
-        if (conditionSql != "") {
-          conditionSql += " and receiveUserId=? "
-        } else {
-          conditionSql += " where receiveUserId=? "
-        }
-        conditions.push(obj.query.receiveUserId)
-      }
-      if (obj.query.receiveRoomId !== undefined) {
-        if (conditionSql != "") {
-          conditionSql += " and receiveRoomId=? "
-        } else {
-          conditionSql += " where receiveRoomId=? "
-        }
-        conditions.push(obj.query.receiveRoomId)
-      }
-      if (obj.query.type !== undefined) {
-        if (conditionSql != "") {
-          conditionSql += " and type=? "
-        } else {
-          conditionSql += " where type=? "
-        }
-        conditions.push(obj.query.type)
-      }
 
-      const query = `
-      SELECT t1.*,t2.userName,t2.nickName,t2.email,t3.name,t3.description
-      FROM requests as t1
-      left join users as t2 on t2.id=t1.sendUserId
-      left join rooms as t3 on t3.id=t1.receiveRoomId and t1.type='room'
-      ` + conditionSql;
-      db.all(query, conditions, (err, rows) => {
-        if (err) {
-          throw err;
-        }
-        console.log(rows);
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: rows
+      dal.getRequestsAsync(obj.query.userId, obj.query.type)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
         })
-      });
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
   })
-  app.post("/api/addRequests", (req, res) => {
+  app.post("/api/addRequestByContact", (req, res) => {
     try {
-      console.log("/api/addRequests", req.body);
+      console.log("/api/addRequestByContact", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
-      // 开始事务
-      db.serialize(() => {
-        // 开始事务
-        db.run('BEGIN TRANSACTION');
+      const { sendUserId, receiveUserId, remark } = req.body;
+      if (sendUserId === 0 || sendUserId === '' || sendUserId === null || sendUserId === undefined) throw "sendUserId不能为0或空";
+      if (receiveUserId === 0 || receiveUserId === '' || receiveUserId === null || receiveUserId === undefined) throw "receiveUserId不能为0或空";
+      if (remark === 0 || remark === '' || remark === null || remark === undefined) throw "remark不能为空";
 
-        // 使用循环将数据逐条插入到数据表中（body是集合，前端请传集合过来）
-        for (let user of req.body) {
-          let stmt = db.prepare(`INSERT INTO requests (sendUserId, receiveUserId, receiveRoomId, type, remark, progress, createTime) VALUES (?, ?, ?, ?, ?, ?, dateTime('now'));`)
-          stmt.run(user.sendUserId, user.receiveUserId, user.receiveRoomId, user.type, user.remark, user.progress)
-          let stmt2 = db.prepare(`INSERT INTO messageQueues (userId, originUserId, type, createTime) VALUES (?, ?, ?, dateTime('now'));`)
-          stmt2.run(user.receiveUserId, user.sendUserId, 'requestcontact')
-        }
-
-        // 提交事务
-        db.run('COMMIT');
-      })
-
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: null
-      })
+      dal.addRequestByContactAsync(sendUserId, receiveUserId, remark)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -757,34 +485,31 @@ function initApi() {
     try {
       console.log("/api/setRequestToRefuse", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { id, userId, originUserId } = req.body;
       if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
 
-      db.serialize(() => {
-        // 开始事务
-        db.run('BEGIN TRANSACTION');
-
-        var stmt = db.prepare("UPDATE requests SET progress='refuse' WHERE id=?")
-        stmt.run(id)
-
-        var stmt2 = db.prepare(`DELETE FROM messageQueues WHERE userId=? and originUserId=? and type='requestcontact'`)
-        stmt2.run(userId, originUserId)
-
-        // 提交事务
-        db.run('COMMIT');
-      })
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: null
-      });
+      dal.setRequestToRefuseAsync(id, userId, originUserId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -793,26 +518,31 @@ function initApi() {
     try {
       console.log("/api/deleteRequest", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
       const { id } = req.body;
       if (id === 0 || id === '' || id === null || id === undefined) throw "id不能为0或空";
-      const deleteQuery = 'DELETE FROM requests WHERE id = ?';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: null
-        });
-      });
+
+      dal.deleteRequestAsync(id)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -822,38 +552,27 @@ function initApi() {
     try {
       const obj = url.parse(req.url, true)
       console.log("/api/getMessageQueues", obj.query);
-      var conditions = []
-      var conditionSql = ""
-      if (obj.query.userId !== undefined) {
-        conditionSql += " where userId=? "
-        conditions.push(obj.query.userId)
-      }
-      if (obj.query.type !== undefined) {
-        if (conditionSql != "") {
-          conditionSql += " and type=? "
-        } else {
-          conditionSql += " where type=? "
-        }
-        conditions.push(obj.query.type)
-      }
 
-      const query = 'SELECT * FROM messageQueues ' + conditionSql;
-      db.all(query, conditions, (err, rows) => {
-        if (err) {
-          throw err;
-        }
-        console.log(rows);
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: rows
+      dal.getMessageQueuesAsync(obj.query.userId, obj.query.type)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
         })
-      });
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -862,27 +581,30 @@ function initApi() {
     try {
       console.log("/api/deleteMessageQueues", req.body);
       if (req.body === undefined) {
-        throw '参数不能为空'
+        throw new Error('参数不能为空')
       }
-      if (req.body.length) throw "id不能为0或空";
-      let id = req.body.join(",")
+      if (req.body.length === 0) throw new Error("参数不能为空");//body是一个集合，如：[1,2,3]
 
-      const deleteQuery = 'DELETE FROM messageQueues WHERE id in (?)';
-      db.run(deleteQuery, [id], (err) => {
-        if (err) {
-          throw err;
-        }
-        res.json({
-          isSuccess: true,
-          error: null,
-          data: null
-        });
-      });
+      dal.deleteMessageQueuesAsync(req.body)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
@@ -896,70 +618,424 @@ function initApi() {
       if (obj.query.myselfId === 0 || obj.query.myselfId === '' || obj.query.myselfId === null || obj.query.myselfId === undefined) throw "myselfId不能为0或空";
       if (obj.query.friendId === 0 || obj.query.friendId === '' || obj.query.friendId === null || obj.query.friendId === undefined) throw "friendId不能为0或空";
 
-      db.run("DELETE FROM messageQueues WHERE userId=? and originUserId=? and type='chatcontact'", [obj.query.myselfId, obj.query.friendId], (err) => {
-        if (err) {
-          throw err;
-        }
-        const query = `
-        SELECT t1.*,t2.nickName
-        FROM contactMessages as t1
-        left join users as t2 on t2.id=t1.sendUserId
-        where (t1.sendUserId=? and t1.receiveUserId=?) or (t1.sendUserId=? and t1.receiveUserId=?)
-        order by t1.createTime`;//查询发送人是自己或他人，接收人是自己或他人
-        db.all(query, [obj.query.myselfId, obj.query.friendId, obj.query.friendId, obj.query.myselfId], (err2, rows) => {
-          if (err2) {
-            throw err2;
-          }
-
+      dal.getContactMessagesAsync(obj.query.myselfId, obj.query.friendId)
+        .then((data) => {
           res.json({
             isSuccess: true,
             error: null,
-            data: rows
+            data: data
           })
-        });
-      });
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
         data: null
       });
     }
   })
-  app.post("/api/addContactMessages", (req, res) => {
+  app.post("/api/addContactMessage", (req, res) => {
     try {
-      console.log("/api/addContactMessages", req.body);
+      console.log("/api/addContactMessage", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+
+      const { sendUserId, receiveUserId, message } = req.body;
+      if (sendUserId === 0 || sendUserId === '' || sendUserId === null || sendUserId === undefined) throw "sendUserId不能为0或空";
+      if (receiveUserId === 0 || receiveUserId === '' || receiveUserId === null || receiveUserId === undefined) throw "receiveUserId不能为0或空";
+      if (message === '' || message === null || message === undefined) throw "message不能为空";
+
+      dal.addContactMessageAsync(sendUserId, receiveUserId, message)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+
+  app.get("/api/getRooms", (req, res) => {
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getRooms", obj.query);
+
+      dal.getRoomsAsync(obj.query.myselfId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.get("/api/getRoomByName", (req, res) => {
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getRoomByName", obj.query);
+
+      if (!obj.query.name) throw "name不能为0或空";
+
+      dal.getRoomByNameAsync(obj.query.name)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.get("/api/getRoomInfo", (req, res) => {
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getRoomInfo", obj.query);
+
+      if (!obj.query.roomId) throw "roomId不能为0或空";
+
+      dal.getRoomInfoAsync(obj.query.roomId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post("/api/addRoom", (req, res) => {
+    try {
+      console.log("/api/addRoom", req.body);
       if (req.body === undefined) {
         throw '参数不能为空'
       }
-      // 开始事务
-      db.serialize(() => {
-        // 开始事务
-        db.run('BEGIN TRANSACTION');
+      const { myselfId, friendIds } = req.body;
+      if (!myselfId) throw "myselfId不能为空"
+      if (!friendIds || friendIds.length == 0) throw "friendIds不能为空"
 
-        // 使用循环将数据逐条插入到数据表中（body是集合，前端请传集合过来）
-        for (let item of req.body) {
-          let stmt = db.prepare(`INSERT INTO contactMessages (sendUserId, receiveUserId, message, createTime) VALUES (?, ?, ?, dateTime('now'));`)
-          stmt.run(item.sendUserId, item.receiveUserId, item.message)
-          let stmt2 = db.prepare(`INSERT INTO messageQueues (userId, originUserId, type, createTime) VALUES (?, ?, ?, dateTime('now'));`)
-          stmt2.run(item.receiveUserId, item.sendUserId, 'chatcontact')
-        }
-
-        // 提交事务
-        db.run('COMMIT');
-      })
-
-      res.json({
-        isSuccess: true,
-        error: null,
-        data: null
-      })
+      dal.addRoomAsync(myselfId, friendIds)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
     }
-    catch (ex) {
+    catch (err) {
       res.json({
         isSuccess: false,
-        error: ex,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post("/api/addRequestByRoom", (req, res) => {
+    try {
+      console.log("/api/addRequestByRoom", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+      const { sendUserId, receiveUserId, receiveRoomId, remark } = req.body;
+      if (!sendUserId) throw "sendUserId不能为0或空";
+      if (!receiveUserId) throw "receiveUserId不能为0或空";
+      if (!receiveRoomId) throw "receiveRoomId不能为0或空";
+      if (!remark) throw "remark不能为空";
+
+      dal.addRequestByRoomAsync(sendUserId, receiveUserId, receiveRoomId, remark)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post("/api/addRoomUser", (req, res) => {
+    try {
+      console.log("/api/addRoomUser", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+      const { requestId, roomId, myselfId, friendId } = req.body;
+
+      dal.addRoomUserAsync(requestId, roomId, myselfId, friendId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post('/api/updateRoom', (req, res) => {
+    try {
+      console.log("/api/updateRoom", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+      const { roomId, name, description } = req.body;
+
+      dal.updateRoomAsync(roomId, name, description)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+
+  app.get("/api/getRoomMessages", (req, res) => {
+    try {
+      const obj = url.parse(req.url, true)
+      console.log("/api/getRoomMessages", obj.query);
+
+      if (!obj.query.myselfId) throw "myselfId不能为0或空";
+      if (!obj.query.roomId) throw "roomId不能为0或空";
+
+      dal.getRoomMessagesAsync(obj.query.myselfId, obj.query.roomId)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post("/api/addRoomMessage", (req, res) => {
+    try {
+      console.log("/api/addRoomMessage", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+
+      const { sendUserId, receiveRoomId, message } = req.body;
+      if (!sendUserId) throw "sendUserId不能为0或空";
+      if (!receiveRoomId) throw "receiveRoomId不能为0或空";
+      if (!message) throw "message不能为空";
+
+      dal.addRoomMessageAsync(sendUserId, receiveRoomId, message)
+        .then((data) => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: data
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          });
+        });
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  })
+  app.post("/api/deleteRoom", (req, res) => {
+    try {
+      console.log("/api/deleteRoom", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+      const { id } = req.body;
+      if (!id) throw "id不能为0或空";
+
+      dal.deleteRoomAsync(id)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
+        data: null
+      });
+    }
+  }),
+  app.post("/api/quitRoom", (req, res) => {
+    try {
+      console.log("/api/quitRoom", req.body);
+      if (req.body === undefined) {
+        throw new Error('参数不能为空')
+      }
+      const { id, userId } = req.body;
+      if (!id) throw "id不能为0或空";
+      if (!userId) throw "userId不能为0或空";
+
+      dal.quitRoomAsync(id, userId)
+        .then(() => {
+          res.json({
+            isSuccess: true,
+            error: null,
+            data: null
+          })
+        })
+        .catch((error) => {
+          res.json({
+            isSuccess: false,
+            error: error.message,
+            data: null
+          })
+        })
+    }
+    catch (err) {
+      res.json({
+        isSuccess: false,
+        error: err.message,
         data: null
       });
     }
@@ -969,6 +1045,7 @@ function initApi() {
 initApi();
 
 function initSocket() {
+
   // 创建 Socket.IO 实例
   const io = new Server(httpServer, {
     cors: {
@@ -978,35 +1055,47 @@ function initSocket() {
   })
   // Socket 连接监听
   io.on('connection', (socket) => {
-    console.log('客户端已连接:', socket.id, "userName:" + socket.handshake.query.userName, "roomId:" + socket.handshake.query.roomId)
+    console.log('客户端已连接:', socket.id, "userId:" + socket.handshake.query.userId, "userName:" + socket.handshake.query.userName, "roomId:" + socket.handshake.query.roomId)
+
+    onlineSetting.addOnlineUserId(socket.handshake.query.userId, socket.id);
 
     if (socket.handshake.query.roomId) {
       socket.join(socket.handshake.query.roomId)
     }
 
-    // 接收客户端消息
-    socket.on('send-message', (message) => {
-      console.log('收到消息:', message)
-
-      // 广播给所有客户端（包括发送者）
-      io.emit('chat-message', message)
-
+    //用户登录
+    socket.on('userlogin', (data) => {
+      console.log('userlogin收到消息:', data)
+      io.emit('getuserlogin', onlineSetting.getOnlineUserIds())
+    })
+    //用户退出
+    socket.on('userquit', (data) => {
+      console.log('userquit收到消息:', data)
+      onlineSetting.removeOnlineUserId(data, socket.id);
       // 如果只想广播给其他客户端：
-      // socket.broadcast.emit('message', message)
+      socket.broadcast.emit('getuserquit', onlineSetting.getOnlineUserIds())
+    })
+    // 断开连接处理
+    socket.on('disconnect', () => {
+      console.log('客户端断开:', socket.handshake.query.userId)
+      onlineSetting.removeOnlineUserId(socket.handshake.query.userId, socket.id);
+      // 如果只想广播给其他客户端：
+      socket.broadcast.emit('getdisconnect', onlineSetting.getOnlineUserIds())
     })
 
     socket.on('send-ContactChatMessage', (data) => {
-      console.log('send-ContactChatMessage收到消息:', data)
-      if (socket.handshake.query.roomId) {
-        io.to(socket.handshake.query.roomId).emit('chat-ContactMessage', data)
-      } else {
-        io.emit('chat-ContactMessage', data)
-      }
+      console.log('send-ContactChatMessage收到消息:', socket.handshake.query.userName, data)
+      io.emit('chat-ContactMessage', data)
     })
-
-    // 断开连接处理
-    socket.on('disconnect', () => {
-      console.log('客户端断开:', socket.id)
+    socket.on('send-RoomChatMessage', (data) => {
+      console.log('send-RoomChatMessage收到消息:', socket.handshake.query.userName, data)
+      if (!socket.handshake.query.roomId) {
+        return
+      }
+      io.to(socket.handshake.query.roomId).emit('chat-RoomChatMessage', data)
+      if(data.roomUserIds && data.roomUserIds.length > 0){
+        io.emit('message-RoomChat', data.roomUserIds)//由于群聊的按roomId来发消息了，如果群聊的所有用户有的没有在房间内就没有任何的消息通知了，所以这里再发一个通知给前端刷新右上角
+      }
     })
   })
 }
@@ -1022,6 +1111,7 @@ httpServer.listen(PORT, () => {
 // 在需要关闭服务器时调用
 // httpServer.close(() => {
 //   console.log('Server closed');
+//   const db = new sqlite3.Database("mydb.sqlite");
 //   db.close((err) => {
 //     if (err) {
 //       console.error(err.message);
@@ -1029,3 +1119,15 @@ httpServer.listen(PORT, () => {
 //     console.log('Close the database connection.');
 //   });
 // });
+
+// 捕获未处理的 Promise 异常
+process.on('unhandledRejection', (err) => {
+  console.error('全局捕获 [unhandledRejection]:', err);
+});
+
+// 捕获未处理的同步异常
+process.on('uncaughtException', (err) => {
+  console.error('全局捕获 [uncaughtException]:', err);
+  // 注意：此处应记录日志并优雅退出，避免状态不一致
+  process.exit(1);
+});

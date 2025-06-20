@@ -5,9 +5,7 @@
                 <h3>Contact</h3>
             </el-header>
             <el-main>
-                <el-table ref="mainTable" stripe row-key="id" :data="table.rows" :border="parentBorder" style="width: 100%"
-                    @selection-change="handleSelectionChange">
-                    <el-table-column type="selection" width="55" />
+                <el-table ref="mainTable" stripe row-key="id" :data="table.rows" :border="parentBorder" style="width: 100%">
                     <el-table-column type="index" width="50" />
                     <el-table-column label="Operations">
                         <template #default="scope">
@@ -16,20 +14,37 @@
                             </el-button>
                         </template>
                     </el-table-column>
+                    <el-table-column label="Status">
+                        <template #default="scope">
+                            <el-icon>
+                                <UserFilled :color="scope.row.onlineStatus" />
+                            </el-icon>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="Nick Name" prop="nickName" />
                     <el-table-column label="Email" prop="email" />
+                    <el-table-column label="Is Invalid">
+                        <template #default="scope">
+                            {{ scope.row.isInvalid ? '失效' : '有效' }}
+                        </template>
+                    </el-table-column>
                 </el-table>
             </el-main>
             <el-footer>
                 <div style="display:flex">
-                    <el-button type="success" @click="handleAdd">申请添加好友</el-button>
+                    <div>
+                        <el-button type="info" @click="pageChange(null)">刷新</el-button>
+                    </div>
+                    <div style="margin-left: 5px;">
+                        <el-button type="success" @click="handleSearch">申请添加好友</el-button>
+                    </div>
                 </div>
             </el-footer>
         </el-container>
 
-        <el-dialog v-model="createModal.isVisible" title="查找用户" width="800">
+        <el-dialog v-model="searchModal.isVisible" title="查找用户" width="800">
             <div class="mt-4">
-                <el-input v-model="createModal.userNameOrEmail" style="max-width: 600px"
+                <el-input v-model="searchModal.userNameOrEmail" style="max-width: 600px"
                     placeholder="Please input User Name Or Email" class="input-with-select">
                     <template #append>
                         <el-button icon="Search" @click="searchUser" />
@@ -37,16 +52,34 @@
                 </el-input>
             </div>
 
-            <div>
-                <el-table ref="searchUserTable" stripe row-key="id" :data="searchUserTable.rows" style="width: 100%"
-                    @selection-change="handleSelectionChange2">
-                    <el-table-column type="selection" width="55" />
+            <div style="
+                    border: 1px solid #03A9F4;
+                    border-radius: 10px;
+                    margin: 5px;
+                    padding: 5px;
+                ">
+                <el-table ref="searchUserTable" stripe row-key="id" :data="searchUserTable.rows" style="width: 100%">
                     <el-table-column type="index" width="50" />
+                    <el-table-column label="Operations">
+                        <template #default="scope">
+                            <el-button size="small" type="success" @click="handleCreate(scope.$index, scope.row)">
+                                申请
+                            </el-button>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="Nick Name" prop="nickName" />
                     <el-table-column label="Email" prop="email" />
                 </el-table>
             </div>
 
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="closeSearchModal">关闭</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
+        <el-dialog v-model="createModal.isVisible" title="申请添加" width="600">
             <el-form :model="form">
                 <el-form-item label="Remark" label-width="140px">
                     <el-input v-model="form.remark" autocomplete="off" type="textarea" :rows="2" />
@@ -55,7 +88,7 @@
 
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button @click="closeModal">{{ $t("app.cancel") }}</el-button>
+                    <el-button @click="closeCreateModal">{{ $t("app.cancel") }}</el-button>
                     <el-button type="success" @click="saveData">{{ $t("app.confirm") }}</el-button>
                 </div>
             </template>
@@ -74,33 +107,33 @@ export default {
                 rows: [],
                 total: 100,
                 disabled: false,
-                selectIds: []
             },
             searchUserTable: {
                 rows: [],
                 disabled: false,
-                selectIds: []
+            },
+            searchModal: {
+                isVisible: false,
+                userNameOrEmail: '',
             },
             createModal: {
                 isVisible: false,
-                userNameOrEmail: '',
+                userId: null,
             },
             form: {
                 remark: '',
             },
+
+            onlineUserIds: []
         }
     },
     methods: {
-        handleSelectionChange(val) {
-            console.log(val)
-            this.table.selectIds = [];
-            for (var i = 0; i < val.length; i++) {
-                this.table.selectIds.push(val[i].id);
-            }
+        handleSearch() {
+            this.searchModal.isVisible = true;
         },
-        handleAdd() {
+        handleCreate(index, row) {
             this.createModal.isVisible = true;
-            this.createModal.userNameOrEmail = '';
+            this.createModal.userId = row.id;
         },
         handleDelete(index, row) {
             console.log(index, row)
@@ -126,7 +159,7 @@ export default {
             })
         },
 
-        pageChange() {
+        pageChange(callback) {
             var userEntity = JSON.parse(sessionStorage.getItem('user'));
 
             let loadingInstance = ElLoading.service({ fullscreen: true });
@@ -134,6 +167,9 @@ export default {
                 loadingInstance.close();
                 this.table.rows = response.data.data;
                 this.table.total = this.table.rows.length;
+                if(callback){
+                    callback();
+                }
             }).catch((err) => {
                 loadingInstance.close();
                 this.$swalError('系统提示', err);
@@ -141,13 +177,13 @@ export default {
         },
 
         searchUser() {
-            if (!this.createModal.userNameOrEmail) {
+            if (!this.searchModal.userNameOrEmail) {
                 this.$swalError('系统提示', 'User Name Or Email不能为空');
                 return;
             }
 
             let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.createModal.userNameOrEmail}`).then((response) => {
+            this.$get(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.searchModal.userNameOrEmail}`).then((response) => {
                 loadingInstance.close();
                 console.log(response.data.data);
                 this.searchUserTable.rows = response.data.data;
@@ -156,43 +192,31 @@ export default {
                 this.$swalError('系统提示', err);
             })
         },
-        handleSelectionChange2(val) {
-            console.log(val)
-            this.searchUserTable.selectIds = [];
-            for (var i = 0; i < val.length; i++) {
-                this.searchUserTable.selectIds.push(val[i].id);
-            }
-        },
 
         saveData() {
+            if (!this.createModal.userId) {
+                this.$swalError('系统提示', '请选择要申请的对象');
+                return;
+            }
             if (!this.form.remark) {
                 this.$swalError('系统提示', 'Remark不能为空');
                 return;
             }
-            if (this.searchUserTable.selectIds.length == 0) {
-                this.$swalError('系统提示', '请选择要申请的对象');
-                return;
-            }
             var userEntity = JSON.parse(sessionStorage.getItem('user'));
 
-            var inputDtos = []
-            for (var i = 0; i < this.searchUserTable.selectIds.length; i++) {
-                inputDtos.push({
-                    sendUserId: userEntity.id,
-                    receiveUserId: this.searchUserTable.selectIds[i],
-                    receiveRoomId: null,
-                    type: 'contact',
-                    remark: this.form.remark,
-                    progress: 'waiting'//进度是等待回复
-                });
-            }
+            var inputDto = {
+                sendUserId: userEntity.id,
+                receiveUserId: this.createModal.userId,
+                remark: this.form.remark,
+            };
 
             let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$post("/api/addRequests", inputDtos).then((response) => {
+            this.$post("/api/addRequestByContact", inputDto).then((response) => {
                 loadingInstance.close();
+                console.log(response)
                 if (response.data.isSuccess) {
                     this.$swalSuccess('系统提示', '申请成功！');
-                    this.closeModal();
+                    this.closeCreateModal();
                 } else {
                     this.$swalError('系统提示', response.data.error);
                 }
@@ -201,15 +225,46 @@ export default {
                 this.$swalError('系统提示', err);
             })
         },
-        closeModal() {
+        closeSearchModal() {
+            this.searchModal.isVisible = false;
+            this.searchModal.userNameOrEmail = '';
+            this.searchUserTable.rows = [];
+        },
+        closeCreateModal() {
             this.createModal.isVisible = false;
             this.form.remark = ""
+        },
+
+        refreshOnlineStatus(rows) {
+            rows.forEach(element => {
+                if (this.onlineUserIds.findIndex(f => f == element.friendId) !== -1) {
+                    element.onlineStatus = 'green'
+                } else {
+                    element.onlineStatus = 'red'
+                }
+            })
+        },
+        getOnlineUserIds(){
+            this.$get(`/api/getOnlineUserIds`).then((response) => {
+                this.onlineUserIds = response.data.data
+                this.refreshOnlineStatus(this.table.rows);
+            }).catch((err) => {
+                this.$swalError('系统提示', err);
+            })
         }
     },
     mounted() {
         console.log("Contact mounted");
-        this.pageChange();
+        this.pageChange(this.getOnlineUserIds);
+
+        this.$bus.on('refreshOnlineUserIds', (data) => {
+            this.onlineUserIds = data
+            this.refreshOnlineStatus(this.table.rows);
+        })
     },
+    beforeUnmount() {
+        this.$bus.off('refreshOnlineUserIds');
+    }
 }
 </script>
   
