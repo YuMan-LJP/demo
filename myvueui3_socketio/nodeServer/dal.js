@@ -459,11 +459,22 @@ createTime NUMERIC NOT NULL
 
         var result = false
         try {
-            //校验是否已经申请过，如果申请被拒绝了可以重复申请，注意A发给B或B发给A，都算重复了
-            await dbAll(db, `SELECT * FROM requests WHERE ((sendUserId=? and receiveUserId=?) or (sendUserId=? and receiveUserId=?)) and type='contact' and progress!='refuse'`, [sendUserId, receiveUserId, receiveUserId, sendUserId])
+            //校验是否已经加了联系人
+            await dbAll(db, `SELECT * FROM contacts WHERE ((myselfId=? and friendId=?) or (myselfId=? and friendId=?))`, [sendUserId, receiveUserId, receiveUserId, sendUserId])
+                .then((rows) => {
+                    if (rows && rows.length === 2) {
+                        throw new Error('已经存在联系人，不能重复申请')
+                    }
+                })
+                .catch((err) => {
+                    throw err
+                })
+
+            //校验是否已经申请了还没审批，如果申请被拒绝了可以重复申请
+            await dbAll(db, `SELECT * FROM requests WHERE sendUserId=? and receiveUserId=? and type='contact' and progress='waiting'`, [sendUserId, receiveUserId])
                 .then((rows) => {
                     if (rows && rows.length > 0) {
-                        throw new Error('已经申请过了，不能重复申请')
+                        throw new Error('已经申请了等待对方同意，不能重复申请')
                     }
                 })
                 .catch((err) => {
@@ -757,7 +768,7 @@ createTime NUMERIC NOT NULL
     addRoomAsync: async (myselfId, friendIds = []) => {
         const db = new sqlite3.Database("mydb.sqlite");
 
-        var result = true
+        var result = 0
         try {
             var names = []
             var ids = friendIds.concat([myselfId])
@@ -799,14 +810,15 @@ createTime NUMERIC NOT NULL
                 }
 
                 await dbRun(db, 'COMMIT')// 提交事务
+                result = roomId
             }
             catch (err) {
                 await dbRun(db, "ROLLBACK");// 错误时回滚
-                result = false
+                result = 0
                 throw err
             }
         } catch (err) {
-            result = false
+            result = 0
             throw err
         } finally {
             db.close();

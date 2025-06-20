@@ -326,6 +326,7 @@ export default {
     },
     linkToChatRoom() {
       this.router.push("/room")
+      //判断如果是当前路由就刷都当前表格
     },
 
     initSocket() {
@@ -363,6 +364,12 @@ export default {
         console.log('message-RoomChat', data);
         if (data.findIndex(f => f == this.sessionUserId) !== -1) {
           this.$bus.emit('messageChange')//接收到新的消息时，如果是群聊内的用户就刷新右上角
+        }
+      });
+      this.socket.on('message-Refresh', (data) => {
+        console.log('message-Refresh', data);
+        if (data.findIndex(f => f == this.sessionUserId) !== -1) {
+          this.$bus.emit('messageChange')//接收到新的消息时，就刷新右上角
         }
       });
       // 错误处理
@@ -411,32 +418,42 @@ export default {
       console.log('messageChange')
       this.refreshMessage();
     })
+    this.$bus.on('sendRefreshMessage', (data) => {
+      console.log('sendRefreshMessage')
+      this.socket.emit('send-RefreshMessage', data);//用户Id集合
+    })
   },
   beforeUnmount() {
     console.log('App beforeUnmount');
     // 组件卸载前断开连接
     if (this.socket) {
-      this.socket.off('getuserlogin') // 移除事件监听
-      this.socket.off('getuserquit') // 移除事件监听
-      this.socket.off('getdisconnect') // 移除事件监听
-      this.socket.off('chat-ContactMessage') // 移除事件监听
-      this.socket.off('message-RoomChat') // 移除事件监听
+      // 移除事件监听
+      this.socket.off('getuserlogin')
+      this.socket.off('getuserquit')
+      this.socket.off('getdisconnect')
+      this.socket.off('chat-ContactMessage')
+      this.socket.off('message-RoomChat')
+      this.socket.off('message-Refresh')
       this.socket.disconnect()
     }
     this.$bus.off('messageChange');
+    this.$bus.off('sendRefreshMessage');
   },
   beforeDestroy() {
     console.log("App beforeDestroy");
     // 组件销毁前断开连接
     if (this.socket) {
-      this.socket.off('getuserlogin') // 移除事件监听
-      this.socket.off('getuserquit') // 移除事件监听
-      this.socket.off('getdisconnect') // 移除事件监听
-      this.socket.off('chat-ContactMessage') // 移除事件监听
-      this.socket.off('message-RoomChat') // 移除事件监听
+      // 移除事件监听
+      this.socket.off('getuserlogin')
+      this.socket.off('getuserquit')
+      this.socket.off('getdisconnect') 
+      this.socket.off('chat-ContactMessage')
+      this.socket.off('message-RoomChat')
+      this.socket.off('message-Refresh')
       this.socket.disconnect()
     }
     this.$bus.off('messageChange');
+    this.$bus.off('sendRefreshMessage');
   }
 }
 </script>

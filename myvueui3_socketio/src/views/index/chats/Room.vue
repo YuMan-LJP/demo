@@ -281,7 +281,7 @@ export default {
                 this.$swalError('系统提示', err);
             })
         },
-        handleUpdate(index, row){
+        handleUpdate(index, row) {
             this.updateModal.isVisible = true;
             this.updateModal.roomId = row.id;
             this.updateForm.name = row.name;
@@ -323,11 +323,43 @@ export default {
                     this.$swalSuccess('系统提示', '创建成功！');
                     this.closeCreateModal();
                     this.pageChange();
+
+                    //创建房间之后，默认发出一条消息，群内其他人就会收到消息，右上角就会有提示了
+                    console.log('new room id', response.data.data)
+                    this.sendNewMessageToRoom(response.data.data);//返回的是roomId
                 } else {
                     this.$swalError('系统提示', response.data.error);
                 }
             }).catch((err) => {
                 loadingInstance.close();
+                this.$swalError('系统提示', err);
+            })
+        },
+        sendNewMessageToRoom(roomId) {
+            //创建房间之后，默认发出一条消息，群内其他人就会收到消息，右上角就会有提示了
+            this.$get(`/api/getRoomInfo?roomId=${roomId}`).then((response) => {
+                var curRoom = response.data.data;
+                var roomUsers = response.data.data.users;
+                console.log('sendNewMessageToRoom', curRoom, roomUsers)
+
+                var inputDto = {
+                    sendUserId: this.curUser.id,
+                    receiveRoomId: roomId,
+                    nickName: this.curUser.nickName,//触发消息的时候使用
+                    message: curRoom.name + ' 已加入群聊',
+                }
+
+                this.$post(`/api/addRoomMessage`, inputDto).then((response2) => {
+                    if (response2.data.isSuccess) {
+                        var roomUserIds = roomUsers.map(m => m.userId)
+                        this.$bus.emit('sendRefreshMessage', roomUserIds)//通知当前群聊的所有人
+                    } else {
+                        this.$swalError('系统提示', response2.data.error);
+                    }
+                }).catch((err2) => {
+                    this.$swalError('系统提示', err2);
+                })
+            }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
         },
@@ -392,6 +424,7 @@ export default {
                 if (response.data.isSuccess) {
                     this.$swalSuccess('系统提示', '申请成功！');
                     this.closeRequestModal();
+                    this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
                 } else {
                     this.$swalError('系统提示', response.data.error);
                 }
@@ -405,13 +438,13 @@ export default {
             this.requestForm.remark = ""
         },
 
-        closeUpdateModal(){
+        closeUpdateModal() {
             this.updateModal.isVisible = false;
             this.updateModal.roomId = null;
             this.updateForm.name = ""
             this.updateForm.description = ""
         },
-        updateRoom(){
+        updateRoom() {
             var inputDto = {
                 roomId: this.updateModal.roomId,
                 name: this.updateForm.name,

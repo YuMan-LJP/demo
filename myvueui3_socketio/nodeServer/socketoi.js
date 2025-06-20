@@ -103,6 +103,10 @@ function initSocket(httpServer, onlineSetting) {
                 io.emit('message-RoomChat', data.roomUserIds)//由于群聊的按roomId来发消息了，如果群聊的所有用户有的没有在房间内就没有任何的消息通知了，所以这里再发一个通知给前端刷新右上角
             }
         })
+        socket.on('send-RefreshMessage', (data) => {
+            console.log('send-RefreshMessage收到消息:', socket.handshake.query.userName, data)
+            io.emit('message-Refresh', data)//用户Id集合
+        })
     })
 }
 

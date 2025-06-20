@@ -102,6 +102,7 @@ export default {
     name: 'Contact',
     data() {
         return {
+            curUser: null,
             parentBorder: false,
             table: {
                 rows: [],
@@ -132,6 +133,10 @@ export default {
             this.searchModal.isVisible = true;
         },
         handleCreate(index, row) {
+            if (row.id === this.curUser.id) {
+                this.$swalError('系统提示', '不能申请自己');
+                return
+            }
             this.createModal.isVisible = true;
             this.createModal.userId = row.id;
         },
@@ -167,7 +172,7 @@ export default {
                 loadingInstance.close();
                 this.table.rows = response.data.data;
                 this.table.total = this.table.rows.length;
-                if(callback){
+                if (callback) {
                     callback();
                 }
             }).catch((err) => {
@@ -217,6 +222,7 @@ export default {
                 if (response.data.isSuccess) {
                     this.$swalSuccess('系统提示', '申请成功！');
                     this.closeCreateModal();
+                    this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
                 } else {
                     this.$swalError('系统提示', response.data.error);
                 }
@@ -244,7 +250,7 @@ export default {
                 }
             })
         },
-        getOnlineUserIds(){
+        getOnlineUserIds() {
             this.$get(`/api/getOnlineUserIds`).then((response) => {
                 this.onlineUserIds = response.data.data
                 this.refreshOnlineStatus(this.table.rows);
@@ -255,6 +261,7 @@ export default {
     },
     mounted() {
         console.log("Contact mounted");
+        this.curUser = JSON.parse(sessionStorage.getItem('user'));
         this.pageChange(this.getOnlineUserIds);
 
         this.$bus.on('refreshOnlineUserIds', (data) => {
