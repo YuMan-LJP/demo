@@ -751,7 +751,7 @@ createTime NUMERIC NOT NULL
         } finally {
             db.close();
         }
-        
+
         return result
     },
     addRoomAsync: async (myselfId, friendIds = []) => {
