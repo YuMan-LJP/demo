@@ -14,8 +14,8 @@ app.use(cors({
 }))
 app.use(express.static(__dirname + '/static'));//配置静态资源文件，vue编译后的文件放这里
 var onlineSetting = socketoi.initOnlineSetting();//初始化存储当前在线用户记录
-api.initApip(app, onlineSetting);//配置api接口
-socketoi.initSocket(httpServer, onlineSetting);//初始化 Socket.IO
+api.initApi(app);//配置api接口
+socketoi.initSocket(app, httpServer, onlineSetting);//初始化 Socket.IO
 
 // 启动服务器
 const PORT = 5005

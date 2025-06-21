@@ -2,29 +2,12 @@ const bodyParser = require('body-parser');
 const url = require("url")
 const dal = require('./dal')
 
-function initApi(app, onlineSetting) {
+function initApi(app) {
     //初始化数据库
     dal.initSqlite();
 
     //app.use(express.json());// 允许解析 JSON 数据
     app.use(bodyParser.json());// 使用 body-parser 中间件来解析请求体
-
-    app.get("/api/getOnlineUserIds", (req, res) => {
-        var ids = onlineSetting.getOnlineUserIds();
-        res.json({
-            isSuccess: true,
-            error: null,
-            data: ids
-        });
-    })
-    app.get("/api/getOnlineUserKey", (req, res) => {
-        var key = onlineSetting.getOnlineUserKey();
-        res.json({
-            isSuccess: true,
-            error: null,
-            data: key
-        });
-    })
 
     app.get("/api/getUsers", (req, res) => {
         try {
@@ -878,12 +861,12 @@ function initApi(app, onlineSetting) {
                 throw new Error('参数不能为空')
             }
 
-            const { sendUserId, receiveRoomId, message } = req.body;
+            const { sendUserId, receiveRoomId, message, messageType, originMessageId } = req.body;
             if (!sendUserId) throw "sendUserId不能为0或空";
             if (!receiveRoomId) throw "receiveRoomId不能为0或空";
             if (!message) throw "message不能为空";
 
-            dal.addRoomMessageAsync(sendUserId, receiveRoomId, message)
+            dal.addRoomMessageAsync(sendUserId, receiveRoomId, message, messageType, originMessageId)
                 .then((data) => {
                     res.json({
                         isSuccess: true,
@@ -977,5 +960,5 @@ function initApi(app, onlineSetting) {
 }
 
 module.exports = {
-    initApip: initApi
+    initApi: initApi
 }

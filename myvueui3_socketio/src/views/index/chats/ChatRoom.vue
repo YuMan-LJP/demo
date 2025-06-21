@@ -8,7 +8,20 @@
                         <div style="max-height: calc(100vh - 400px)">
                             <div v-for="item in chatMessages"
                                 style="margin: 5px 10px;background-color: blanchedalmond;padding: 5px;border-radius: 5px;width: fit-content;">
-                                <span>{{ item.nickName }}:</span>{{ item.message }}
+                                <div v-if="item.messageType == '1'">
+                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}发起了一个投票: </span>{{ item.message}}
+                                    <br />
+                                    <div v-if="!item.isConfirm">
+                                        <el-button type="success" size="small" @click="votePassOrRefuse(item, true)">√</el-button>
+                                        <el-button type="danger" size="small" @click="votePassOrRefuse(item, false)">×</el-button>
+                                    </div>
+                                </div>
+                                <div v-else-if="item.messageType == '-1'">
+                                    <span style="font-weight:bold;color: red;">系统消息: </span>{{ item.message}}
+                                </div>
+                                <div v-else>
+                                    <span style="font-weight:bold;">{{ item.nickName }}: </span>{{ item.message }}
+                                </div>
                             </div>
                         </div>
                     </el-main>
@@ -18,7 +31,19 @@
                             <el-input v-model="sendText" style="width: calc(100% - 50px)"
                                 :autosize="{ minRows: 2, maxRows: 4 }" type="textarea" placeholder="Please input">
                             </el-input>
-                            <el-button type="success" size="small" @click="sendMessage">发送</el-button>
+                            <div style="float: right;width: 48px;">
+                                <el-button type="success" size="small" @click="sendMessage">发送</el-button>
+                                <el-dropdown>
+                                    <el-button style="margin-left: 0px;margin-top: 2px;" type="primary"
+                                        size="small">更多</el-button>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item @click="openRequestModal">投票</el-dropdown-item>
+                                            <el-dropdown-item>Doudizhu</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </div>
                     </el-footer>
                 </el-container>
@@ -39,6 +64,21 @@
                 </el-aside>
             </el-container>
         </el-container>
+
+        <el-dialog v-model="requestModal.isVisible" title="投票" width="600">
+            <el-form :model="requestForm">
+                <el-form-item label="议题" label-width="140px">
+                    <el-input v-model="requestForm.remark" autocomplete="off" type="textarea" :rows="2" />
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="closeRequestModal">{{ $t("app.cancel") }}</el-button>
+                    <el-button type="success" @click="sendRequestMessage">{{ $t("app.confirm") }}</el-button>
+                </div>
+            </template>
+        </el-dialog>
     </div>
 </template>
   
@@ -60,6 +100,15 @@ export default {
             chatMessages: [],
 
             onlineUserIds: [],
+
+            requestModal: {
+                isVisible: false,
+                userId: null,
+                nickName: ''
+            },
+            requestForm: {
+                remark: '',
+            },
 
             debounceClickChatDiv: () => { },//防抖
         }
@@ -95,6 +144,12 @@ export default {
                 return;
             }
             this.$get(`/api/getRoomMessages?myselfId=${this.curUser.id}&roomId=${this.roomId}`).then((response) => {
+                for (var item of response.data.data) {
+                    if (item.messageType == '1') {
+                        //如果投票了会发出一条消息，该消息会标记来源的消息Id，如果来源是投票这条消息就说明当前用户已经投票了
+                        item.isConfirm = response.data.data.findIndex(f => f.sendUserId == this.curUser.id && f.originMessageId == item.id + '') !== -1
+                    }
+                }
                 this.chatMessages = response.data.data;
                 this.$bus.emit('messageChange')
                 this.scrollChatMessageDiv();
@@ -116,6 +171,8 @@ export default {
                 receiveRoomId: this.curRoom.id,
                 nickName: this.curUser.nickName,//触发消息的时候使用
                 message: this.sendText,
+                messageType: null,
+                originMessageId: null
             }
 
             this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
@@ -156,6 +213,90 @@ export default {
             })
         },
 
+        openRequestModal() {
+            this.requestModal.isVisible = true;
+            this.requestModal.userId = this.curUser.id;
+            this.requestModal.nickName = this.curUser.nickName;
+        },
+        closeRequestModal() {
+            this.requestModal.isVisible = false;
+            this.requestModal.userId = null;
+            this.requestModal.nickName = '';
+            this.requestForm.remark = ""
+        },
+        sendRequestMessage() {
+            var inputDto = {
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: this.requestForm.remark,
+                messageType: '1',
+                originMessageId: null
+            }
+            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
+                if (response.data.isSuccess) {
+                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                    this.socket.emit('send-RoomChatMessage', inputDto);
+                    this.closeRequestModal();
+                    this.scrollChatMessageDiv();
+                } else {
+                    this.$swalError('系统提示', response.data.error);
+                }
+            }).catch((err) => {
+                this.$swalError('系统提示', err);
+            })
+        },
+        votePassOrRefuse(row, isOk){
+            var inputDto = {
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: isOk ? `对[${row.nickName}]"${row.message}"的投票通过` : `对[${row.nickName}]"${row.message}"的投票拒绝`,
+                messageType: isOk ? '1=1' : '1=0',
+                originMessageId: row.id
+            }
+            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
+                if (response.data.isSuccess) {
+                    row.isConfirm = true;
+                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                    this.socket.emit('send-RoomChatMessage', inputDto);
+                    this.scrollChatMessageDiv();
+
+                    //t1.roomId,t1.userId,t2.message,t2.messageType
+                    if(response.data.data.voteResult && response.data.data.voteResult.findIndex(f => f.message === null) === -1){
+                        //都投票完了
+                        this.voteComplete(row, response.data.data)
+                    }
+                } else {
+                    this.$swalError('系统提示', response.data.error);
+                }
+            }).catch((err) => {
+                this.$swalError('系统提示', err);
+            })
+        },
+        voteComplete(row, result){
+            var inputDto = {
+                sendUserId: -1,//系统
+                receiveRoomId: this.curRoom.id,
+                nickName: '系统消息',//触发消息的时候使用
+                message: `[${row.nickName}]"${row.message}"的投票结束`,
+                messageType: '-1',
+                originMessageId: row.id
+            }
+            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
+                if (response.data.isSuccess) {
+                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                    this.socket.emit('send-RoomChatMessage', inputDto);
+                    this.scrollChatMessageDiv();
+                    console.log(inputDto.message, result)
+                } else {
+                    this.$swalError('系统提示', response.data.error);
+                }
+            }).catch((err) => {
+                this.$swalError('系统提示', err);
+            })
+        },
+
         initSocket() {
             if (this.roomId == null) {
                 return;
@@ -175,18 +316,8 @@ export default {
             });
             // 接收消息
             this.socket.on('chat-RoomChatMessage', (data) => {
-                //接收到新的消息时，如果发送人和接收人是当前聊天窗口的人，就追加消息到聊天窗口
+                //接收到新的消息时，刷新聊天窗口
                 if (data.receiveRoomId == this.roomId) {
-                    this.chatMessages.push({
-                        sendUserId: data.sendUserId,
-                        receiveRoomId: data.receiveRoomId,
-                        nickName: data.nickName,
-                        message: data.message
-                    });
-                    this.scrollChatMessageDiv();
-                }
-                //接收到新的消息时，如果发送人不是自己，就刷新当前聊天消息
-                if (data.sendUserId != this.curUser.id) {
                     this.loadMessage()//主要就是为了设置已读
                 }
             });
@@ -216,7 +347,7 @@ export default {
             }).catch((err) => {
                 this.$swalError('系统提示', err);
             })
-        }
+        },
     },
     mounted() {
         console.log("ChatRoom mounted");
@@ -261,5 +392,11 @@ export default {
     margin: 1px;
     border-radius: 5px;
     padding: 5px;
+}
+</style>
+
+<style scoped>
+.el-header {
+    height: 30px;
 }
 </style>

@@ -50,7 +50,7 @@ function initOnlineSetting() {
     }
 }
 
-function initSocket(httpServer, onlineSetting) {
+function initSocket(app, httpServer, onlineSetting) {
 
     // 创建 Socket.IO 实例
     const io = new Server(httpServer, {
@@ -107,6 +107,23 @@ function initSocket(httpServer, onlineSetting) {
             console.log('send-RefreshMessage收到消息:', socket.handshake.query.userName, data)
             io.emit('message-Refresh', data)//用户Id集合
         })
+    })
+
+    app.get("/api/getOnlineUserIds", (req, res) => {
+        var ids = onlineSetting.getOnlineUserIds();
+        res.json({
+            isSuccess: true,
+            error: null,
+            data: ids
+        });
+    })
+    app.get("/api/getOnlineUserKey", (req, res) => {
+        var key = onlineSetting.getOnlineUserKey();
+        res.json({
+            isSuccess: true,
+            error: null,
+            data: key
+        });
     })
 }
 

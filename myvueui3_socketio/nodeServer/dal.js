@@ -56,7 +56,9 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 sendUserId INTEGER NOT NULL,
 receiveRoomId INTEGER NOT NULL,
 message TEXT NOT NULL,
-createTime NUMERIC NOT NULL
+messageType TEXT,
+createTime NUMERIC NOT NULL,
+originMessageId TEXT
 );
 --房间表
 CREATE TABLE IF NOT EXISTS rooms (
@@ -950,10 +952,10 @@ createTime NUMERIC NOT NULL
         }
         return result
     },
-    addRoomMessageAsync: async (sendUserId, receiveRoomId, message) => {
+    addRoomMessageAsync: async (sendUserId, receiveRoomId, message, messageType, originMessageId) => {
         const db = new sqlite3.Database("mydb.sqlite");
 
-        var result = false
+        var result = { voteResult: {} }
         try {
             var roomUsers = []
             await dbAll(db, `SELECT * FROM roomUsers WHERE roomId=?`, [receiveRoomId])
@@ -966,32 +968,44 @@ createTime NUMERIC NOT NULL
                 .catch((err) => {
                     throw err
                 })
-            if (roomUsers.findIndex(f => f.userId == sendUserId) === -1) {
+            if (sendUserId !== -1 && roomUsers.findIndex(f => f.userId == sendUserId) === -1) {
                 throw new Error('无法发送消息，您已不再群聊中')
             }
 
             try {
                 await dbRun(db, 'BEGIN TRANSACTION')// 开始事务
 
-                await dbRun(db, `INSERT INTO roomMessages (sendUserId, receiveRoomId, message, createTime) VALUES (?, ?, ?, dateTime('now'));`, [sendUserId, receiveRoomId, message])
+                await dbRun(db, `INSERT INTO roomMessages (sendUserId, receiveRoomId, message, messageType, originMessageId, createTime) VALUES (?, ?, ?, ?, ?, dateTime('now'));`, [sendUserId, receiveRoomId, message, messageType, originMessageId])
                 for (var roomUser of roomUsers) {//给这个房间的所有人，除了发送人自己，都发送消息
-                    if (roomUser.userId != sendUserId) {
+                    if (sendUserId !== -1 && roomUser.userId != sendUserId) {
                         await dbRun(db, `INSERT INTO messageQueues (userId, originId, type, createTime) VALUES (?, ?, ?, dateTime('now'));`, [roomUser.userId, receiveRoomId, 'chatroom'])
                     }
                 }
 
                 await dbRun(db, 'COMMIT')// 提交事务
+
+                if (sendUserId !== -1 && originMessageId) {
+                    await dbAll(db, `select t1.roomId,t1.userId,t2.message,t2.messageType from roomUsers as t1
+                    left join roomMessages as t2 on t2.receiveRoomId=t1.roomId and t2.sendUserId=t1.userId and t2.originMessageId=?
+                    where t1.roomId=?;`, [originMessageId, receiveRoomId])
+                        .then((rows) => {
+                            if (rows && rows.length > 0) {
+                                result.voteResult = rows;//投票结果
+                            }
+                        })
+                        .catch((err) => {
+                            throw err
+                        })
+                }
             }
             catch (err) {
                 await dbRun(db, "ROLLBACK");// 错误时回滚
-                result = false
+                result = {}
                 throw err
             }
-
-            result = true
         }
         catch (err) {
-            result = false
+            result = {}
             throw err
         } finally {
             db.close();
