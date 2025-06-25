@@ -6,7 +6,8 @@
         <el-input v-model="form.userName" />
       </el-form-item>
       <el-form-item label="Password">
-        <el-input v-model="form.password" type="password" placeholder="Please input password" show-password v-on:keyup.enter="login"/>
+        <el-input v-model="form.password" type="password" placeholder="Please input password" show-password
+          v-on:keyup.enter="login" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="login">Login</el-button>
@@ -40,7 +41,6 @@
 </template>
   
 <script>
-import { ElLoading } from 'element-plus';
 export default {
   name: 'Login',
   data() {
@@ -65,24 +65,23 @@ export default {
   methods: {
     login() {
 
-      let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$post("/api/checkUserPassword", this.form).then((response) => {
-        loadingInstance.close();
-        if (response.data.isSuccess) {
-          if (response.data.data) {
-            sessionStorage.setItem('user', JSON.stringify(response.data.data))
-            window.location.href = "index.html"
-          } else {
-            this.$swalError('系统提示', "用户名或密码错误");
+      this.$setBusy(
+        this.$post("/api/checkUserPassword", this.form).then((response) => {
+          if (response.data.isSuccess) {
+            if (response.data.data) {
+              sessionStorage.setItem('user', JSON.stringify(response.data.data))
+              window.location.href = "index.html"
+            } else {
+              this.$swalError('系统提示', "用户名或密码错误");
+            }
           }
-        }
-        else {
-          this.$swalError('系统提示', response.data.error);
-        }
-      }).catch((err) => {
-        loadingInstance.close();
-        this.$swalError('系统提示', err);
-      })
+          else {
+            this.$swalError('系统提示', response.data.error);
+          }
+        }).catch((err) => {
+          this.$swalError('系统提示', err);
+        })
+      )
     },
     register() {
       //数据校验
@@ -110,20 +109,19 @@ export default {
         password: this.form2.password,
         userType: this.form2.userType,
       }
-      let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$post("/api/addUser", inputDto).then((response) => {
-        loadingInstance.close();
-        if (response.data.isSuccess) {
-          sessionStorage.setItem('user', JSON.stringify(response.data.data))
-          window.location.href = "index.html"
-        }
-        else {
-          this.$swalError('系统提示', response.data.error);
-        }
-      }).catch((err) => {
-        loadingInstance.close();
-        this.$swalError('系统提示', err);
-      })
+      this.$setBusy(
+        this.$post("/api/addUser", inputDto).then((response) => {
+          if (response.data.isSuccess) {
+            sessionStorage.setItem('user', JSON.stringify(response.data.data))
+            window.location.href = "index.html"
+          }
+          else {
+            this.$swalError('系统提示', response.data.error);
+          }
+        }).catch((err) => {
+          this.$swalError('系统提示', err);
+        })
+      )
     },
     closeModal() {
       this.createOrEditModal.isVisible = false;

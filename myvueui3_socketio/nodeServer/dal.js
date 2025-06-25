@@ -27,6 +27,9 @@ function guid() {
     }
     return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
 }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 module.exports = {
 
@@ -955,7 +958,7 @@ createTime NUMERIC NOT NULL
     addRoomMessageAsync: async (sendUserId, receiveRoomId, message, messageType, originMessageId) => {
         const db = new sqlite3.Database("mydb.sqlite");
 
-        var result = { voteResult: {} }
+        var result = { newId: 0, voteResult: {} }
         try {
             var roomUsers = []
             await dbAll(db, `SELECT * FROM roomUsers WHERE roomId=?`, [receiveRoomId])
@@ -976,6 +979,14 @@ createTime NUMERIC NOT NULL
                 await dbRun(db, 'BEGIN TRANSACTION')// 开始事务
 
                 await dbRun(db, `INSERT INTO roomMessages (sendUserId, receiveRoomId, message, messageType, originMessageId, createTime) VALUES (?, ?, ?, ?, ?, dateTime('now'));`, [sendUserId, receiveRoomId, message, messageType, originMessageId])
+                await dbGet(db, `select last_insert_rowId() as 'rowId';`)//获取刚刚插入的自增id
+                    .then((row) => {
+                        result.newId = row.rowId
+                    })
+                    .catch((err) => {
+                        throw err
+                    });
+                
                 for (var roomUser of roomUsers) {//给这个房间的所有人，除了发送人自己，都发送消息
                     if (sendUserId !== -1 && roomUser.userId != sendUserId) {
                         await dbRun(db, `INSERT INTO messageQueues (userId, originId, type, createTime) VALUES (?, ?, ?, dateTime('now'));`, [roomUser.userId, receiveRoomId, 'chatroom'])
@@ -1060,5 +1071,21 @@ createTime NUMERIC NOT NULL
         } finally {
             db.close();
         }
-    }
+    },
+
+    setMessageReadAsync: async (userId, originId, type) => {
+        const db = new sqlite3.Database("mydb.sqlite");
+
+        try {
+            await dbRun(db, "DELETE FROM messageQueues WHERE userId=? and originId=? and type=?", [userId, originId, type])
+                .catch((err) => {
+                    throw err
+                });
+        } catch (err) {
+            throw err
+        } finally {
+            db.close();
+        }
+        return true
+    },
 }

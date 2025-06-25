@@ -75,7 +75,6 @@
 </template>
   
 <script>
-import { ElLoading } from 'element-plus';
 export default {
     name: 'UserInfo',
     data() {
@@ -131,19 +130,9 @@ export default {
         handleDelete(index, row) {
             this.$swalConfirm(this.$t("app.systemTips"), "Are you sure to delete it?", (isConfirmed) => {
                 if (isConfirmed) {
-                    let loadingInstance = ElLoading.service({ fullscreen: true });
-                    this.$post("/api/deleteUser", { id: row.id }).then((response) => {
-                        loadingInstance.close();
-                        if (response.data.isSuccess) {
-                            var index = this.table.rows.findIndex(f => f.id == row.id);
-                            this.table.rows.splice(index, 1);
-                        }
-                        else {
-                            this.$swalError('系统提示', response.data.error);
-                        }
-                    }).catch((err) => {
-                        loadingInstance.close();
-                        this.$swalError('系统提示', err);
+                    this.$postEx("/api/deleteUser", { id: row.id }, (data) => {
+                        var index = this.table.rows.findIndex(f => f.id == row.id);
+                        this.table.rows.splice(index, 1);
                     })
                 }
             })
@@ -163,14 +152,10 @@ export default {
         pageChange() {
             let limit = this.table.pageSize;
             let offset = (this.table.currentPage - 1) * this.table.pageSize;
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getUsers?limit=${limit}&offset=${offset}`).then((response) => {
-                loadingInstance.close();
-                this.table.rows = response.data.data.data;
-                this.table.total = response.data.data.count.count;
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            
+            this.$getEx(`/api/getUsers?limit=${limit}&offset=${offset}`, (data) => {
+                this.table.rows = data.data;
+                this.table.total = data.count.count;
             })
         },
         saveData() {
@@ -206,25 +191,15 @@ export default {
                     password: this.form.password,
                     userType: this.form.userType,
                 }
-                let loadingInstance = ElLoading.service({ fullscreen: true });
-                this.$post("/api/updateUser", inputDto).then((response) => {
-                    loadingInstance.close();
-                    if (response.data.isSuccess) {
-                        this.pageChange()//做简单一点直接刷新表格即可
-                        this.closeModal();
-                        // var mainRow = this.table.rows.filter(f => f.id == this.createOrEditModal.rowId)[0];
-                        // mainRow.userName = this.form.userName
-                        // mainRow.nickName = this.form.nickName
-                        // mainRow.email = this.form.email
-                        // mainRow.password = this.form.password
-                        // mainRow.userType = this.form.userType
-                    }
-                    else {
-                        this.$swalError('系统提示', response.data.error);
-                    }
-                }).catch((err) => {
-                    loadingInstance.close();
-                    this.$swalError('系统提示', err);
+                this.$postEx("/api/updateUser", inputDto, (data) => {
+                    this.pageChange()//做简单一点直接刷新表格即可
+                    this.closeModal();
+                    // var mainRow = this.table.rows.filter(f => f.id == this.createOrEditModal.rowId)[0];
+                    // mainRow.userName = this.form.userName
+                    // mainRow.nickName = this.form.nickName
+                    // mainRow.email = this.form.email
+                    // mainRow.password = this.form.password
+                    // mainRow.userType = this.form.userType
                 })
             }
             else {
@@ -236,27 +211,17 @@ export default {
                     password: this.form.password,
                     userType: this.form.userType,
                 }
-                let loadingInstance = ElLoading.service({ fullscreen: true });
-                this.$post("/api/addUser", inputDto).then((response) => {
-                    loadingInstance.close();
-                    if (response.data.isSuccess) {
-                        this.pageChange()//做简单一点直接刷新表格即可
-                        this.closeModal();
-                        // var newRow = {};
-                        // //newRow.id = this.$getGuid();//自增Id
-                        // newRow.userName = this.form.userName
-                        // newRow.nickName = this.form.nickName
-                        // newRow.email = this.form.email
-                        // newRow.password = this.form.password
-                        // newRow.userType = this.form.userType
-                        // this.table.rows.push(newRow);
-                    }
-                    else {
-                        this.$swalError('系统提示', response.data.error);
-                    }
-                }).catch((err) => {
-                    loadingInstance.close();
-                    this.$swalError('系统提示', err);
+                this.$post("/api/addUser", inputDto, (data) => {
+                    this.pageChange()//做简单一点直接刷新表格即可
+                    this.closeModal();
+                    // var newRow = {};
+                    // //newRow.id = this.$getGuid();//自增Id
+                    // newRow.userName = this.form.userName
+                    // newRow.nickName = this.form.nickName
+                    // newRow.email = this.form.email
+                    // newRow.password = this.form.password
+                    // newRow.userType = this.form.userType
+                    // this.table.rows.push(newRow);
                 })
             }
         },

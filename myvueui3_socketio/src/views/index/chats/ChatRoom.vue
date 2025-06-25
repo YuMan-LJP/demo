@@ -9,15 +9,34 @@
                             <div v-for="item in chatMessages"
                                 style="margin: 5px 10px;background-color: blanchedalmond;padding: 5px;border-radius: 5px;width: fit-content;">
                                 <div v-if="item.messageType == '1'">
-                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}发起了一个投票: </span>{{ item.message}}
+                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}发起了一个投票: </span>
+                                    {{ item.message }}
                                     <br />
                                     <div v-if="!item.isConfirm">
-                                        <el-button type="success" size="small" @click="votePassOrRefuse(item, true)">√</el-button>
-                                        <el-button type="danger" size="small" @click="votePassOrRefuse(item, false)">×</el-button>
+                                        <el-button type="success" size="small"
+                                            @click="votePassOrRefuse(item, true)">√</el-button>
+                                        <el-button type="danger" size="small"
+                                            @click="votePassOrRefuse(item, false)">×</el-button>
+                                    </div>
+                                </div>
+                                <div v-else-if="item.messageType == '2'">
+                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}{{ item.originMessageId ? '接龙+1: ' : '发起了一个接龙: ' }}</span>
+                                    {{ item.message }}
+                                    <br />
+                                    <div v-if="item.jielongUser && item.jielongUser.userId == curUser.id">
+                                        <el-input v-model="jielongText" v-if="!item.isConfirm">
+                                            <template #append>
+                                                <el-button @click="jielongToNext(item, false)">发送</el-button>
+                                            </template>
+                                        </el-input>
+                                        <el-button v-if="!item.isConfirm" @click="jielongToNext(item, true)">停止</el-button>
+                                    </div>
+                                    <div v-else>
+                                        {{ item.jielongUser && !item.isConfirm ? item.jielongUser.nickName + '正在输入中' : '' }}
                                     </div>
                                 </div>
                                 <div v-else-if="item.messageType == '-1'">
-                                    <span style="font-weight:bold;color: red;">系统消息: </span>{{ item.message}}
+                                    <span style="font-weight:bold;color: red;">系统消息: </span>{{ item.message }}
                                 </div>
                                 <div v-else>
                                     <span style="font-weight:bold;">{{ item.nickName }}: </span>{{ item.message }}
@@ -38,8 +57,9 @@
                                         size="small">更多</el-button>
                                     <template #dropdown>
                                         <el-dropdown-menu>
-                                            <el-dropdown-item @click="openRequestModal">投票</el-dropdown-item>
-                                            <el-dropdown-item>Doudizhu</el-dropdown-item>
+                                            <el-dropdown-item @click="openRequestModal('1')">投票</el-dropdown-item>
+                                            <el-dropdown-item @click="openRequestModal('2')">接龙</el-dropdown-item>
+                                            <el-dropdown-item @click="openRequestModal('3')">Doudizhu</el-dropdown-item>
                                         </el-dropdown-menu>
                                     </template>
                                 </el-dropdown>
@@ -65,9 +85,9 @@
             </el-container>
         </el-container>
 
-        <el-dialog v-model="requestModal.isVisible" title="投票" width="600">
+        <el-dialog v-model="requestModal.isVisible" title="讨论" width="600">
             <el-form :model="requestForm">
-                <el-form-item label="议题" label-width="140px">
+                <el-form-item label="主题" label-width="140px">
                     <el-input v-model="requestForm.remark" autocomplete="off" type="textarea" :rows="2" />
                 </el-form-item>
             </el-form>
@@ -75,7 +95,7 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="closeRequestModal">{{ $t("app.cancel") }}</el-button>
-                    <el-button type="success" @click="sendRequestMessage">{{ $t("app.confirm") }}</el-button>
+                    <el-button type="success" @click="confirmRequestMessage">{{ $t("app.confirm") }}</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -104,11 +124,14 @@ export default {
             requestModal: {
                 isVisible: false,
                 userId: null,
-                nickName: ''
+                nickName: '',
+                type: '',//1-投票，2-接龙
             },
             requestForm: {
                 remark: '',
             },
+
+            jielongText: '',
 
             debounceClickChatDiv: () => { },//防抖
         }
@@ -175,25 +198,29 @@ export default {
                 originMessageId: null
             }
 
-            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
-                if (response.data.isSuccess) {
-                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
-                    this.socket.emit('send-RoomChatMessage', inputDto);
-                    this.sendText = ""
-                    this.scrollChatMessageDiv();
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                this.$swalError('系统提示', err);
+            this.$post2(`/api/addRoomMessage`, inputDto, (data) => {
+                inputDto.id = data.newId
+                inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                this.socket.emit('send-RoomChatMessage', inputDto);
+                this.sendText = ""
+                this.scrollChatMessageDiv();
+            })
+        },
+        setMessageRead() {
+            this.$post2(`/api/setMessageRead`, {
+                userId: this.curUser.id,
+                originId: this.curRoom.id,
+                type: 'chatroom'
+            }, () => {
+                this.$bus.emit('messageChange')
             })
         },
         clickChatDiv() {
-            //点击聊天区域时，直接设置当前聊天对象已读
             if (this.roomId == null) {
                 return;
             }
-            this.loadMessage()
+            //点击聊天区域时，直接设置当前聊天对象已读
+            this.setMessageRead()
         },
         removeUserFromRoom(userId) {
             this.$swalConfirm(this.$t("app.systemTips"), "确定要移除这个用户吗？", (isConfirmed) => {
@@ -213,18 +240,34 @@ export default {
             })
         },
 
-        openRequestModal() {
+        openRequestModal(type) {
             this.requestModal.isVisible = true;
             this.requestModal.userId = this.curUser.id;
             this.requestModal.nickName = this.curUser.nickName;
+            this.requestModal.type = type;
         },
         closeRequestModal() {
             this.requestModal.isVisible = false;
             this.requestModal.userId = null;
             this.requestModal.nickName = '';
+            this.requestModal.type = '';
             this.requestForm.remark = ""
         },
+        confirmRequestMessage() {
+            if (this.requestModal.type == '1') {
+                this.sendRequestMessage();
+            } else if (this.requestModal.type == '2') {
+                this.sendJielongMessage();
+            } else if (this.requestModal.type == '3') {
+                this.sendDoudizhuMessage();
+            } else {
+                this.$swalError('系统提示', '暂不支持');
+            }
+        },
+
         sendRequestMessage() {
+            //非实时投票（发出一个群内所有人可见的问答消息，大家参与，没有先后顺序，问答消息完提示结束）
+            //可以先开投票后面再进入房间，不是实时参与也可以
             var inputDto = {
                 sendUserId: this.curUser.id,
                 receiveRoomId: this.curRoom.id,
@@ -233,20 +276,15 @@ export default {
                 messageType: '1',
                 originMessageId: null
             }
-            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
-                if (response.data.isSuccess) {
-                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
-                    this.socket.emit('send-RoomChatMessage', inputDto);
-                    this.closeRequestModal();
-                    this.scrollChatMessageDiv();
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                this.$swalError('系统提示', err);
+            this.$post2(`/api/addRoomMessage`, inputDto, (data) => {
+                inputDto.id = data.newId
+                inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                this.socket.emit('send-RoomChatMessage', inputDto);
+                this.closeRequestModal();
+                this.scrollChatMessageDiv();
             })
         },
-        votePassOrRefuse(row, isOk){
+        votePassOrRefuse(row, isOk) {
             var inputDto = {
                 sendUserId: this.curUser.id,
                 receiveRoomId: this.curRoom.id,
@@ -255,26 +293,21 @@ export default {
                 messageType: isOk ? '1=1' : '1=0',
                 originMessageId: row.id
             }
-            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
-                if (response.data.isSuccess) {
-                    row.isConfirm = true;
-                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
-                    this.socket.emit('send-RoomChatMessage', inputDto);
-                    this.scrollChatMessageDiv();
+            this.$post2(`/api/addRoomMessage`, inputDto, (data) => {
+                inputDto.id = data.newId
+                row.isConfirm = true;
+                inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                this.socket.emit('send-RoomChatMessage', inputDto);
+                this.scrollChatMessageDiv();
 
-                    //t1.roomId,t1.userId,t2.message,t2.messageType
-                    if(response.data.data.voteResult && response.data.data.voteResult.findIndex(f => f.message === null) === -1){
-                        //都投票完了
-                        this.voteComplete(row, response.data.data)
-                    }
-                } else {
-                    this.$swalError('系统提示', response.data.error);
+                //t1.roomId,t1.userId,t2.message,t2.messageType
+                if (data.voteResult && data.voteResult.findIndex(f => f.message === null) === -1) {
+                    //都投票完了
+                    this.voteComplete(row, data)
                 }
-            }).catch((err) => {
-                this.$swalError('系统提示', err);
             })
         },
-        voteComplete(row, result){
+        voteComplete(row, result) {
             var inputDto = {
                 sendUserId: -1,//系统
                 receiveRoomId: this.curRoom.id,
@@ -283,18 +316,74 @@ export default {
                 messageType: '-1',
                 originMessageId: row.id
             }
-            this.$post(`/api/addRoomMessage`, inputDto).then((response) => {
-                if (response.data.isSuccess) {
-                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
-                    this.socket.emit('send-RoomChatMessage', inputDto);
-                    this.scrollChatMessageDiv();
-                    console.log(inputDto.message, result)
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                this.$swalError('系统提示', err);
+            this.$post2(`/api/addRoomMessage`, inputDto, (data) => {
+                inputDto.id = data.newId
+                inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                this.socket.emit('send-RoomChatMessage', inputDto);
+                this.scrollChatMessageDiv();
             })
+        },
+
+        sendJielongMessage() {
+            //在线接龙（发出一个群内所有人可见的问答消息，选择在线的人参与，有先后顺序，等前面一个人完成之后再轮到下一个人，问答消息完提示结束）
+            //如果其中有人离开房间，就当弃权
+            var user = this.calcJielongNextUser(this.curUser.id);//开始循环，取第一个人
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: this.requestForm.remark,
+                messageType: '2',
+                originMessageId: null,
+                jielongUser: user,//只有当前人可以回复
+                isConfirm: false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+            this.closeRequestModal();
+        },
+        jielongToNext(row, isStop) {
+            var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: this.jielongText,
+                messageType: '2',
+                originMessageId: row.id,
+                jielongUser: isStop ? null : user,//只有当前人可以回复
+                isConfirm: isStop ? true : false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+
+            row.isConfirm = true;
+            this.jielongText = '';
+        },
+        calcJielongNextUser(curUserId) {
+            //计算下一个轮到的用户，如果轮完回到开头重新轮
+            var total = this.roomUsers.length;
+            var index = this.roomUsers.findIndex(f => f.userId == curUserId)
+            if (index !== total - 1) {
+                //不是最后一个就取下一个
+                return this.roomUsers[index + 1]
+            } else {
+                //如果是最后一个就取回第一个
+                return this.roomUsers[0]
+            }
+        },
+
+        sendDoudizhuMessage() {
+            //投票是否开启
+            //开启后随机选一个用户作为地主
+            //后台服务器开始发牌
+            //显示出地主牌并加入地主手中
+            //地主先出牌。。轮流下一名用户出牌
+            //最后牌先出完一方获胜，显示所有用户剩余手中的牌
+            //投票是否开启下一轮，下一轮由上一轮赢家开始选择是否做地主，弃权就轮流下一名用户选择是否做地主，大家都不做就默认赢家做
+            //依次类推
         },
 
         initSocket() {
@@ -316,9 +405,19 @@ export default {
             });
             // 接收消息
             this.socket.on('chat-RoomChatMessage', (data) => {
-                //接收到新的消息时，刷新聊天窗口
+                //接收到新的消息时，追加消息到聊天窗口
                 if (data.receiveRoomId == this.roomId) {
-                    this.loadMessage()//主要就是为了设置已读
+                    this.chatMessages.push(data);
+                    this.scrollChatMessageDiv();
+
+                    if (data.messageType != '2') {
+                        this.setMessageRead()//设置已读
+                    } else {
+                        var index = this.chatMessages.findIndex(f => f.id == data.originMessageId)
+                        if(index !== -1){
+                            this.chatMessages[index].isConfirm = true
+                        }
+                    }
                 }
             });
             // 错误处理

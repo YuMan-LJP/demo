@@ -957,6 +957,42 @@ function initApi(app) {
             });
         }
     })
+    
+    app.post("/api/setMessageRead", (req, res) => {
+        try {
+            console.log("/api/setMessageRead", req.body);
+            if (req.body === undefined) {
+                throw new Error('参数不能为空')
+            }
+            const { userId, originId, type } = req.body;
+            if (!userId) throw "userId不能为0或空";
+            if (!originId) throw "originId不能为0或空";
+            if (!type) throw "type不能为0或空";
+
+            dal.setMessageReadAsync(userId, originId, type)
+                .then((data) => {
+                    res.json({
+                        isSuccess: true,
+                        error: null,
+                        data: data
+                    })
+                })
+                .catch((error) => {
+                    res.json({
+                        isSuccess: false,
+                        error: error.message,
+                        data: null
+                    })
+                })
+        }
+        catch (err) {
+            res.json({
+                isSuccess: false,
+                error: err.message,
+                data: null
+            });
+        }
+    })
 }
 
 module.exports = {

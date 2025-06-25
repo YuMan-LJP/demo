@@ -158,7 +158,6 @@
 </template>
   
 <script>
-import { ElLoading } from 'element-plus';
 import { useRouter } from 'vue-router'
 export default {
     setup() {
@@ -217,33 +216,18 @@ export default {
     },
     methods: {
         pageChange() {
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getRooms?myselfId=${this.curUser.id}`).then((response) => {
-                loadingInstance.close();
-                this.table.rows = response.data.data;
+            this.$getEx(`/api/getRooms?myselfId=${this.curUser.id}`, (data) => {
+                this.table.rows = data;
                 this.table.total = this.table.rows.length;
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
             })
         },
         handleDelete(index, row, isDeleteRoom) {
             if (isDeleteRoom) {
                 this.$swalConfirm(this.$t("app.systemTips"), "确定要解散吗？", (isConfirmed) => {
                     if (isConfirmed) {
-                        let loadingInstance = ElLoading.service({ fullscreen: true });
-                        this.$post("/api/deleteRoom", { id: row.id }).then((response) => {
-                            loadingInstance.close();
-                            if (response.data.isSuccess) {
-                                var index = this.table.rows.findIndex(f => f.id == row.id);
-                                this.table.rows.splice(index, 1);
-                            }
-                            else {
-                                this.$swalError('系统提示', response.data.error);
-                            }
-                        }).catch((err) => {
-                            loadingInstance.close();
-                            this.$swalError('系统提示', err);
+                        this.$postEx("/api/deleteRoom", { id: row.id }, (data) => {
+                            var index = this.table.rows.findIndex(f => f.id == row.id);
+                            this.table.rows.splice(index, 1);
                         })
                     }
                 })
@@ -251,19 +235,9 @@ export default {
             else {
                 this.$swalConfirm(this.$t("app.systemTips"), "确定要退出吗？", (isConfirmed) => {
                     if (isConfirmed) {
-                        let loadingInstance = ElLoading.service({ fullscreen: true });
-                        this.$post("/api/quitRoom", { id: row.id, userId: this.curUser.id }).then((response) => {
-                            loadingInstance.close();
-                            if (response.data.isSuccess) {
-                                var index = this.table.rows.findIndex(f => f.id == row.id);
-                                this.table.rows.splice(index, 1);
-                            }
-                            else {
-                                this.$swalError('系统提示', response.data.error);
-                            }
-                        }).catch((err) => {
-                            loadingInstance.close();
-                            this.$swalError('系统提示', err);
+                        this.$postEx("/api/quitRoom", { id: row.id, userId: this.curUser.id }, (data) => {
+                            var index = this.table.rows.findIndex(f => f.id == row.id);
+                            this.table.rows.splice(index, 1);
                         })
                     }
                 })
@@ -296,13 +270,8 @@ export default {
         },
         searchUser() {
             //当没有输入查询条件时，就是查当前用户所有的联系人
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.createModal.userNameOrEmail}&myselfId=${this.curUser.id}`).then((response) => {
-                loadingInstance.close();
-                this.searchUserTable.rows = response.data.data;
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$getEx(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.createModal.userNameOrEmail}&myselfId=${this.curUser.id}`, (data) => {
+                this.searchUserTable.rows = data;
             })
         },
         searchUserTableSelectionChange(val) {
@@ -316,23 +285,14 @@ export default {
                 myselfId: this.curUser.id,
                 friendIds: this.searchUserTable.selectIds
             };
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$post("/api/addRoom", inputDto).then((response) => {
-                loadingInstance.close();
-                if (response.data.isSuccess) {
-                    this.$swalSuccess('系统提示', '创建成功！');
-                    this.closeCreateModal();
-                    this.pageChange();
+            this.$postEx("/api/addRoom", inputDto, (data) => {
+                this.$swalSuccess('系统提示', '创建成功！');
+                this.closeCreateModal();
+                this.pageChange();
 
-                    //创建房间之后，默认发出一条消息，群内其他人就会收到消息，右上角就会有提示了
-                    console.log('new room id', response.data.data)
-                    this.sendNewMessageToRoom(response.data.data);//返回的是roomId
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+                //创建房间之后，默认发出一条消息，群内其他人就会收到消息，右上角就会有提示了
+                console.log('new room id', response.data.data)
+                this.sendNewMessageToRoom(response.data.data);//返回的是roomId
             })
         },
         sendNewMessageToRoom(roomId) {
@@ -380,14 +340,8 @@ export default {
                 return;
             }
 
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getRoomByName?name=${this.searchModal.roomName}`).then((response) => {
-                loadingInstance.close();
-                console.log(response.data.data);
-                this.searchRoomTable.rows = response.data.data;
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$getEx(`/api/getRoomByName?name=${this.searchModal.roomName}`, (data) => {
+                this.searchRoomTable.rows = data;
             })
         },
         closeSearchModal() {
@@ -417,20 +371,10 @@ export default {
                 remark: this.requestForm.remark,
             };
 
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$post("/api/addRequestByRoom", inputDto).then((response) => {
-                loadingInstance.close();
-                console.log(response)
-                if (response.data.isSuccess) {
-                    this.$swalSuccess('系统提示', '申请成功！');
-                    this.closeRequestModal();
-                    this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$postEx("/api/addRequestByRoom", inputDto, (data) => {
+                this.$swalSuccess('系统提示', '申请成功！');
+                this.closeRequestModal();
+                this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
             })
         },
         closeRequestModal() {
@@ -450,19 +394,10 @@ export default {
                 name: this.updateForm.name,
                 description: this.updateForm.description
             };
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$post("/api/updateRoom", inputDto).then((response) => {
-                loadingInstance.close();
-                if (response.data.isSuccess) {
-                    this.$swalSuccess('系统提示', '修改成功！');
-                    this.closeUpdateModal();
-                    this.pageChange();
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$postEx("/api/updateRoom", inputDto, (data) => {
+                this.$swalSuccess('系统提示', '修改成功！');
+                this.closeUpdateModal();
+                this.pageChange();
             })
         }
     },

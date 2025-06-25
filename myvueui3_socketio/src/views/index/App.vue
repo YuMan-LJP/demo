@@ -152,7 +152,6 @@
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import en from 'element-plus/dist/locale/en.mjs'
-import { ElLoading } from 'element-plus';
 import { useRouter } from 'vue-router'
 import io from 'socket.io-client';
 
@@ -226,13 +225,13 @@ export default {
       catch (ex) { console.log(ex) }
     },
     refreshMessage() {
-      this.$get(`/api/getMessageQueues?userId=${this.sessionUser.id}`).then((response) => {
-        this.messageAllCount = 0;
-        this.requestContactCount = 0;
-        this.requestRoomCount = 0;
-        this.chatContactCount = 0;
-        this.chatRoomCount = 0;
-        for (let item of response.data.data) {
+      this.messageAllCount = 0;
+      this.requestContactCount = 0;
+      this.requestRoomCount = 0;
+      this.chatContactCount = 0;
+      this.chatRoomCount = 0;
+      this.$get2(`/api/getMessageQueues?userId=${this.sessionUser.id}`, (data) => {
+        for (let item of data) {
           //requestcontact联系人申请/requestroom群申请/chatcontact联系人聊天/chatroom群聊天
           if (item.type == 'requestcontact') {
             this.requestContactCount++;
@@ -245,21 +244,13 @@ export default {
           }
           this.messageAllCount++;
         }
-      }).catch((err) => {
-        this.$swalError('系统提示', err);
       })
     },
 
     openRequsetModal(type) {
-      this.requestModal.isVisible = true
-
-      let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$get(`/api/getRequests?userId=${this.sessionUser.id}&type=${type}`).then((response) => {
-        loadingInstance.close();
-        this.requestTable.rows = response.data.data;
-      }).catch((err) => {
-        loadingInstance.close();
-        this.$swalError('系统提示', err);
+      this.$getEx(`/api/getRequests?userId=${this.sessionUser.id}&type=${type}`, (data) => {
+        this.requestTable.rows = data;
+        this.requestModal.isVisible = true
       })
     },
     closeRequsetModal() {
@@ -272,16 +263,9 @@ export default {
           myselfId: row.receiveUserId,
           friendId: row.sendUserId
         }
-        let loadingInstance = ElLoading.service({ fullscreen: true });
-        this.$post(`/api/addContact`, inputDto).then((response) => {
-          loadingInstance.close();
-          if (response.data.isSuccess) {
-            row.progress = 'pass'
-            this.$bus.emit('messageChange')
-          }
-        }).catch((err) => {
-          loadingInstance.close();
-          this.$swalError('系统提示', err);
+        this.$postEx(`/api/addContact`, inputDto, (data) => {
+          row.progress = 'pass'
+          this.$bus.emit('messageChange')
         })
       }
       else if (row.type === 'room') {
@@ -291,16 +275,9 @@ export default {
           myselfId: row.receiveUserId,
           friendId: row.sendUserId
         }
-        let loadingInstance = ElLoading.service({ fullscreen: true });
-        this.$post(`/api/addRoomUser`, inputDto).then((response) => {
-          loadingInstance.close();
-          if (response.data.isSuccess) {
-            row.progress = 'pass'
-            this.$bus.emit('messageChange')
-          }
-        }).catch((err) => {
-          loadingInstance.close();
-          this.$swalError('系统提示', err);
+        this.$postEx(`/api/addRoomUser`, inputDto, (data) => {
+          row.progress = 'pass'
+          this.$bus.emit('messageChange')
         })
       }
       else {
@@ -308,16 +285,9 @@ export default {
       }
     },
     handleRequsetRefuse(index, row) {
-      let loadingInstance = ElLoading.service({ fullscreen: true });
-      this.$post(`/api/setRequestToRefuse`, { id: row.id, userId: row.receiveUserId, originUserId: row.sendUserId }).then((response) => {
-        loadingInstance.close();
-        if (response.data.isSuccess) {
-          row.progress = 'refuse'
-          this.$bus.emit('messageChange')
-        }
-      }).catch((err) => {
-        loadingInstance.close();
-        this.$swalError('系统提示', err);
+      this.$postEx(`/api/setRequestToRefuse`, { id: row.id, userId: row.receiveUserId, originUserId: row.sendUserId }, (data) => {
+        row.progress = 'refuse'
+        this.$bus.emit('messageChange')
       })
     },
 
@@ -446,7 +416,7 @@ export default {
       // 移除事件监听
       this.socket.off('getuserlogin')
       this.socket.off('getuserquit')
-      this.socket.off('getdisconnect') 
+      this.socket.off('getdisconnect')
       this.socket.off('chat-ContactMessage')
       this.socket.off('message-RoomChat')
       this.socket.off('message-Refresh')

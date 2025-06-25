@@ -97,7 +97,6 @@
 </template>
   
 <script>
-import { ElLoading } from 'element-plus';
 export default {
     name: 'Contact',
     data() {
@@ -146,19 +145,9 @@ export default {
             //特别注意，删除联系人只是单方面在本人这端删除，对方还是有的，只是对方没办法发送消息了
             this.$swalConfirm(this.$t("app.systemTips"), "Are you sure to delete it?", (isConfirmed) => {
                 if (isConfirmed) {
-                    let loadingInstance = ElLoading.service({ fullscreen: true });
-                    this.$post("/api/deleteContact", { id: row.id }).then((response) => {
-                        loadingInstance.close();
-                        if (response.data.isSuccess) {
-                            var index = this.table.rows.findIndex(f => f.id == row.id);
-                            this.table.rows.splice(index, 1);
-                        }
-                        else {
-                            this.$swalError('系统提示', response.data.error);
-                        }
-                    }).catch((err) => {
-                        loadingInstance.close();
-                        this.$swalError('系统提示', err);
+                    this.$postEx("/api/deleteContact", { id: row.id }, (data) => {
+                        var index = this.table.rows.findIndex(f => f.id == row.id);
+                        this.table.rows.splice(index, 1);
                     })
                 }
             })
@@ -167,17 +156,12 @@ export default {
         pageChange(callback) {
             var userEntity = JSON.parse(sessionStorage.getItem('user'));
 
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getContacts?myselfId=${userEntity.id}`).then((response) => {
-                loadingInstance.close();
-                this.table.rows = response.data.data;
+            this.$getEx(`/api/getContacts?myselfId=${userEntity.id}`, (data) => {
+                this.table.rows = data;
                 this.table.total = this.table.rows.length;
                 if (callback) {
                     callback();
                 }
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
             })
         },
 
@@ -187,14 +171,8 @@ export default {
                 return;
             }
 
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$get(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.searchModal.userNameOrEmail}`).then((response) => {
-                loadingInstance.close();
-                console.log(response.data.data);
-                this.searchUserTable.rows = response.data.data;
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$getEx(`/api/getUserByUserNameOrEmail?userNameOrEmail=${this.searchModal.userNameOrEmail}`, (data) => {
+                this.searchUserTable.rows = data;
             })
         },
 
@@ -215,20 +193,10 @@ export default {
                 remark: this.form.remark,
             };
 
-            let loadingInstance = ElLoading.service({ fullscreen: true });
-            this.$post("/api/addRequestByContact", inputDto).then((response) => {
-                loadingInstance.close();
-                console.log(response)
-                if (response.data.isSuccess) {
-                    this.$swalSuccess('系统提示', '申请成功！');
-                    this.closeCreateModal();
-                    this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
-                } else {
-                    this.$swalError('系统提示', response.data.error);
-                }
-            }).catch((err) => {
-                loadingInstance.close();
-                this.$swalError('系统提示', err);
+            this.$postEx("/api/addRequestByContact", inputDto, (data) => {
+                this.$swalSuccess('系统提示', '申请成功！');
+                this.closeCreateModal();
+                this.$bus.emit('sendRefreshMessage', [inputDto.receiveUserId])//通知接收人
             })
         },
         closeSearchModal() {

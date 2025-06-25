@@ -1,6 +1,7 @@
 import axios from 'axios'
 import i18n from './i18n/index'
 import Swal from 'sweetalert2'
+import { ElLoading } from 'element-plus';
 
 const $swalError = (title, message) => {
     Swal.fire({
@@ -76,8 +77,30 @@ instance.interceptors.response.use(
 const $get = (url) => {
     return instance.get(url);
 }
+const $get2 = (url, callback) => {
+    return instance.get(url).then((response) => {
+        if (response.data.isSuccess) {
+            callback(response.data.data);
+        } else {
+            $swalError(i18n.global.t("app.systemTips"), response.data.error);
+        }
+    }).catch((err) => {
+        $swalError(i18n.global.t("app.systemTips"), err);
+    })
+}
 const $post = (url, data) => {
     return instance.post(url, data);//默认是json格式
+}
+const $post2 = (url, data, callback) => {//默认是json格式
+    return instance.post(url, data).then((response) => {
+        if (response.data.isSuccess) {
+            callback(response.data.data);
+        } else {
+            $swalError(i18n.global.t("app.systemTips"), response.data.error);
+        }
+    }).catch((err) => {
+        $swalError(i18n.global.t("app.systemTips"), err);
+    })
 }
 const $postForm = (url, data) => {
     return instance.post(url, data, {
@@ -86,11 +109,73 @@ const $postForm = (url, data) => {
         }
     });
 }
+const $postForm2 = (url, data) => {
+    return instance.post(url, data, {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    }).then((response) => {
+        if (response.data.isSuccess) {
+            callback(response.data.data);
+        } else {
+            $swalError(i18n.global.t("app.systemTips"), response.data.error);
+        }
+    }).catch((err) => {
+        $swalError(i18n.global.t("app.systemTips"), err);
+    });
+}
+
+//由于接口返回的结构都是一样的，这里统一做错误提示处理，然后再加上loading，直接封装成通用请求方法
+const getEx = (url, callback) => {
+    let loadingInstance = ElLoading.service({
+        lock: true,
+        text: 'Loading',
+        background: 'rgba(0, 0, 0, 0.7)',
+        fullscreen: true
+    });
+    instance.get(url).then((response) => {
+        if (response.data.isSuccess) {
+            callback(response.data.data);
+        } else {
+            $swalError(i18n.global.t("app.systemTips"), response.data.error);
+        }
+    }).catch((err) => {
+        $swalError(i18n.global.t("app.systemTips"), err);
+    }).finally(() => {
+        loadingInstance.close();
+    })
+}
+
+//由于接口返回的结构都是一样的，这里统一做错误提示处理，然后再加上loading，直接封装成通用请求方法
+const postEx = (url, data, callback) => {//默认是json格式
+    let loadingInstance = ElLoading.service({
+        lock: true,
+        text: 'Loading',
+        background: 'rgba(0, 0, 0, 0.7)',
+        fullscreen: true
+    });
+    instance.post(url, data).then((response) => {
+        if (response.data.isSuccess) {
+            callback(response.data.data);
+        } else {
+            $swalError(i18n.global.t("app.systemTips"), response.data.error);
+        }
+    }).catch((err) => {
+        $swalError(i18n.global.t("app.systemTips"), err);
+    }).finally(() => {
+        loadingInstance.close();
+    })
+}
 
 export default {
-    install: (app)=>{
+    install: (app) => {
         app.config.globalProperties["$get"] = $get;
         app.config.globalProperties["$post"] = $post;
         app.config.globalProperties["$postForm"] = $postForm;
+        app.config.globalProperties["$get2"] = $get2;//包含统一的异常处理
+        app.config.globalProperties["$post2"] = $post2;//包含统一的异常处理
+        app.config.globalProperties["$postForm2"] = $postForm2;//包含统一的异常处理
+        app.config.globalProperties["$getEx"] = getEx;//包含Laoding和统一的异常处理
+        app.config.globalProperties["$postEx"] = postEx;//包含Laoding和统一的异常处理
     }
 };
