@@ -291,8 +291,8 @@ export default {
                 this.pageChange();
 
                 //创建房间之后，默认发出一条消息，群内其他人就会收到消息，右上角就会有提示了
-                console.log('new room id', response.data.data)
-                this.sendNewMessageToRoom(response.data.data);//返回的是roomId
+                console.log('new room id', data)
+                this.sendNewMessageToRoom(data);//返回的是roomId
             })
         },
         sendNewMessageToRoom(roomId) {

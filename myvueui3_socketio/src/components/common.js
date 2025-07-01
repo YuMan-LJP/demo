@@ -43,11 +43,37 @@ function debounce(func, delay) {
     };
 }
 
+//是否数组是连续数字
+function areNumbersConsecutive(arr) {
+    // 对数组进行排序
+    arr.sort((a, b) => a - b);
+
+    // 检查数组中的元素是否连续
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] - arr[i - 1] !== 1) {
+            return false;
+        }
+    }
+    return true;
+}
+
+//判断数组是否有重复
+function hasDuplicates(arr) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr.indexOf(arr[i]) !== i) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export default {
     install: (app) => {
         app.config.globalProperties["$setBusy"] = setBusy;
         app.config.globalProperties["$getLoading"] = getLoading;
         app.config.globalProperties["$getGuid"] = getGuid;
         app.config.globalProperties["$debounce"] = debounce;
+        app.config.globalProperties["$areNumbersConsecutive"] = areNumbersConsecutive;
+        app.config.globalProperties["$hasDuplicates"] = hasDuplicates;
     }
 }

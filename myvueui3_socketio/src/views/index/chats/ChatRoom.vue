@@ -20,7 +20,8 @@
                                     </div>
                                 </div>
                                 <div v-else-if="item.messageType == '2'">
-                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}{{ item.originMessageId ? '接龙+1: ' : '发起了一个接龙: ' }}</span>
+                                    <span style="font-weight:bold;color: blue;">{{ item.nickName }}{{ item.originMessageId ?
+                                        '接龙+1: ' : '发起了一个接龙: ' }}</span>
                                     {{ item.message }}
                                     <br />
                                     <div v-if="item.jielongUser && item.jielongUser.userId == curUser.id">
@@ -35,11 +36,64 @@
                                         {{ item.jielongUser && !item.isConfirm ? item.jielongUser.nickName + '正在输入中' : '' }}
                                     </div>
                                 </div>
+                                <div v-else-if="item.messageType == '3-1'">
+                                    <span style="font-weight:bold;color: blue;">[{{ item.nickName }}]{{ item.message
+                                    }}</span>
+                                    <br />
+                                    <div v-if="!item.isConfirm">
+                                        <el-button type="success" size="small"
+                                            @click="doudizhuVotePassOrRefuse(item, true)">√</el-button>
+                                        <el-button type="danger" size="small"
+                                            @click="doudizhuVotePassOrRefuse(item, false)">×</el-button>
+                                    </div>
+                                </div>
+                                <div v-else-if="item.messageType == '3-3'">
+                                    <span>{{ item.jielongUser ? item.jielongUser.nickName + '正在选择是否做地主' : '' }}</span>
+                                    <div
+                                        v-if="item.jielongUser && item.jielongUser.userId == curUser.id && !item.isConfirm">
+                                        <el-button type="success" size="small" round
+                                            @click="doudizhuSelectLandlord(item, true)">抢</el-button>
+                                        <el-button type="danger" size="small" round
+                                            @click="doudizhuSelectLandlord(item, false)">不抢</el-button>
+                                    </div>
+                                </div>
+                                <div v-else-if="item.messageType == '3-4' || item.messageType == '3-5=1'">
+                                    <span style="font-weight:bold;color: blue;">
+                                        {{ item.nickName }}
+                                        {{ doudizhu.landlordPlayerId == item.sendUserId ? '(地主)' : '' }}: 
+                                    </span>
+                                    {{ item.message }}
+                                    <div v-if="item.htmlMessage" v-html="item.htmlMessage"></div>
+                                </div>
                                 <div v-else-if="item.messageType == '-1'">
                                     <span style="font-weight:bold;color: red;">系统消息: </span>{{ item.message }}
+                                    <div v-if="item.htmlMessage" v-html="item.htmlMessage"></div>
                                 </div>
                                 <div v-else>
                                     <span style="font-weight:bold;">{{ item.nickName }}: </span>{{ item.message }}
+                                </div>
+                            </div>
+                            <div v-if="doudizhu.isShow">
+                                <div>
+                                    <span style="margin-right: 10px;" v-if="doudizhu.currentPlayerName">轮到 {{
+                                        doudizhu.currentPlayerName }} 出牌</span>
+                                    <el-button type="success" size="small" round
+                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer"
+                                        @click="doudizhuPlayCard">出牌</el-button>
+                                    <el-button type="danger" size="small" round
+                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer || doudizhu.lastPlayCardPlayerId == curUser.id"
+                                        @click="doudizhuSkip">跳过</el-button>
+                                    <el-button type="primary" size="small" round :disabled="!doudizhu.isStart"
+                                        @click="doudizhuSort(doudizhu.myCards)">排序</el-button>
+                                    <span style="margin-left: 10px;">(每张牌都是一个多选按钮，直接点击按钮选择出牌即可)</span>
+                                </div>
+                                <div>
+                                    <el-checkbox-group v-model="doudizhu.selectCardKeys" size="small">
+                                        <el-checkbox-button v-for="card in doudizhu.myCards" :key="card.key"
+                                            :value="card.key">
+                                            <span :style="'color:' + card.color">({{ card.suit }}){{ card.value }}</span>
+                                        </el-checkbox-button>
+                                    </el-checkbox-group>
                                 </div>
                             </div>
                         </div>
@@ -59,7 +113,7 @@
                                         <el-dropdown-menu>
                                             <el-dropdown-item @click="openRequestModal('1')">投票</el-dropdown-item>
                                             <el-dropdown-item @click="openRequestModal('2')">接龙</el-dropdown-item>
-                                            <el-dropdown-item @click="openRequestModal('3')">Doudizhu</el-dropdown-item>
+                                            <el-dropdown-item v-if="curRoom.createUserId === curUser.id" @click="sendDoudizhuMessage">斗地主</el-dropdown-item>
                                         </el-dropdown-menu>
                                     </template>
                                 </el-dropdown>
@@ -132,6 +186,29 @@ export default {
             },
 
             jielongText: '',
+
+            doudizhu: {
+                sendUserId: null,//发起人
+                isShow: false,
+
+                voteGuid: '',
+                voteResult: [],//投票结果
+
+                myCards: [],
+                players: {},
+                landlordCards: [],
+
+                isStart: false,
+                currentPlayerId: null,
+                currentPlayerName: null,
+                isCurrentPlayer: false,
+                landlordPlayerId: null,
+                landlordPlayerName: null,
+
+                selectCardKeys: [],
+                lastPlayCardPlayerId: null,//最后一次出牌的人，跳过不出的不记录，如果最后一次出牌人又是自己说明轮空了一轮
+                lastSelectCardKeys: [],//最后一次出的牌，用于出牌规则校验
+            },
 
             debounceClickChatDiv: () => { },//防抖
         }
@@ -219,6 +296,9 @@ export default {
             if (this.roomId == null) {
                 return;
             }
+            if (this.doudizhu.sendUserId) {
+                return;
+            }
             //点击聊天区域时，直接设置当前聊天对象已读
             this.setMessageRead()
         },
@@ -258,8 +338,6 @@ export default {
                 this.sendRequestMessage();
             } else if (this.requestModal.type == '2') {
                 this.sendJielongMessage();
-            } else if (this.requestModal.type == '3') {
-                this.sendDoudizhuMessage();
             } else {
                 this.$swalError('系统提示', '暂不支持');
             }
@@ -376,14 +454,577 @@ export default {
         },
 
         sendDoudizhuMessage() {
-            //投票是否开启
-            //开启后随机选一个用户作为地主
-            //后台服务器开始发牌
-            //显示出地主牌并加入地主手中
-            //地主先出牌。。轮流下一名用户出牌
-            //最后牌先出完一方获胜，显示所有用户剩余手中的牌
-            //投票是否开启下一轮，下一轮由上一轮赢家开始选择是否做地主，弃权就轮流下一名用户选择是否做地主，大家都不做就默认赢家做
+            //投票是否开启（3-1）
+            //后台服务器开始发牌（3-2）
+            //显示出地主牌，由发起人开始按用户顺序接龙询问是否做地主，确认地主后将地主牌加入地主手中（3-3）
+            //地主先出牌。。轮流下一名用户出牌（3-4）
+            //最后牌先出完一方获胜，显示所有用户剩余手中的牌（3-5）
+            //投票是否开启下一局，下一局由上一局赢家开始选择是否做地主，弃权就轮流下一名用户选择是否做地主，大家都不做就默认赢家做（3-1）
             //依次类推
+
+            if (this.roomUsers.length !== 3) {
+                this.$swalError('系统提示', '必须是3个人的房间才能开启');
+                return;
+            }
+            this.sendDoudizhuMessage_3_1(this.curUser.id);//由发起人开始，这局结束后，由赢家开始下一局
+        },
+        sendDoudizhuMessage_3_1(userId) {
+            this.doudizhu.sendUserId = userId
+            //投票是否开启（3-1）
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '投票是否开启一局斗地主',
+                messageType: '3-1',
+                originMessageId: null,
+                jielongUser: null,//只有当前人可以回复
+                isConfirm: false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+            this.doudizhu.voteGuid = inputDto.id
+            this.doudizhu.voteResult = [];
+        },
+        doudizhuVotePassOrRefuse(row, isOk) {
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: isOk ? `同意开启斗地主` : `拒绝开启斗地主`,
+                messageType: isOk ? '3-1=1' : '3-1=0',
+                originMessageId: null,
+                jielongUser: null,//只有当前人可以回复
+                isConfirm: false,
+                remark: row.id
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+            row.isConfirm = true;
+        },
+        sendDoudizhuMessage_3_2() {
+            //后台服务器开始发牌（3-2）
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '开始发牌',
+                messageType: '3-2',
+                originMessageId: null,
+                jielongUser: null,//只有当前人可以回复
+                isConfirm: false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+        },
+        sendDoudizhuMessage_3_3() {
+            //显示出地主牌，由发起人开始按用户顺序接龙询问是否做地主，确认地主后将地主牌加入地主手中（3-3）
+            var index = this.roomUsers.findIndex(f => f.userId == this.curUser.id)
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '接龙询问是否做地主',
+                messageType: '3-3',
+                originMessageId: null,
+                jielongUser: index !== -1 ? this.roomUsers[index] : null,//只有当前人可以回复
+                isConfirm: false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+        },
+        doudizhuSelectLandlord(row, isOk) {
+            row.isConfirm = true;
+            if (isOk) {
+                this.doudizhuBeLandlord(this.curUser.id, this.curUser.nickName);
+            } else {
+                //不抢就轮到下一名用户，如果都轮完了，就默认发起者做
+                var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
+                if (user.userId == this.doudizhu.sendUserId) {
+                    //当又轮回发起人的时候，就代表没有人做，就默认发起人做
+                    this.doudizhuBeLandlord(user.userId, user.nickName);
+                } else {
+                    var inputDto = {
+                        id: this.$getGuid(),
+                        sendUserId: this.curUser.id,
+                        receiveRoomId: this.curRoom.id,
+                        nickName: this.curUser.nickName,//触发消息的时候使用
+                        message: `不抢地主`,
+                        messageType: '3-3',
+                        originMessageId: row.id,
+                        jielongUser: user,//只有当前人可以回复
+                        isConfirm: false,
+                    }
+                    inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+                    this.socket.emit('send-RoomChatMessage', inputDto);
+                }
+            }
+        },
+        doudizhuBeLandlord(userId, userName) {
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: userId,
+                receiveRoomId: this.curRoom.id,
+                nickName: userName,//触发消息的时候使用
+                message: '做地主（地主牌加入该用户手中）由地主先出牌',
+                messageType: '3-3=1',
+                originMessageId: null,
+                jielongUser: null,//只有当前人可以回复
+                isConfirm: false,
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+        },
+        sendDoudizhuMessage_3_4(userId, userName) {
+            //地主先出牌。。轮流下一名用户出牌（3-4）
+            this.doudizhu.isStart = true
+            this.doudizhu.currentPlayerId = userId
+            this.doudizhu.currentPlayerName = userName
+            this.doudizhu.isCurrentPlayer = userId == this.curUser.id
+
+            //出牌过程：
+            //如果用户选择出牌：用户选择牌组，点出牌时校验是否符合，不符合提示错误，符合就出牌（相当于就是广播消息），然后手中的牌减去已经出的牌，排序，轮到下一家
+            //如果用户选择不出：直接轮到下家
+        },
+        doudizhuPlayCard() {
+            if (this.doudizhu.selectCardKeys.length === 0) {
+                this.$swalError('系统提示', '请选择要出的牌');
+                return;
+            }
+            var isOK = this.checkSelectCards();
+            if (!isOK) {
+                this.$swalError('系统提示', '请选择牌不符合出牌规则');
+                return;
+            }
+
+            //表示这次出完牌就赢了
+            var isOver = this.doudizhu.selectCardKeys.length === this.doudizhu.myCards.length;
+
+            var selectCardTexts = [];
+            this.doudizhu.selectCardKeys.forEach(f => {
+                let cardObj = f.split('_')//suit + '_' + value + '_' + color
+                selectCardTexts.push(`<span style="color:${cardObj[2]}">(${cardObj[0]})${cardObj[1]}</span>`)
+            })
+            var remainingQty = this.doudizhu.myCards.length - selectCardTexts.length;//计算剩余手牌数量
+            var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: `出牌(剩余手牌)${remainingQty}`,
+                htmlMessage: selectCardTexts.join(' | '),
+                messageType: '3-4',
+                originMessageId: null,
+                jielongUser: isOver ? null : user,//设置当前人为激活
+                isConfirm: false,
+                remark: this.doudizhu.selectCardKeys
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+
+            //手牌减去刚刚出的牌
+            this.doudizhu.selectCardKeys.forEach(f => {
+                let index = this.doudizhu.myCards.findIndex(f2 => f2.key === f)
+                if (index !== -1) {
+                    this.doudizhu.myCards.splice(index, 1)
+                }
+            })
+            this.doudizhuSort(this.doudizhu.myCards);
+            this.doudizhu.selectCardKeys = [];
+
+            if (isOver) {
+                this.sendDoudizhuMessage_3_5();
+            }
+        },
+        checkSelectCards() {
+            //校验是否符合出牌规则
+            //当前选择的牌：this.doudizhu.selectCardKeys
+            //上一次出牌人this.doudizhu.lastPlayCardPlayerId
+            //上一次出的牌this.doudizhu.lastSelectCardKeys
+
+            //首先必须校验出的牌必须符合规定：
+            //单张
+            //两张相同值的牌/王炸弹
+            //三张相同值的牌  //三带一，三代二
+            //四张相同值的牌  //四带一，四带二
+            //顺子，五个连续的牌
+            //连对：连续三对以上相同的两张牌
+            //飞机：连续两对以上相同的三张牌  //三带一，三带二
+            const cardOrder = {
+                "3": 1,
+                "4": 2,
+                "5": 3,
+                "6": 4,
+                "7": 5,
+                "8": 6,
+                "9": 7,
+                "10": 8,
+                "J": 9,
+                "Q": 10,
+                "K": 11,
+                "A": 12,
+                "2": 13,
+                "小王": 14,
+                "大王": 15
+            };
+            var cardNos = [];//牌序号
+            var cardCount = []//统计出现次数
+            this.doudizhu.selectCardKeys.forEach(f => {
+                let cardObj = f.split('_')//suit + '_' + value + '_' + color
+                let cardNo = cardOrder[cardObj[1]]
+                cardNos.push(cardNo);//转为序号
+
+                let index = cardCount.findIndex(f => f.key === cardNo);
+                if (index !== -1) {
+                    cardCount[index].count++
+                } else {
+                    cardCount.push({ key: cardNo, count: 1 })
+                }
+            })
+            cardNos.sort((a, b) => {
+                return a.value - b.value;
+            });
+            var isOK = this.checkCard(cardNos, cardCount);
+            if (!isOK) {
+                return false;
+            }
+
+            //特别注意：如果其他两个人都不出，又轮回自己的时候，就不需要判断上一次的牌了，上一次的牌也是自己出的
+            if (this.doudizhu.lastSelectCardKeys.length > 0 && this.doudizhu.lastPlayCardPlayerId !== this.curUser.id) {
+                //上一次出牌比较，必须比上一次出牌大
+                var lastCardNos = [];//牌序号
+                var lastCardCount = []//统计出现次数
+                this.doudizhu.lastSelectCardKeys.forEach(f => {
+                    let cardObj = f.split('_')//suit + '_' + value + '_' + color
+                    let cardNo = cardOrder[cardObj[1]]
+                    lastCardNos.push(cardNo);
+
+                    let index = lastCardCount.findIndex(f => f.key === cardNo);
+                    if (index !== -1) {
+                        lastCardCount[index].count++
+                    } else {
+                        lastCardCount.push({ key: cardNo, count: 1 })
+                    }
+                })
+                lastCardNos.sort((a, b) => {
+                    return a.value - b.value;
+                });
+                return this.checkLastCard(cardNos, cardCount, lastCardNos, lastCardCount)
+            } else {
+                return true
+            }
+        },
+        checkCard(cardNos, cardCount) {
+            const len = cardNos.length;
+
+            //单张
+            var oneCards = cardCount.filter(f => f.count === 1);
+            //两对
+            var twoCards = cardCount.filter(f => f.count === 2);
+            //三张相同
+            var threeCards = cardCount.filter(f => f.count === 3);
+            //四张相同
+            var fourCards = cardCount.filter(f => f.count === 4);
+
+            // 单牌
+            if (len === 1) return true;
+
+            // 对子/王炸
+            if (len === 2) {
+                if (twoCards.length === 1) return true;
+                else if (
+                    (cardNos[0] === 14 && cardNos[1] === 15)
+                    ||
+                    (cardNos[0] === 15 && cardNos[1] === 14)) return true;
+                else return false;
+            }
+
+            // 三张
+            if (len === 3) {
+                if (threeCards.length === 1) return true;
+                else return false;
+            }
+
+            // 四张/三带一
+            if (len === 4) {
+                if (fourCards.length === 1) return true;
+                else if (threeCards.length === 1 && oneCards.length === 1) {//可能三带一
+                    return true;
+                }
+                else return false;
+            }
+
+            //34567
+            //3456789[10]JQKA
+            //顺子：由‌至少5张‌连续的单牌组成，且必须从3开始到A结束（A可视为1），中间不能包含2或双王
+            if (twoCards.length === 0 && threeCards.length === 0 && fourCards.length === 0) {//都是单张牌
+                if (cardNos.filter(f => f >= 13).length > 0) {
+                    return false;//不能连到2或双王
+                }
+                return this.$areNumbersConsecutive(cardNos)//校验数字是否连续
+            }
+
+            //33+44+55+66
+            //33+44+55+66+77+88...
+            //连续出对，但必须是三对或三对以上的连续对子，且不包括2和双王
+            if (twoCards.length >= 3 && threeCards.length < 3) {//含有3个以上的对子，且没有3个以上三顺（因为三顺可以搭对子）
+                if (oneCards.length > 0) {
+                    return false;//连对不能有单牌
+                }
+                var keys_2 = twoCards.map(m => m.key)
+                if (keys_2.filter(f => f >= 13).length > 0) {
+                    return false;//不能连到2或双王
+                }
+                return this.$areNumbersConsecutive(keys_2)//校验数字是否连续
+            }
+
+            //333+444
+            //333+444+555+666...
+            //飞机由两个或以上的连续三张牌组成，不能使用2和双王作为飞机的起点（最高点数可以连到2，但通常不使用2作为飞机的起点）。例如，444555666可以组成一个飞机，但222不能作为飞机的起点‌
+            //三顺带出相同数量的单牌：333444+56（飞机带翅膀，翅膀没有顺序要求，任意单牌，也可以是2或大小王）
+            //三顺带出相同数量的对子：333444+5566、777888999+445566（飞机带翅膀，翅膀没有顺序要求，任意单牌，也可以是对2或大小王）
+            //注意不能又搭单牌的同时又搭对子
+            if (threeCards.length >= 2) {//含有2个以上的三顺
+                if (oneCards.length > 0 && twoCards.length > 0) {
+                    return false;//不能又搭单牌的同时又搭对子
+                }
+                if (oneCards.length > 0 && threeCards.length !== oneCards.length) {
+                    return false;//飞机与翅膀的数量必须一致
+                }
+                if (twoCards.length > 0 && threeCards.length !== twoCards.length) {
+                    return false;//飞机与翅膀的数量必须一致
+                }
+
+                var keys_3 = threeCards.map(m => m.key)
+                if (keys_3.filter(f => f >= 13).length > 0) {
+                    return false;//不能连到2或双王
+                }
+                return this.$areNumbersConsecutive(keys_3)//校验数字是否连续
+            }
+
+            //炸弹也可以顺连：3333+4444
+            //四带一：3333+4
+            //四带二，二可以为单牌或对子，没有顺序牌型要求：33334444+58，33334444+5588
+            if (fourCards.length > 0) {
+                if (oneCards.length > 0 && twoCards.length > 0) {
+                    return false;//不能又搭单牌的同时又搭对子
+                }
+                if (oneCards.length > 0 && fourCards.length !== oneCards.length) {
+                    return false;//数量必须一致
+                }
+                if (twoCards.length > 0 && fourCards.length !== twoCards.length) {
+                    return false;//数量必须一致
+                }
+
+                var keys_4 = fourCards.map(m => m.key)
+                if (keys_4.filter(f => f >= 13).length > 0) {
+                    return false;//不能连到2或双王
+                }
+                return this.$areNumbersConsecutive(keys_4)//校验数字是否连续
+            }
+
+            return false;
+        },
+        checkLastCard(cardNos, cardCount, lastCardNos, lastCardCount) {
+            //比较大小即可，牌已经是校验过的了
+            const len = cardNos.length;
+            const lenLast = lastCardNos.length;
+
+            //单张
+            var oneCards = cardCount.filter(f => f.count === 1);
+            //两对
+            var twoCards = cardCount.filter(f => f.count === 2);
+            //三张相同
+            var threeCards = cardCount.filter(f => f.count === 3);
+            //四张相同
+            var fourCards = cardCount.filter(f => f.count === 4);
+
+            //单张
+            var oneCardsLast = lastCardCount.filter(f => f.count === 1);
+            //两对
+            var twoCardsLast = lastCardCount.filter(f => f.count === 2);
+            //三张相同
+            var threeCardsLast = lastCardCount.filter(f => f.count === 3);
+            //四张相同
+            var fourCardsLast = lastCardCount.filter(f => f.count === 4);
+
+            // 单牌
+            if (len === 1 && lenLast === 1) {
+                return cardNos[0] > lastCardNos[0]
+            }
+
+            // 对子/王炸
+            if (len === 2 && lenLast === 2) {
+                var newTotal = cardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                var lastTotal = lastCardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                return newTotal > lastTotal
+            }
+
+            // 三张
+            if (len === 3 && lenLast === 3) {
+                var newTotal = cardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                var lastTotal = lastCardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                return newTotal > lastTotal
+            }
+
+            // 四张
+            if (len === 4 && lenLast === 4) {
+                if (threeCards.length === 1 && threeCardsLast.length === 1) {
+                    return threeCards[0].key > threeCardsLast[0].key//三带一，只管三张相同牌即可，不用管附带牌
+                }
+                if (fourCards.length === 1 && fourCardsLast.length === 1) {
+                    return fourCards[0].key > fourCardsLast[0].key
+                }
+            }
+
+            //34567
+            //3456789[10]JQKA
+            //顺子：由‌至少5张‌连续的单牌组成，且必须从3开始到A结束（A可视为1），中间不能包含2或双王
+            if (twoCards.length === 0 && threeCards.length === 0 && fourCards.length === 0 &&
+                twoCardsLast.length === 0 && threeCardsLast.length === 0 && fourCardsLast.length === 0) {//都是单张牌
+                var newTotal = cardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                var lastTotal = lastCardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                return newTotal > lastTotal
+            }
+
+            //33+44+55+66
+            //33+44+55+66+77+88...
+            //连续出对，但必须是三对或三对以上的连续对子，且不包括2和双王
+            if (twoCards.length >= 3 && threeCards.length < 3 &&
+                twoCardsLast.length >= 3 && threeCardsLast.length < 3) {//含有3个以上的对子，且没有3个以上三顺（因为三顺可以搭对子）
+                var newTotal = twoCards.reduce((sum, item) => sum + item.key, 0)
+                var lastTotal = twoCardsLast.reduce((sum, item) => sum + item.key, 0)
+                return newTotal > lastTotal
+            }
+
+            //333+444
+            //333+444+555+666...
+            //飞机由两个或以上的连续三张牌组成，不能使用2和双王作为飞机的起点（最高点数可以连到2，但通常不使用2作为飞机的起点）。例如，444555666可以组成一个飞机，但222不能作为飞机的起点‌
+            //三顺带出相同数量的单牌：333444+56（飞机带翅膀，翅膀没有顺序要求，任意单牌，也可以是2或大小王）
+            //三顺带出相同数量的对子：333444+5566、777888999+445566（飞机带翅膀，翅膀没有顺序要求，任意单牌，也可以是对2或大小王）
+            //注意不能又搭单牌的同时又搭对子
+            if (threeCards.length >= 2 && threeCardsLast.length >= 2) {//含有2个以上的三顺
+                var newTotal = threeCards.reduce((sum, item) => sum + item.key, 0)
+                var lastTotal = threeCardsLast.reduce((sum, item) => sum + item.key, 0)
+                return newTotal > lastTotal
+            }
+
+            //3333+4444
+            if (fourCards.length >= 2 && fourCardsLast.length >= 2) {
+                var newTotal = fourCards.reduce((sum, item) => sum + item.key, 0)
+                var lastTotal = fourCardsLast.reduce((sum, item) => sum + item.key, 0)
+                return newTotal > lastTotal
+            }
+
+            return false;
+        },
+        doudizhuSkip() {
+            var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '不出',
+                htmlMessage: null,
+                messageType: '3-4',
+                originMessageId: null,
+                jielongUser: user,//设置当前人为激活
+                isConfirm: false,
+                remark: null
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+        },
+        sendDoudizhuMessage_3_5() {
+            //最后牌先出完一方获胜，显示所有用户剩余手中的牌（3-5）
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,//这个用户是赢家
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '胜利',
+                htmlMessage: null,
+                messageType: '3-5',
+                originMessageId: null,
+                jielongUser: null,//设置当前人为激活
+                isConfirm: false,
+                remark: null
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+        },
+        showAllUserCards() {
+            //显示所有人的手牌
+            var showCardTexts = [];
+            this.doudizhu.myCards.forEach(f => {
+                showCardTexts.push(`<span style="color:${f.color}">(${f.suit})${f.value}</span>`)
+            })
+            var inputDto = {
+                id: this.$getGuid(),
+                sendUserId: this.curUser.id,
+                receiveRoomId: this.curRoom.id,
+                nickName: this.curUser.nickName,//触发消息的时候使用
+                message: '剩余手牌',
+                htmlMessage: showCardTexts.length > 0 ? showCardTexts.join(' | ') : '没有剩余手牌',
+                messageType: '3-5=1',
+                originMessageId: null,
+                jielongUser: null,//设置当前人为激活
+                isConfirm: true,
+                remark: showCardTexts.length === 0 ? '1' : '0'//标记是否是赢家
+            }
+            inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
+            this.socket.emit('send-RoomChatMessage', inputDto);
+            this.doudizhuReset();
+        },
+        doudizhuReset() {
+            //重新开始，重置所有状态
+            this.doudizhu.sendUserId = null;//发起人
+            this.doudizhu.isShow = false;
+            this.doudizhu.voteGuid = '';
+            this.doudizhu.voteResult = [];//投票结果
+            this.doudizhu.myCards = [];
+            this.doudizhu.players = {};
+            this.doudizhu.landlordCards = [];
+            this.doudizhu.isStart = false;
+            this.doudizhu.currentPlayerId = null;
+            this.doudizhu.currentPlayerName = null;
+            this.doudizhu.isCurrentPlayer = false;
+            this.doudizhu.landlordPlayerId = null;
+            this.doudizhu.landlordPlayerName = null;
+            this.doudizhu.selectCardKeys = [];
+            this.doudizhu.lastPlayCardPlayerId = null;
+            this.doudizhu.lastSelectCardKeys = [];//最后一次出的牌，用于出牌规则校验
+        },
+        doudizhuSort(cards) {
+            if (cards.length === 0) {
+                return;
+            }
+            const cardOrder = {
+                "3": 1,
+                "4": 2,
+                "5": 3,
+                "6": 4,
+                "7": 5,
+                "8": 6,
+                "9": 7,
+                "10": 8,
+                "J": 9,
+                "Q": 10,
+                "K": 11,
+                "A": 12,
+                "2": 13,
+                "小王": 14,
+                "大王": 15
+            };
+            cards.sort((a, b) => {
+                return cardOrder[a.value] - cardOrder[b.value];
+            });
         },
 
         initSocket() {
@@ -410,11 +1051,97 @@ export default {
                     this.chatMessages.push(data);
                     this.scrollChatMessageDiv();
 
-                    if (data.messageType != '2') {
-                        this.setMessageRead()//设置已读
-                    } else {
+                    console.log('chat-RoomChatMessage', data);
+                    if (data.messageType == '3-1') {
+                        this.doudizhu.sendUserId = data.sendUserId//标记发起人
+                    }
+                    if (data.messageType == '3-1=1' || data.messageType == '3-1=0') {
+                        if (data.remark == this.doudizhu.voteGuid) {
+                            this.doudizhu.voteResult.push(data.messageType)
+                            if (this.doudizhu.voteResult.length === this.roomUsers.length) {
+                                //如果都投完票了，判断有没有人投反对票，没有就继续下一步，有就停止
+                                let index = this.doudizhu.voteResult.findIndex(f => f === "3-1=0");
+                                if (index === -1) {
+                                    this.sendDoudizhuMessage_3_2();//最后一个人投票完成之后就开始
+                                } else {
+                                    this.chatMessages.push({
+                                        id: this.$getGuid(),
+                                        sendUserId: null,
+                                        receiveRoomId: this.curRoom.id,
+                                        nickName: '',
+                                        message: '有人反对启动斗地主, 结束',
+                                        messageType: '-1',//系统提示
+                                        originMessageId: null,
+                                        jielongUser: null,
+                                        isConfirm: true,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    if (data.messageType == '3-2') {
+                        this.doudizhu.myCards = data.duodizhu.players['Id_' + this.curUser.id]
+                        this.doudizhu.players = data.duodizhu.players
+                        this.doudizhu.landlordCards = data.duodizhu.landlordCards
+                        this.doudizhuSort(this.doudizhu.myCards)
+                        this.doudizhu.isShow = true
+
+                        //显示地主牌
+                        var landlordCardTexts = [];
+                        this.doudizhu.landlordCards.forEach(f => {
+                            landlordCardTexts.push(`<span style="color:${f.color}">(${f.suit})${f.value}</span>`)
+                        })
+                        this.chatMessages.push({
+                            id: this.$getGuid(),
+                            sendUserId: null,
+                            receiveRoomId: this.curRoom.id,
+                            nickName: '',
+                            message: '地主牌',
+                            htmlMessage: landlordCardTexts.join(' | '),
+                            messageType: '-1',//系统提示
+                            originMessageId: null,
+                            jielongUser: null,
+                            isConfirm: true,
+                        });
+
+                        if (this.doudizhu.sendUserId == this.curUser.id) {
+                            this.sendDoudizhuMessage_3_3();//由发起人开始接龙，是否抢地主
+                        }
+                    }
+                    if (data.messageType == '3-3=1') {
+                        if (data.sendUserId == this.curUser.id) {
+                            //地主牌加入地主手中
+                            this.doudizhu.landlordCards.forEach(f => this.doudizhu.myCards.push(f))
+                            this.doudizhuSort(this.doudizhu.myCards)
+                        }
+                        //由地主先出牌
+                        this.sendDoudizhuMessage_3_4(data.sendUserId, data.nickName);
+                        this.doudizhu.landlordPlayerId = data.sendUserId//地主用户Id
+                        this.doudizhu.landlordPlayerName = data.nickName//地主用户名
+                    }
+                    if (data.messageType == '3-4') {
+                        if (data.remark) {
+                            this.doudizhu.lastPlayCardPlayerId = data.sendUserId
+                            this.doudizhu.lastSelectCardKeys = data.remark//标记最后一次的出牌，用于出牌规则校验
+                        }
+                        if (data.jielongUser) {
+                            this.sendDoudizhuMessage_3_4(data.jielongUser.userId, data.jielongUser.nickName);
+                        }
+                    }
+                    if (data.messageType == '3-5') {
+                        //结束，公布所有人的手牌，然后又开始投票开始下一局
+                        this.showAllUserCards();
+                    }
+                    if (data.messageType == '3-5=1') {
+                        //当前人是赢家时，由赢家进入下一轮开局
+                        if (data.remark === '1' && data.sendUserId == this.curUser.id) {
+                            this.sendDoudizhuMessage_3_1(data.sendUserId)
+                        }
+                    }
+
+                    if (data.originMessageId) {
                         var index = this.chatMessages.findIndex(f => f.id == data.originMessageId)
-                        if(index !== -1){
+                        if (index !== -1) {
                             this.chatMessages[index].isConfirm = true
                         }
                     }

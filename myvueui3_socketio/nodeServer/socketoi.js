@@ -1,4 +1,5 @@
 const { Server } = require('socket.io')
+const onlineServer = require('./onlineTest/onlineServer')
 
 function initOnlineSetting() {
     //当前在线用户Id-socketIds，一个用户Id对应多个socketId，也就是一个用户可以打开多个页面，当这个用户的全部页面都关闭时，才算用户下线
@@ -97,6 +98,9 @@ function initSocket(app, httpServer, onlineSetting) {
             console.log('send-RoomChatMessage收到消息:', socket.handshake.query.userName, data)
             if (!socket.handshake.query.roomId) {
                 return
+            }
+            if(data.messageType == '3-2'){
+                data.duodizhu = onlineServer.initDoudizhu(data.roomUserIds)
             }
             io.to(socket.handshake.query.roomId).emit('chat-RoomChatMessage', data)
             if (data.roomUserIds && data.roomUserIds.length > 0) {
