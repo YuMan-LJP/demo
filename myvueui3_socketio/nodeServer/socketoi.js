@@ -100,7 +100,8 @@ function initSocket(app, httpServer, onlineSetting) {
                 return
             }
             if(data.messageType == '3-2'){
-                data.duodizhu = onlineServer.initDoudizhu(data.roomUserIds)
+                //如果聊天是发的消息类型是3-2就是斗地主发牌
+                data.doudizhu = onlineServer.initDoudizhu(data.roomUserIds)
             }
             io.to(socket.handshake.query.roomId).emit('chat-RoomChatMessage', data)
             if (data.roomUserIds && data.roomUserIds.length > 0) {

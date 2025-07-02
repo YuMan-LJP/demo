@@ -14,7 +14,7 @@ function initDoudizhu(roomUserIds) {
         }
         var deck = [];//牌组：花色/数值/颜色
         for(var userId of roomUserIds){
-            output.players['Id_' + userId] = [];
+            output.players['Id_' + userId] = { decks: [], count: 0 };
         }
 
         function createDeck() {
@@ -52,7 +52,8 @@ function initDoudizhu(roomUserIds) {
             // 发牌给三位玩家（每人17张）
             for (let i = 0; i < 51; i++) {
                 const userId = roomUserIds[i % 3];
-                output.players['Id_' + userId].push(deck[i]);
+                output.players['Id_' + userId].decks.push(deck[i]);
+                output.players['Id_' + userId].count++;
             }
             
             // 剩余3张作为地主牌
