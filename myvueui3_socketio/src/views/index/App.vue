@@ -324,6 +324,14 @@ export default {
         console.log('getdisconnect', data);
         this.$bus.emit('refreshOnlineUserIds', data)
       });
+      this.socket.on('joinroom', (roomId) => {
+        console.log('joinroom', roomId);
+        this.$bus.emit('refreshOnlineRoomUserIds', roomId)
+      });
+      this.socket.on('quitroom', (roomId) => {
+        console.log('quitroom', roomId);
+        this.$bus.emit('refreshOnlineRoomUserIds', roomId)
+      });
       this.socket.on('chat-ContactMessage', (data) => {
         console.log('chat-ContactMessage', data);
         if (data.receiveUserId == this.sessionUserId) {
@@ -401,6 +409,8 @@ export default {
       this.socket.off('getuserlogin')
       this.socket.off('getuserquit')
       this.socket.off('getdisconnect')
+      this.socket.off('joinroom')
+      this.socket.off('quitroom')
       this.socket.off('chat-ContactMessage')
       this.socket.off('message-RoomChat')
       this.socket.off('message-Refresh')
@@ -417,6 +427,8 @@ export default {
       this.socket.off('getuserlogin')
       this.socket.off('getuserquit')
       this.socket.off('getdisconnect')
+      this.socket.off('joinroom')
+      this.socket.off('quitroom')
       this.socket.off('chat-ContactMessage')
       this.socket.off('message-RoomChat')
       this.socket.off('message-Refresh')

@@ -60,7 +60,7 @@
                                 <div v-else-if="item.messageType == '3-4' || item.messageType == '3-5=1'">
                                     <span style="font-weight:bold;color: blue;">
                                         {{ item.nickName }}
-                                        {{ doudizhu.landlordPlayerId == item.sendUserId ? '(地主)' : '' }}: 
+                                        {{ doudizhu.landlordPlayerId == item.sendUserId ? '(地主)' : '' }}:
                                     </span>
                                     {{ item.message }}
                                     <div v-if="item.htmlMessage" v-html="item.htmlMessage"></div>
@@ -75,13 +75,15 @@
                             </div>
                             <div v-if="doudizhu.isShow">
                                 <div>
-                                    <span style="margin-right: 10px;" v-if="doudizhu.currentPlayerName">轮到 {{
-                                        doudizhu.currentPlayerName }} 出牌</span>
+                                    <span style="margin-right: 10px;" v-if="doudizhu.currentPlayerName">
+                                        轮到 {{ doudizhu.currentPlayerName }} 出牌</span>
+                                    <span style="margin-right: 10px;color:red;" v-if="doudizhu.isCurrentPlayer">
+                                        {{ doudizhu.timeRemaining }}</span>
                                     <el-button type="success" size="small" round
-                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer"
+                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer || doudizhu.isOverTime"
                                         @click="doudizhuPlayCard">出牌</el-button>
                                     <el-button type="danger" size="small" round
-                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer || doudizhu.lastPlayCardPlayerId == curUser.id"
+                                        :disabled="!doudizhu.isStart || !doudizhu.isCurrentPlayer || doudizhu.isOverTime || doudizhu.lastPlayCardPlayerId == curUser.id"
                                         @click="doudizhuSkip">跳过</el-button>
                                     <el-button type="primary" size="small" round :disabled="!doudizhu.isStart"
                                         @click="doudizhuSort(doudizhu.myCards)">排序</el-button>
@@ -113,7 +115,7 @@
                                         <el-dropdown-menu>
                                             <el-dropdown-item @click="openRequestModal('1')">投票</el-dropdown-item>
                                             <el-dropdown-item @click="openRequestModal('2')">接龙</el-dropdown-item>
-                                            <el-dropdown-item v-if="curRoom.createUserId === curUser.id" @click="sendDoudizhuMessage">斗地主</el-dropdown-item>
+                                            <el-dropdown-item @click="sendDoudizhuMessage">斗地主</el-dropdown-item>
                                         </el-dropdown-menu>
                                     </template>
                                 </el-dropdown>
@@ -126,7 +128,9 @@
                     <div>
                         群成员
                         <div v-for="item in roomUsers" class="roomUser">
+                            <span v-if="doudizhu.isShow">(手牌：{{ doudizhu.players['Id_' + item.userId].count }} 张)</span>
                             <span :style="'color:' + item.onlineStatus">{{ item.nickName }}</span>
+                            <span v-if="doudizhu.isShow">{{ doudizhu.landlordPlayerId == item.userId ? '(地主)' : '' }}</span>
 
                             <el-button @click="removeUserFromRoom(item.userId)"
                                 v-if="curRoom.createUserId === curUser.id && item.userId !== curUser.id"
@@ -204,6 +208,10 @@ export default {
                 isCurrentPlayer: false,
                 landlordPlayerId: null,
                 landlordPlayerName: null,
+                timeRemaining: 60,//出牌剩余时间
+                timeIntervalId: null,//计算Id
+                isOverTime: false,//是否超时，超时之后3秒自动跳过，3秒内不能点出牌按钮，避免出牌按钮和自动跳过同时触发，预留3秒缓冲
+                timeOutId: null,
 
                 selectCardKeys: [],
                 lastPlayCardPlayerId: null,//最后一次出牌的人，跳过不出的不记录，如果最后一次出牌人又是自己说明轮空了一轮
@@ -466,6 +474,10 @@ export default {
                 this.$swalError('系统提示', '必须是3个人的房间才能开启');
                 return;
             }
+            if (this.onlineUserIds.length !== this.roomUsers.length) {
+                this.$swalError('系统提示', '有用户还没进入房间');
+                return;
+            }
             this.sendDoudizhuMessage_3_1(this.curUser.id);//由发起人开始，这局结束后，由赢家开始下一局
         },
         sendDoudizhuMessage_3_1(userId) {
@@ -585,21 +597,59 @@ export default {
             this.doudizhu.currentPlayerId = userId
             this.doudizhu.currentPlayerName = userName
             this.doudizhu.isCurrentPlayer = userId == this.curUser.id
+            if (this.doudizhu.isCurrentPlayer) {
+                this.playCardResetTime();//是当前操作的用户时，再进行计时
+            }
 
             //出牌过程：
             //如果用户选择出牌：用户选择牌组，点出牌时校验是否符合，不符合提示错误，符合就出牌（相当于就是广播消息），然后手中的牌减去已经出的牌，排序，轮到下一家
             //如果用户选择不出：直接轮到下家
         },
+        playCardResetTime() {
+            this.doudizhu.timeRemaining = 60;
+            this.doudizhu.timeIntervalId = setInterval(() => {
+                this.doudizhu.timeRemaining--
+                if (this.doudizhu.timeRemaining === 0) {
+                    this.clearTimeInterval();
+
+                    //如果还是当前出牌人，已经超过60秒，就算超时，自动跳过出牌，如果已经出牌会自动清掉该定时器
+                    //超时之后，马上设置出牌按钮禁用，然后等3秒再跳过，避免出牌按钮和自动跳过同时触发
+                    if (this.doudizhu.isCurrentPlayer) {
+                        this.doudizhu.isOverTime = true;
+                        this.doudizhu.timeOutId = setTimeout(() => { this.doudizhuSkip() }, 3000)
+                    }
+                }
+            }, 1000)
+        },
+        clearTimeInterval() {
+            if (this.doudizhu.timeIntervalId !== null) {
+                clearInterval(this.doudizhu.timeIntervalId)
+                this.doudizhu.timeIntervalId = null;
+            }
+        },
+        clearMyTimeout() {
+            if (this.doudizhu.timeOutId !== null) {
+                clearTimeout(this.doudizhu.timeOutId)
+                this.doudizhu.timeOutId = null;
+            }
+        },
         doudizhuPlayCard() {
+            if (!this.doudizhu.isCurrentPlayer) {
+                return;
+            }
+
             if (this.doudizhu.selectCardKeys.length === 0) {
                 this.$swalError('系统提示', '请选择要出的牌');
                 return;
             }
             var isOK = this.checkSelectCards();
             if (!isOK) {
-                this.$swalError('系统提示', '请选择牌不符合出牌规则');
+                this.$swalError('系统提示', '选择牌不符合出牌规则');
                 return;
             }
+
+            this.clearTimeInterval();
+            this.clearMyTimeout();
 
             //表示这次出完牌就赢了
             var isOver = this.doudizhu.selectCardKeys.length === this.doudizhu.myCards.length;
@@ -616,7 +666,7 @@ export default {
                 sendUserId: this.curUser.id,
                 receiveRoomId: this.curRoom.id,
                 nickName: this.curUser.nickName,//触发消息的时候使用
-                message: `出牌(剩余手牌)${remainingQty}`,
+                message: `出牌(剩余手牌:${remainingQty})`,
                 htmlMessage: selectCardTexts.join(' | '),
                 messageType: '3-4',
                 originMessageId: null,
@@ -626,6 +676,7 @@ export default {
             }
             inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
             this.socket.emit('send-RoomChatMessage', inputDto);
+            this.doudizhu.isOverTime = false;
 
             //手牌减去刚刚出的牌
             this.doudizhu.selectCardKeys.forEach(f => {
@@ -924,13 +975,19 @@ export default {
             return false;
         },
         doudizhuSkip() {
+            if (!this.doudizhu.isCurrentPlayer) {
+                return;
+            }
+            this.clearTimeInterval();
+            this.clearMyTimeout();
+
             var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
             var inputDto = {
                 id: this.$getGuid(),
                 sendUserId: this.curUser.id,
                 receiveRoomId: this.curRoom.id,
                 nickName: this.curUser.nickName,//触发消息的时候使用
-                message: '不出',
+                message: this.doudizhu.isOverTime ? '超时自动跳过' : '不出',
                 htmlMessage: null,
                 messageType: '3-4',
                 originMessageId: null,
@@ -940,6 +997,7 @@ export default {
             }
             inputDto.roomUserIds = this.roomUsers.map(m => m.userId)
             this.socket.emit('send-RoomChatMessage', inputDto);
+            this.doudizhu.isOverTime = false;
         },
         sendDoudizhuMessage_3_5() {
             //最后牌先出完一方获胜，显示所有用户剩余手中的牌（3-5）
@@ -997,6 +1055,10 @@ export default {
             this.doudizhu.isCurrentPlayer = false;
             this.doudizhu.landlordPlayerId = null;
             this.doudizhu.landlordPlayerName = null;
+            this.doudizhu.timeRemaining = 60;//出牌剩余时间
+            this.doudizhu.timeIntervalId = null;//计算Id
+            this.doudizhu.isOverTime = false;
+            this.doudizhu.timeOutId = null;
             this.doudizhu.selectCardKeys = [];
             this.doudizhu.lastPlayCardPlayerId = null;
             this.doudizhu.lastSelectCardKeys = [];//最后一次出的牌，用于出牌规则校验
@@ -1080,9 +1142,9 @@ export default {
                         }
                     }
                     if (data.messageType == '3-2') {
-                        this.doudizhu.myCards = data.duodizhu.players['Id_' + this.curUser.id]
-                        this.doudizhu.players = data.duodizhu.players
-                        this.doudizhu.landlordCards = data.duodizhu.landlordCards
+                        this.doudizhu.myCards = data.doudizhu.players['Id_' + this.curUser.id].decks
+                        this.doudizhu.players = data.doudizhu.players
+                        this.doudizhu.landlordCards = data.doudizhu.landlordCards
                         this.doudizhuSort(this.doudizhu.myCards)
                         this.doudizhu.isShow = true
 
@@ -1114,6 +1176,7 @@ export default {
                             this.doudizhu.landlordCards.forEach(f => this.doudizhu.myCards.push(f))
                             this.doudizhuSort(this.doudizhu.myCards)
                         }
+                        this.doudizhu.players['Id_' + data.sendUserId].count += 3
                         //由地主先出牌
                         this.sendDoudizhuMessage_3_4(data.sendUserId, data.nickName);
                         this.doudizhu.landlordPlayerId = data.sendUserId//地主用户Id
@@ -1123,6 +1186,9 @@ export default {
                         if (data.remark) {
                             this.doudizhu.lastPlayCardPlayerId = data.sendUserId
                             this.doudizhu.lastSelectCardKeys = data.remark//标记最后一次的出牌，用于出牌规则校验
+                            if (this.doudizhu.players['Id_' + data.sendUserId]) {
+                                this.doudizhu.players['Id_' + data.sendUserId].count -= data.remark.length
+                            }
                         }
                         if (data.jielongUser) {
                             this.sendDoudizhuMessage_3_4(data.jielongUser.userId, data.jielongUser.nickName);
@@ -1165,9 +1231,20 @@ export default {
                     element.onlineStatus = 'red'
                 }
             })
+            if (this.doudizhu.isStart && this.onlineUserIds.length !== this.roomUsers.length) {
+                this.$swalError('系统提示', '有用户掉线了，自动结束这局');
+                this.doudizhuReset();
+            }
         },
         getOnlineUserIds() {
-            this.$get(`/api/getOnlineUserIds`).then((response) => {
+            // this.$get(`/api/getOnlineUserIds`).then((response) => {
+            //     this.onlineUserIds = response.data.data
+            //     this.refreshOnlineStatus(this.roomUsers);
+            // }).catch((err) => {
+            //     this.$swalError('系统提示', err);
+            // })
+            //改成用户进入房间才算在线
+            this.$get(`/api/getOnlineRoomUserIds?roomId=${this.roomId}`).then((response) => {
                 this.onlineUserIds = response.data.data
                 this.refreshOnlineStatus(this.roomUsers);
             }).catch((err) => {
@@ -1185,9 +1262,15 @@ export default {
         this.loadMessage()
         this.initSocket();
 
-        this.$bus.on('refreshOnlineUserIds', (data) => {
-            this.onlineUserIds = data
-            this.refreshOnlineStatus(this.roomUsers);
+        // this.$bus.on('refreshOnlineUserIds', (data) => {
+        //     this.onlineUserIds = data
+        //     this.refreshOnlineStatus(this.roomUsers);
+        // })
+        //改为统计房间内的用户在线
+        this.$bus.on('refreshOnlineRoomUserIds', (roomId) => {
+            if (roomId == this.roomId) {
+                this.getOnlineUserIds()
+            }
         })
     },
     beforeUnmount() {
@@ -1198,6 +1281,7 @@ export default {
             this.socket.disconnect()
         }
         this.$bus.off('refreshOnlineUserIds');
+        this.$bus.off('refreshOnlineRoomUserIds');
     },
     beforeDestroy() {
         console.log("ChatRoom beforeDestroy");
@@ -1207,6 +1291,7 @@ export default {
             this.socket.disconnect()
         }
         this.$bus.off('refreshOnlineUserIds');
+        this.$bus.off('refreshOnlineRoomUserIds');
     }
 }
 </script>
