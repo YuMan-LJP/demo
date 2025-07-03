@@ -10,7 +10,8 @@ function initDoudizhu(roomUserIds) {
     try {
         let output = {
             players: {},
-            landlordCards: []
+            landlordCards: [],
+            deckInfo: {}
         }
         var deck = [];//牌组：花色/数值/颜色
         for(var userId of roomUserIds){
@@ -23,20 +24,28 @@ function initDoudizhu(roomUserIds) {
             
             // 创建普通牌
             for (let suit of suits) {
+                let index = 1;
                 for (let value of values) {
                     var newCard = {
                         suit,
                         value,
-                        color: suit === "♥" || suit === "♦" ? "red" : "black"
+                        color: suit === "♥" || suit === "♦" ? "red" : "black",
+                        index
                     }
                     newCard.key = newCard.suit + '_' + newCard.value + '_' + newCard.color
                     deck.push(newCard);
+                    output.deckInfo[newCard.key] = newCard;//记录一下全部原始牌型信息
+                    index++
                 }
             }
             
             // 添加大小王
-            deck.push({ suit: "小王", value: "小王", color: "black", key: "小王_小王_black" });
-            deck.push({ suit: "大王", value: "大王", color: "red", key: "大王_大王_red" });
+            var smallKing = { suit: "小王", value: "小王", color: "black", key: "小王_小王_black", index: 14 }
+            var bigKing = { suit: "大王", value: "大王", color: "red", key: "大王_大王_red", index: 15 }
+            deck.push(smallKing);
+            deck.push(bigKing);
+            output.deckInfo[smallKing.key] = smallKing;
+            output.deckInfo[bigKing.key] = bigKing;
         }
         
         // 洗牌

@@ -201,6 +201,7 @@ export default {
                 myCards: [],
                 players: {},
                 landlordCards: [],
+                deckInfo: {},
 
                 isStart: false,
                 currentPlayerId: null,
@@ -656,8 +657,8 @@ export default {
 
             var selectCardTexts = [];
             this.doudizhu.selectCardKeys.forEach(f => {
-                let cardObj = f.split('_')//suit + '_' + value + '_' + color
-                selectCardTexts.push(`<span style="color:${cardObj[2]}">(${cardObj[0]})${cardObj[1]}</span>`)
+                const card = this.doudizhu.deckInfo[f]
+                selectCardTexts.push(`<span style="color:${card.color}">(${card.value})${card.suit}</span>`)
             })
             var remainingQty = this.doudizhu.myCards.length - selectCardTexts.length;//计算剩余手牌数量
             var user = this.calcJielongNextUser(this.curUser.id);//取下一个人
@@ -706,39 +707,21 @@ export default {
             //顺子，五个连续的牌
             //连对：连续三对以上相同的两张牌
             //飞机：连续两对以上相同的三张牌  //三带一，三带二
-            const cardOrder = {
-                "3": 1,
-                "4": 2,
-                "5": 3,
-                "6": 4,
-                "7": 5,
-                "8": 6,
-                "9": 7,
-                "10": 8,
-                "J": 9,
-                "Q": 10,
-                "K": 11,
-                "A": 12,
-                "2": 13,
-                "小王": 14,
-                "大王": 15
-            };
             var cardNos = [];//牌序号
             var cardCount = []//统计出现次数
             this.doudizhu.selectCardKeys.forEach(f => {
-                let cardObj = f.split('_')//suit + '_' + value + '_' + color
-                let cardNo = cardOrder[cardObj[1]]
-                cardNos.push(cardNo);//转为序号
+                const card = this.doudizhu.deckInfo[f]
+                cardNos.push(card.index);//转为序号
 
-                let index = cardCount.findIndex(f => f.key === cardNo);
+                let index = cardCount.findIndex(f => f.key === card.index);
                 if (index !== -1) {
                     cardCount[index].count++
                 } else {
-                    cardCount.push({ key: cardNo, count: 1 })
+                    cardCount.push({ key: card.index, count: 1 })
                 }
             })
             cardNos.sort((a, b) => {
-                return a.value - b.value;
+                return a - b;
             });
             var isOK = this.checkCard(cardNos, cardCount);
             if (!isOK) {
@@ -751,19 +734,18 @@ export default {
                 var lastCardNos = [];//牌序号
                 var lastCardCount = []//统计出现次数
                 this.doudizhu.lastSelectCardKeys.forEach(f => {
-                    let cardObj = f.split('_')//suit + '_' + value + '_' + color
-                    let cardNo = cardOrder[cardObj[1]]
-                    lastCardNos.push(cardNo);
+                    const card = this.doudizhu.deckInfo[f]
+                    lastCardNos.push(card.index);
 
-                    let index = lastCardCount.findIndex(f => f.key === cardNo);
+                    let index = lastCardCount.findIndex(f => f.key === card.index);
                     if (index !== -1) {
                         lastCardCount[index].count++
                     } else {
-                        lastCardCount.push({ key: cardNo, count: 1 })
+                        lastCardCount.push({ key: card.index, count: 1 })
                     }
                 })
                 lastCardNos.sort((a, b) => {
-                    return a.value - b.value;
+                    return a - b;
                 });
                 return this.checkLastCard(cardNos, cardCount, lastCardNos, lastCardCount)
             } else {
@@ -972,6 +954,11 @@ export default {
                 return newTotal > lastTotal
             }
 
+            //炸弹
+            if (fourCards.length === 1 && fourCardsLast.length === 1){
+                //炸弹可以炸比自己和双王小的所有牌
+            }
+
             return false;
         },
         doudizhuSkip() {
@@ -1049,6 +1036,7 @@ export default {
             this.doudizhu.myCards = [];
             this.doudizhu.players = {};
             this.doudizhu.landlordCards = [];
+            this.doudizhu.deckInfo = {};
             this.doudizhu.isStart = false;
             this.doudizhu.currentPlayerId = null;
             this.doudizhu.currentPlayerName = null;
@@ -1067,25 +1055,8 @@ export default {
             if (cards.length === 0) {
                 return;
             }
-            const cardOrder = {
-                "3": 1,
-                "4": 2,
-                "5": 3,
-                "6": 4,
-                "7": 5,
-                "8": 6,
-                "9": 7,
-                "10": 8,
-                "J": 9,
-                "Q": 10,
-                "K": 11,
-                "A": 12,
-                "2": 13,
-                "小王": 14,
-                "大王": 15
-            };
             cards.sort((a, b) => {
-                return cardOrder[a.value] - cardOrder[b.value];
+                return a.index - b.index;
             });
         },
 
@@ -1145,6 +1116,7 @@ export default {
                         this.doudizhu.myCards = data.doudizhu.players['Id_' + this.curUser.id].decks
                         this.doudizhu.players = data.doudizhu.players
                         this.doudizhu.landlordCards = data.doudizhu.landlordCards
+                        this.doudizhu.deckInfo = data.doudizhu.deckInfo
                         this.doudizhuSort(this.doudizhu.myCards)
                         this.doudizhu.isShow = true
 
