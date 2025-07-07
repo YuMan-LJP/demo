@@ -892,6 +892,16 @@ export default {
             }
 
             // 对子/王炸
+            if (lenLast === 2) {
+                var lastTotal = lastCardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+                if (lastTotal == 14 + 15) {
+                    //如果上一次出的是双王，其他人都不可以再出牌了
+                    return true;
+                }
+            }
+            if (fourCards.length === 1 && fourCardsLast.length === 0) {
+                return true;//炸弹：这次出炸弹，上一次出的不是炸弹，炸弹除了双王都比其他牌型大
+            }
             if (len === 2 && lenLast === 2) {
                 var newTotal = cardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
                 var lastTotal = lastCardNos.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
@@ -948,15 +958,10 @@ export default {
             }
 
             //3333+4444
-            if (fourCards.length >= 2 && fourCardsLast.length >= 2) {
+            if (fourCards.length >= 1 && fourCardsLast.length >= 1) {
                 var newTotal = fourCards.reduce((sum, item) => sum + item.key, 0)
                 var lastTotal = fourCardsLast.reduce((sum, item) => sum + item.key, 0)
                 return newTotal > lastTotal
-            }
-
-            //炸弹
-            if (fourCards.length === 1 && fourCardsLast.length === 1){
-                //炸弹可以炸比自己和双王小的所有牌
             }
 
             return false;
