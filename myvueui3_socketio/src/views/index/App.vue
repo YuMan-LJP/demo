@@ -90,11 +90,12 @@
                   <span>Other</span>
                 </template>
                 <el-menu-item-group title="分组1">
-                  <el-menu-item index="3-1">选项1</el-menu-item>
-                  <el-menu-item index="3-2">选项2</el-menu-item>
+                  <el-menu-item index="/snake">Snake</el-menu-item>
+                  <el-menu-item index="/snakeOnline">Snake Online</el-menu-item>
+                  <el-menu-item index="/snakeOnline2">Snake Online 2</el-menu-item>
                 </el-menu-item-group>
                 <el-menu-item-group title="分组2">
-                  <el-menu-item index="3-3">选项3</el-menu-item>
+                  <el-menu-item index="/ddz">DDZ</el-menu-item>
                 </el-menu-item-group>
                 <el-sub-menu index="3-4">
                   <template #title>选项4</template>
@@ -225,6 +226,13 @@ export default {
       catch (ex) { console.log(ex) }
     },
     refreshMessage() {
+      if (this.sessionUser.id === undefined ||
+        this.sessionUser.id === 'undefined' ||
+        this.sessionUser.id === 0 ||
+        this.sessionUser.id === null ||
+        this.sessionUser.id === '') {
+        return;
+      }
       this.messageAllCount = 0;
       this.requestContactCount = 0;
       this.requestRoomCount = 0;

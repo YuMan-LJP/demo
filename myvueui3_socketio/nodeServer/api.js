@@ -41,9 +41,39 @@ function initApi(app) {
     app.get("/api/getUserByUserNameOrEmail", (req, res) => {
         try {
             const obj = url.parse(req.url, true)
-            console.log("/api/getusers", obj.query);
+            console.log("/api/getUserByUserNameOrEmail", obj.query);
 
             dal.getUserByUserNameOrEmailAsync(obj.query.userNameOrEmail, obj.query.myselfId)
+                .then((data) => {
+                    res.json({
+                        isSuccess: true,
+                        error: null,
+                        data: data
+                    })
+                })
+                .catch((error) => {
+                    res.json({
+                        isSuccess: false,
+                        error: error.message,
+                        data: null
+                    })
+                })
+        }
+        catch (error) {
+            res.json({
+                isSuccess: false,
+                error: error.message,
+                data: null
+            });
+        }
+    })
+    app.post("/api/getUserByUserIds", (req, res) => {
+        try {
+            console.log("/api/getUserByUserIds", req.body);
+            if (req.body === undefined) {
+                throw new Error('参数不能为空')
+            }
+            dal.getUserByUserIdsAsync(req.body)
                 .then((data) => {
                     res.json({
                         isSuccess: true,

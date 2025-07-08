@@ -202,6 +202,40 @@ createTime NUMERIC NOT NULL
 
         return result
     },
+    getUserByUserIdsAsync: async (userIds) => {
+        const db = new sqlite3.Database("mydb.sqlite");
+
+        var result = []
+        try {
+            var conditions = []
+            var conditionSql = ""
+            if (userIds && userIds.length > 0) {
+                conditionSql += ` where id in (`
+                for (let i = 0; i < userIds.length; i++) {
+                    conditionSql += '?'
+                    if (i !== userIds.length - 1) {
+                        conditionSql += ','
+                    }
+                }
+                conditionSql += ')'
+                conditions = userIds
+            }
+            await dbAll(db, `SELECT id,userName,nickName,email FROM users ` + conditionSql, conditions)
+                .then((rows) => {
+                    result = rows
+                })
+                .catch((err) => {
+                    throw err
+                })
+        }
+        catch (err) {
+            throw err
+        } finally {
+            db.close();
+        }
+
+        return result
+    },
     checkUserPasswordAsync: async (userName, password) => {
         const db = new sqlite3.Database("mydb.sqlite");
 
@@ -986,7 +1020,7 @@ createTime NUMERIC NOT NULL
                     .catch((err) => {
                         throw err
                     });
-                
+
                 for (var roomUser of roomUsers) {//给这个房间的所有人，除了发送人自己，都发送消息
                     if (sendUserId !== -1 && roomUser.userId != sendUserId) {
                         await dbRun(db, `INSERT INTO messageQueues (userId, originId, type, createTime) VALUES (?, ?, ?, dateTime('now'));`, [roomUser.userId, receiveRoomId, 'chatroom'])

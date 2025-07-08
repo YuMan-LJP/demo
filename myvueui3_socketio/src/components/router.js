@@ -53,6 +53,26 @@ const routes = [
         path: '/room',
         name: 'room',
         component: () => import("../views/index/chats/Room.vue")
+    },
+    {
+        path: '/ddz',
+        name: 'ddz',
+        component: () => import("../views/index/others/ddz.vue")
+    },
+    {
+        path: '/snake',
+        name: 'snake',
+        component: () => import("../views/index/others/snake.vue")
+    },
+    {
+        path: '/snakeOnline',
+        name: 'snakeOnline',
+        component: () => import("../views/index/others/snakeOnline.vue")
+    },
+    {
+        path: '/snakeOnline2',
+        name: 'snakeOnline2',
+        component: () => import("../views/index/others/snakeOnline2.vue")
     }
 ]
 

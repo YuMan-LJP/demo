@@ -117,6 +117,8 @@ function initOnlineSetting() {
 }
 
 function initSocket(app, httpServer, onlineSetting) {
+    var snakeServer = null;//snake实例
+    var snakeServer2 = null;//snake实例
 
     // 创建 Socket.IO 实例
     const io = new Server(httpServer, {
@@ -127,7 +129,7 @@ function initSocket(app, httpServer, onlineSetting) {
     })
     // Socket 连接监听
     io.on('connection', (socket) => {
-        console.log('客户端已连接:', socket.id, "userId:" + socket.handshake.query.userId, "userName:" + socket.handshake.query.userName, "roomId:" + socket.handshake.query.roomId)
+        console.log('客户端已连接:', socket.id, "userId:" + socket.handshake.query.userId, "userName:" + socket.handshake.query.userName, "roomId:" + socket.handshake.query.roomId, "otherId:" + socket.handshake.query.otherId)
 
         onlineSetting.addOnlineUserId(socket.handshake.query.userId, socket.id);
 
@@ -139,6 +141,52 @@ function initSocket(app, httpServer, onlineSetting) {
             onlineSetting.addOnlineRoomUserId(socket.handshake.query.roomId, socket.handshake.query.userId, socket.id)
             // 如果只想广播给其他客户端：
             io.emit('joinroom', socket.handshake.query.roomId)
+        }
+        if (socket.handshake.query.otherId !== null &&
+            socket.handshake.query.otherId !== '' &&
+            socket.handshake.query.otherId !== undefined &&
+            socket.handshake.query.otherId !== 'null') {
+
+            if (socket.handshake.query.otherId === 'snake001') {
+                socket.on('back-OtherMessage', (data) => {
+                    console.log('back-OtherMessage收到消息:', socket.handshake.query.otherId, data)
+
+                    //已经实例化过不重复实例化
+                    if (snakeServer === null) {
+                        snakeServer = onlineServer.initSnake(io, data.canvasWidth, data.gridSize);
+                    }
+                    if (data.isResetGame) {
+                        snakeServer.resetGame();
+                    }
+                    else {
+                        snakeServer.addUserId(data.userId, data.nickName);
+                        snakeServer.input(data.direction, data.userId)
+                    }
+                    //io.emit('front-OtherMessage', {})
+                })
+            }
+
+            if (socket.handshake.query.otherId === 'snake002') {
+                socket.on('back-OtherMessage', (data) => {
+                    console.log('back-OtherMessage收到消息:', socket.handshake.query.otherId, data)
+
+                    //已经实例化过不重复实例化
+                    if (snakeServer2 === null) {
+                        snakeServer2 = onlineServer.initSnake2(io, data.timeRemaining, data.canvasWidth, data.gridSize);
+                    }
+                    if (data.isResetGame) {
+                        snakeServer2.resetGame(data.nickName);
+                    } 
+                    else if (data.isReady){
+                        snakeServer2.readyUserId(data.userId)
+                    } 
+                    else {
+                        snakeServer2.addUserId(data.userId, data.nickName);
+                        snakeServer2.input(data.direction, data.userId)
+                    }
+                    //io.emit('front-OtherMessage', {})
+                })
+            }
         }
 
         //用户登录
@@ -172,6 +220,12 @@ function initSocket(app, httpServer, onlineSetting) {
                 socket.handshake.query.roomId !== undefined &&
                 socket.handshake.query.roomId !== 'null') {
                 io.emit('quitroom', socket.handshake.query.roomId)
+            }
+            if (snakeServer !== null) {
+                snakeServer.removeUserId(socket.handshake.query.userId);
+            }
+            if (snakeServer2 !== null) {
+                snakeServer2.removeUserId(socket.handshake.query.userId);
             }
         })
 
