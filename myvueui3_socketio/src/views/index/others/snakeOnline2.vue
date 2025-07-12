@@ -1,10 +1,12 @@
 <template>
     <div>
-        <h1>Snake</h1>
+        <h1>Snake2</h1>
         <div>
             <div style="float: left;">
-                <span v-for="(item, index) of onlineUsers">{{ index + 1 }}. {{ item.nickName }} ({{ item.isReady ? '已准备' :
-                    '未准备' }})</span><br />
+                <span v-for="(item, index) of onlineUsers">
+                    {{ index + 1 }}. {{ item.nickName }} ({{ item.isReady ? '已准备' : '未准备' }})
+                </span>
+                <br />
             </div>
             <div style="float: right;">
                 <span>{{ timeRemaining }}</span>

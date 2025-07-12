@@ -176,10 +176,10 @@ function initSocket(app, httpServer, onlineSetting) {
                     }
                     if (data.isResetGame) {
                         snakeServer2.resetGame(data.nickName);
-                    } 
-                    else if (data.isReady){
+                    }
+                    else if (data.isReady) {
                         snakeServer2.readyUserId(data.userId)
-                    } 
+                    }
                     else {
                         snakeServer2.addUserId(data.userId, data.nickName);
                         snakeServer2.input(data.direction, data.userId)
@@ -187,6 +187,12 @@ function initSocket(app, httpServer, onlineSetting) {
                     //io.emit('front-OtherMessage', {})
                 })
             }
+
+            //封装一个公共的模板
+            socket.on(`back-OtherMessage-${socket.handshake.query.otherId}`, (data) => {
+                console.log('back-OtherMessage收到消息:', socket.handshake.query.otherId, data)
+                io.emit(`front-OtherMessage-${socket.handshake.query.otherId}`, data)
+            })
         }
 
         //用户登录

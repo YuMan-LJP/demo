@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas匀速运动动画</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            width: 500px;
+            max-width: 95%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 20px auto;
+        }
+        
+        canvas {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            outline: none;
+            margin: 0 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-pause {
+            background: #e74c3c;
+        }
+        
+        .btn-pause:hover {
+            background: #c0392b;
+        }
+        
+        .btn-reset {
+            background: #2ecc71;
+        }
+        
+        .btn-reset:hover {
+            background: #27ae60;
+        }
+        
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .info-item {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 18px;
+        }
+        
+        .track {
+            height: 5px;
+            background: #bdc3c7;
+            border-radius: 5px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #3498db;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.2s;
+        }
+        
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Canvas匀速运动动画</h1>
+        <p class="subtitle">一个点以每秒10个长度的速度匀速移动，40秒完成400长度行程</p>
+        
+        <div class="canvas-container">
+            <canvas id="animationCanvas" width="400" height="100"></canvas>
+            <div class="track">
+                <div class="progress" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-item">
+                当前位置: <span class="info-value" id="position">0</span>
+            </div>
+            <div class="info-item">
+                已用时间: <span class="info-value" id="time">0.0</span>秒
+            </div>
+            <div class="info-item">
+                速度: <span class="info-value" id="speed">10</span>/秒
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <button id="playBtn" class="btn-play">▶ 播放</button>
+                <button id="pauseBtn" class="btn-pause">⏸ 暂停</button>
+                <button id="resetBtn" class="btn-reset">↺ 重置</button>
+            </div>
+            <div class="control-group">
+                <span>速度调整:</span>
+                <input type="range" id="speedControl" min="1" max="20" value="10">
+            </div>
+        </div>
+        
+        <div class="description">
+            <p>此动画演示了一个点在400长度的画布上匀速运动。点以<span class="highlight">每秒10个长度</span>的速度移动，因此完成整个行程需要<span class="highlight">40秒</span>。</p>
+            <p>Canvas每秒刷新30次，通过计算时间差确保运动速度精确。</p>
+        </div>
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 获取DOM元素
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const speedControl = document.getElementById('speedControl');
+        const positionDisplay = document.getElementById('position');
+        const timeDisplay = document.getElementById('time');
+        const speedDisplay = document.getElementById('speed');
+        const progressBar = document.getElementById('progressBar');
+        
+        // 动画参数
+        const canvasWidth = canvas.width;
+        let position = 0;  // 点的当前位置
+        let speed = 10;    // 每秒移动的像素数
+        let lastTime = 0;  // 上一帧的时间
+        let elapsedTime = 0; // 已用时间
+        let animationId = null; // 动画ID
+        let isPlaying = false; // 播放状态
+        
+        // 更新显示的速度值
+        function updateSpeedDisplay() {
+            speedDisplay.textContent = speed;
+        }
+        
+        // 绘制场景
+        function draw() {
+            // 清除Canvas
+            ctx.clearRect(0, 0, canvasWidth, canvas.height);
+            
+            // 绘制背景网格
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= canvasWidth; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            
+            // 绘制起点和终点
+            ctx.fillStyle = '#2ecc71';
+            ctx.beginPath();
+            ctx.arc(0, canvas.height/2, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(canvasWidth, canvas.height/2, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制移动的点
+            ctx.fillStyle = '#3498db';
+            ctx.beginPath();
+            ctx.arc(position, canvas.height/2, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制点的轨迹
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height/2);
+            ctx.lineTo(position, canvas.height/2);
+            ctx.stroke();
+            
+            // 更新进度条
+            progressBar.style.width = `${(position / canvasWidth) * 100}%`;
+            
+            // 更新显示信息
+            positionDisplay.textContent = position.toFixed(1);
+            timeDisplay.textContent = elapsedTime.toFixed(1);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            
+            // 计算时间差（秒）
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            
+            // 更新位置和已用时间
+            position += speed * deltaTime;
+            elapsedTime += deltaTime;
+            
+            // 如果点到达终点
+            if (position >= canvasWidth) {
+                position = canvasWidth;
+                pauseAnimation();
+            }
+            
+            // 绘制场景
+            draw();
+            
+            // 继续动画循环
+            if (isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+        
+        // 开始动画
+        function playAnimation() {
+            if (isPlaying) return;
+            
+            isPlaying = true;
+            lastTime = 0; // 重置时间，避免跳跃
+            
+            // 如果已经到达终点，则重置
+            if (position >= canvasWidth) {
+                resetAnimation();
+            }
+            
+            animationId = requestAnimationFrame(animate);
+            playBtn.textContent = '▶ 继续';
+        }
+        
+        // 暂停动画
+        function pauseAnimation() {
+            isPlaying = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        // 重置动画
+        function resetAnimation() {
+            pauseAnimation();
+            position = 0;
+            elapsedTime = 0;
+            draw();
+            playBtn.textContent = '▶ 播放';
+        }
+        
+        // 事件监听
+        playBtn.addEventListener('click', playAnimation);
+        pauseBtn.addEventListener('click', pauseAnimation);
+        resetBtn.addEventListener('click', resetAnimation);
+        
+        speedControl.addEventListener('input', function() {
+            speed = parseInt(this.value);
+            updateSpeedDisplay();
+        });
+        
+        // 初始化
+        updateSpeedDisplay();
+        draw();
+    </script>
+</body>
+</html>

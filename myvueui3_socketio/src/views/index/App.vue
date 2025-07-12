@@ -92,14 +92,15 @@
                 <el-menu-item-group title="分组1">
                   <el-menu-item index="/snake">Snake</el-menu-item>
                   <el-menu-item index="/snakeOnline">Snake Online</el-menu-item>
-                  <el-menu-item index="/snakeOnline2">Snake Online 2</el-menu-item>
+                  <el-menu-item index="/snakeOnline2">Snake Online2</el-menu-item>
+                  <el-menu-item index="/snakeOnline2HighFPS">Snake Online2 (High FPS)</el-menu-item>
                 </el-menu-item-group>
                 <el-menu-item-group title="分组2">
                   <el-menu-item index="/ddz">DDZ</el-menu-item>
                 </el-menu-item-group>
                 <el-sub-menu index="3-4">
                   <template #title>选项4</template>
-                  <el-menu-item index="3-4-1">选项4-1</el-menu-item>
+                  <el-menu-item index="/template">template</el-menu-item>
                 </el-sub-menu>
               </el-sub-menu>
             </el-menu>

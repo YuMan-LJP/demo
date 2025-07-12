@@ -67,6 +67,34 @@ function hasDuplicates(arr) {
     return false;
 }
 
+//判断一个方法执行了多少次
+function createCounter() {
+    let totalCalls = 0;
+    let callsPerSecond = 0;
+    let lastTimestamp = Date.now();
+
+    return {
+        wrap: function (fn) {
+            return (...args) => {
+                totalCalls++;
+                callsPerSecond++;
+
+                // 检查时间窗口
+                const now = Date.now();
+                if (now - lastTimestamp >= 1000) {
+                    console.log(`当前频率：${callsPerSecond}/秒`);
+                    callsPerSecond = 0;
+                    lastTimestamp = now;
+                }
+
+                return fn(...args);
+            };
+        },
+        getTotal: () => totalCalls,
+        getCPS: () => callsPerSecond
+    }
+}
+
 export default {
     install: (app) => {
         app.config.globalProperties["$setBusy"] = setBusy;
@@ -75,5 +103,6 @@ export default {
         app.config.globalProperties["$debounce"] = debounce;
         app.config.globalProperties["$areNumbersConsecutive"] = areNumbersConsecutive;
         app.config.globalProperties["$hasDuplicates"] = hasDuplicates;
+        app.config.globalProperties["$createCounter"] = createCounter;
     }
 }

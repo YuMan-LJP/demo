@@ -73,6 +73,16 @@ const routes = [
         path: '/snakeOnline2',
         name: 'snakeOnline2',
         component: () => import("../views/index/others/snakeOnline2.vue")
+    },
+    {
+        path: '/snakeOnline2HighFPS',
+        name: 'snakeOnline2HighFPS',
+        component: () => import("../views/index/others/snakeOnline2HighFPS.vue")
+    },
+    {
+        path: '/template',
+        name: 'template',
+        component: () => import("../views/index/others/_template.vue")
     }
 ]
 
