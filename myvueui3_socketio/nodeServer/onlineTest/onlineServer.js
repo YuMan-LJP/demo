@@ -469,7 +469,7 @@ function initSnake2(io, timeRemaining, canvasWidth, gridSize) {
         data.player[playerId].score = 0;
         data.snake[playerId] = [snake];//随机在空位置生成
         data.direction[playerId] = { x: 0, y: 0 };
-        
+
         data.player[playerId].isOver = false;
         data.player[playerId].isStart = false;
     }
@@ -557,8 +557,13 @@ function initSnake2(io, timeRemaining, canvasWidth, gridSize) {
     }
 }
 
+function initTank(io, timeRemaining, canvasWidth, gridSize) {
+
+}
+
 module.exports = {
     initDoudizhu: initDoudizhu,
     initSnake: initSnake,
-    initSnake2: initSnake2
+    initSnake2: initSnake2,
+    initTank: initTank
 }

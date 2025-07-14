@@ -93,7 +93,7 @@
                   <el-menu-item index="/snake">Snake</el-menu-item>
                   <el-menu-item index="/snakeOnline">Snake Online</el-menu-item>
                   <el-menu-item index="/snakeOnline2">Snake Online2</el-menu-item>
-                  <el-menu-item index="/snakeOnline2HighFPS">Snake Online2 (High FPS)</el-menu-item>
+                  <!-- <el-menu-item index="/snakeOnline2HighFPS">Snake Online2 (High FPS)</el-menu-item> -->
                 </el-menu-item-group>
                 <el-menu-item-group title="分组2">
                   <el-menu-item index="/ddz">DDZ</el-menu-item>

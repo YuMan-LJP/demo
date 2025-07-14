@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas 2D 绘画技巧指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            min-width: 500px;
+            background: rgba(0, 0, 30, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        button {
+            background: #4a6fc5;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            background: #5d80d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        canvas {
+            background: #0a0a20;
+            border-radius: 8px;
+            width: 100%;
+            display: block;
+        }
+        
+        .info-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 30, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            max-height: 700px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+        
+        h3 {
+            font-size: 1.3rem;
+            margin: 25px 0 10px;
+            color: #4fc3f7;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .code-block {
+            background: rgba(0, 20, 40, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 1rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+            border-left: 4px solid #4a6fc5;
+        }
+        
+        .tip {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .warning {
+            background: rgba(255, 152, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #FF9800;
+        }
+        
+        @media (max-width: 1100px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .canvas-container, .info-panel {
+                min-width: 100%;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HTML Canvas 2D 绘画技巧指南</h1>
+        <p class="subtitle">探索Canvas的强大功能，学习高级绘图技术，创建令人惊叹的视觉效果</p>
+    </header>
+    
+    <div class="container">
+        <div class="canvas-container">
+            <h2>Canvas 演示区</h2>
+            <div class="controls">
+                <button id="drawShapes">绘制基础形状</button>
+                <button id="drawPaths">绘制路径</button>
+                <button id="drawText">文本效果</button>
+                <button id="drawGradients">渐变效果</button>
+                <button id="transform">变换效果</button>
+                <button id="animate">动画演示</button>
+                <button id="clearCanvas">清除画布</button>
+            </div>
+            <canvas id="myCanvas" width="600" height="500"></canvas>
+        </div>
+        
+        <div class="info-panel">
+            <h2>Canvas 技巧与示例</h2>
+            
+            <h3>基础形状绘制</h3>
+            <p>Canvas 提供绘制矩形的基础方法：</p>
+            <div class="code-block">
+// 绘制填充矩形
+ctx.fillStyle = '#FF5722';
+ctx.fillRect(50, 50, 150, 100);
+
+// 绘制描边矩形
+ctx.strokeStyle = '#4CAF50';
+ctx.lineWidth = 3;
+ctx.strokeRect(250, 50, 150, 100);
+
+// 绘制圆形
+ctx.beginPath();
+ctx.arc(150, 300, 60, 0, Math.PI * 2);
+ctx.fillStyle = '#2196F3';
+ctx.fill();</div>
+            
+            <h3>路径绘制</h3>
+            <p>使用路径绘制复杂形状：</p>
+            <div class="code-block">
+ctx.beginPath();
+ctx.moveTo(100, 100);   // 起点
+ctx.lineTo(300, 100);   // 第一条线
+ctx.lineTo(200, 250);   // 第二条线
+ctx.closePath();         // 闭合路径
+ctx.strokeStyle = '#FF9800';
+ctx.lineWidth = 4;
+ctx.stroke();
+
+// 绘制贝塞尔曲线
+ctx.beginPath();
+ctx.moveTo(400, 300);
+ctx.bezierCurveTo(500, 200, 550, 350, 450, 400);
+ctx.strokeStyle = '#E91E63';
+ctx.stroke();</div>
+            
+            <h3>渐变与阴影</h3>
+            <p>创建渐变填充和阴影效果：</p>
+            <div class="code-block">
+// 创建线性渐变
+const gradient = ctx.createLinearGradient(0, 0, 300, 0);
+gradient.addColorStop(0, '#FF512F');
+gradient.addColorStop(1, '#F09819');
+ctx.fillStyle = gradient;
+ctx.fillRect(50, 50, 300, 150);
+
+// 添加阴影
+ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+ctx.shadowBlur = 15;
+ctx.shadowOffsetX = 10;
+ctx.shadowOffsetY = 10;
+ctx.fillStyle = '#9C27B0';
+ctx.fillRect(400, 50, 150, 150);</div>
+            
+            <div class="tip">
+                <strong>提示：</strong> 使用 createRadialGradient() 方法可以创建径向渐变，非常适合绘制发光效果和球体。
+            </div>
+            
+            <h3>文本渲染</h3>
+            <p>Canvas 支持多种文本样式：</p>
+            <div class="code-block">
+ctx.font = 'bold 36px Arial';
+ctx.fillStyle = '#4CAF50';
+ctx.fillText('填充文本', 50, 100);
+
+ctx.strokeStyle = '#2196F3';
+ctx.lineWidth = 2;
+ctx.strokeText('描边文本', 50, 180);
+
+// 文本对齐
+ctx.textAlign = 'center';
+ctx.fillText('居中文本', 300, 250);
+
+// 文本测量
+const text = '测量文本宽度';
+const metrics = ctx.measureText(text);
+ctx.fillText(text + ': ' + metrics.width, 300, 300);</div>
+            
+            <h3>变换操作</h3>
+            <p>使用变换实现旋转、缩放和平移：</p>
+            <div class="code-block">
+// 保存当前状态
+ctx.save();
+
+// 移动原点
+ctx.translate(300, 200);
+
+// 旋转
+ctx.rotate(Math.PI / 4);
+
+// 缩放
+ctx.scale(1.5, 1.5);
+
+// 绘制矩形
+ctx.fillStyle = '#FF9800';
+ctx.fillRect(-50, -50, 100, 100);
+
+// 恢复之前状态
+ctx.restore();</div>
+            
+            <div class="warning">
+                <strong>注意：</strong> 使用 save() 和 restore() 管理变换状态非常重要，避免后续绘制操作受到之前变换的影响。
+            </div>
+            
+            <h3>图像处理</h3>
+            <p>在Canvas中绘制和处理图像：</p>
+            <div class="code-block">
+const img = new Image();
+img.src = 'example.jpg';
+img.onload = function() {
+    // 绘制原始图像
+    ctx.drawImage(img, 50, 50, 200, 150);
+    
+    // 图像切片
+    ctx.drawImage(img, 
+        100, 100, 200, 200, // 源图像切片
+        300, 50, 150, 150   // 目标位置和尺寸
+    );
+    
+    // 应用滤镜
+    const imageData = ctx.getImageData(50, 250, 200, 150);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        // 灰度效果
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = avg;     // 红色
+        data[i + 1] = avg; // 绿色
+        data[i + 2] = avg; // 蓝色
+    }
+    ctx.putImageData(imageData, 300, 250);
+};</div>
+            
+            <h3>动画技巧</h3>
+            <p>使用 requestAnimationFrame 创建平滑动画：</p>
+            <div class="code-block">
+let x = 100;
+let y = 100;
+let dx = 2;
+let dy = 3;
+const radius = 30;
+
+function animate() {
+    // 清除画布
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 更新位置
+    x += dx;
+    y += dy;
+    
+    // 边界检测
+    if (x + radius > canvas.width || x - radius < 0) dx = -dx;
+    if (y + radius > canvas.height || y - radius < 0) dy = -dy;
+    
+    // 绘制
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#E91E63';
+    ctx.fill();
+    
+    // 继续动画
+    requestAnimationFrame(animate);
+}
+
+animate();</div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Canvas 2D 绘图技巧指南 | 通过实践掌握高级Canvas技术 | &copy; 2023 Web图形开发</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 按钮事件处理
+        document.getElementById('drawShapes').addEventListener('click', drawBasicShapes);
+        document.getElementById('drawPaths').addEventListener('click', drawPaths);
+        document.getElementById('drawText').addEventListener('click', drawTextEffects);
+        document.getElementById('drawGradients').addEventListener('click', drawGradients);
+        document.getElementById('transform').addEventListener('click', drawTransformations);
+        document.getElementById('animate').addEventListener('click', startAnimation);
+        document.getElementById('clearCanvas').addEventListener('click', clearCanvas);
+        
+        // 初始绘制
+        drawBasicShapes();
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function drawBasicShapes() {
+            clearCanvas();
+            
+            // 绘制矩形
+            ctx.fillStyle = '#FF5722';
+            ctx.fillRect(50, 50, 150, 100);
+            
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(250, 50, 150, 100);
+            
+            // 绘制圆形
+            ctx.beginPath();
+            ctx.arc(150, 300, 60, 0, Math.PI * 2);
+            ctx.fillStyle = '#2196F3';
+            ctx.fill();
+            
+            // 绘制部分圆形（扇形）
+            ctx.beginPath();
+            ctx.moveTo(350, 300);
+            ctx.arc(350, 300, 60, 0, Math.PI / 2);
+            ctx.closePath();
+            ctx.fillStyle = '#9C27B0';
+            ctx.fill();
+            
+            // 绘制三角形
+            ctx.beginPath();
+            ctx.moveTo(500, 100);
+            ctx.lineTo(550, 200);
+            ctx.lineTo(450, 200);
+            ctx.closePath();
+            ctx.fillStyle = '#FF9800';
+            ctx.fill();
+        }
+        
+        function drawPaths() {
+            clearCanvas();
+            
+            // 绘制路径
+            ctx.beginPath();
+            ctx.moveTo(100, 100);
+            ctx.lineTo(300, 100);
+            ctx.lineTo(200, 250);
+            ctx.closePath();
+            ctx.strokeStyle = '#FF9800';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // 绘制二次贝塞尔曲线
+            ctx.beginPath();
+            ctx.moveTo(100, 300);
+            ctx.quadraticCurveTo(200, 200, 300, 300);
+            ctx.strokeStyle = '#E91E63';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 绘制三次贝塞尔曲线
+            ctx.beginPath();
+            ctx.moveTo(400, 300);
+            ctx.bezierCurveTo(500, 200, 550, 350, 450, 400);
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 绘制复杂路径
+            ctx.beginPath();
+            ctx.moveTo(400, 100);
+            ctx.lineTo(450, 150);
+            ctx.lineTo(500, 100);
+            ctx.lineTo(550, 150);
+            ctx.lineTo(500, 200);
+            ctx.lineTo(450, 150);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(33, 150, 243, 0.7)';
+            ctx.fill();
+        }
+        
+        function drawTextEffects() {
+            clearCanvas();
+            
+            // 基本文本
+            ctx.font = 'bold 36px Arial';
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillText('填充文本', 50, 100);
+            
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 2;
+            ctx.strokeText('描边文本', 50, 180);
+            
+            // 文本对齐
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#FF5722';
+            ctx.fillText('居中文本', 300, 250);
+            
+            ctx.textAlign = 'right';
+            ctx.fillText('右对齐文本', 550, 300);
+            
+            // 文本测量
+            ctx.textAlign = 'left';
+            ctx.font = '24px Arial';
+            const text = '测量文本宽度';
+            const metrics = ctx.measureText(text);
+            ctx.fillText(text + ': ' + metrics.width.toFixed(1) + 'px', 50, 350);
+            
+            // 文本阴影
+            ctx.font = 'bold 40px Arial';
+            ctx.fillStyle = '#9C27B0';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 5;
+            ctx.shadowOffsetY = 5;
+            ctx.fillText('带阴影的文本', 100, 420);
+            
+            // 重置阴影
+            ctx.shadowColor = 'transparent';
+        }
+        
+        function drawGradients() {
+            clearCanvas();
+            
+            // 线性渐变
+            const linearGradient = ctx.createLinearGradient(0, 0, 300, 0);
+            linearGradient.addColorStop(0, '#FF512F');
+            linearGradient.addColorStop(1, '#F09819');
+            ctx.fillStyle = linearGradient;
+            ctx.fillRect(50, 50, 300, 150);
+            
+            // 径向渐变
+            const radialGradient = ctx.createRadialGradient(450, 125, 10, 450, 125, 80);
+            radialGradient.addColorStop(0, '#00c9ff');
+            radialGradient.addColorStop(1, '#92fe9d');
+            ctx.fillStyle = radialGradient;
+            ctx.beginPath();
+            ctx.arc(450, 125, 80, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 阴影效果
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 10;
+            ctx.shadowOffsetY = 10;
+            ctx.fillStyle = '#9C27B0';
+            ctx.fillRect(400, 250, 150, 150);
+            
+            // 重置阴影
+            ctx.shadowColor = 'transparent';
+            
+            // 图案填充
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(50, 250, 150, 150);
+            
+            // 创建图案
+            ctx.fillStyle = '#FF9800';
+            for (let x = 0; x < 150; x += 15) {
+                for (let y = 0; y < 150; y += 15) {
+                    if ((x + y) % 30 === 0) {
+                        ctx.fillRect(50 + x, 250 + y, 7, 7);
+                    }
+                }
+            }
+        }
+        
+        function drawTransformations() {
+            clearCanvas();
+            
+            // 绘制原始位置
+            ctx.fillStyle = '#FF5722';
+            ctx.fillRect(300, 200, 100, 100);
+            
+            // 保存当前状态
+            ctx.save();
+            
+            // 移动原点
+            ctx.translate(300, 200);
+            
+            // 旋转
+            ctx.rotate(Math.PI / 6);
+            
+            // 缩放
+            ctx.scale(0.8, 0.8);
+            
+            // 绘制变换后的矩形
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(0, 0, 100, 100);
+            
+            // 再次变换
+            ctx.translate(150, 0);
+            ctx.rotate(-Math.PI / 4);
+            ctx.scale(0.7, 0.7);
+            
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(0, 0, 100, 100);
+            
+            // 恢复状态
+            ctx.restore();
+            
+            // 绘制另一个未受变换影响的矩形
+            ctx.fillStyle = '#9C27B0';
+            ctx.fillRect(100, 100, 80, 80);
+            
+            // 绘制变换说明
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText('原始位置', 350, 330);
+            ctx.fillText('平移 + 旋转 + 缩放', 350, 230);
+            ctx.fillText('二次变换', 470, 200);
+        }
+        
+        let animationId = null;
+        
+        function startAnimation() {
+            // 停止之前的动画
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            clearCanvas();
+            
+            let x = 100;
+            let y = 100;
+            let dx = 2;
+            let dy = 3;
+            const radius = 30;
+            
+            function animate() {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 更新位置
+                x += dx;
+                y += dy;
+                
+                // 边界检测
+                if (x + radius > canvas.width || x - radius < 0) {
+                    dx = -dx;
+                }
+                if (y + radius > canvas.height || y - radius < 0) {
+                    dy = -dy;
+                }
+                
+                // 绘制弹跳球
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                
+                // 创建径向渐变
+                const gradient = ctx.createRadialGradient(
+                    x - 10, y - 10, 5,
+                    x, y, radius
+                );
+                gradient.addColorStop(0, 'white');
+                gradient.addColorStop(1, '#E91E63');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // 添加阴影
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 5;
+                ctx.shadowOffsetY = 5;
+                
+                // 继续动画
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+    </script>
+</body>
+</html>
