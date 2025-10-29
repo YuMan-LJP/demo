@@ -1,0 +1,14 @@
+﻿@page "/"
+
+<span>当前数量 @Count </span>
+<button @onclick="OnClick">增加数量</button>
+
+@code {
+    private int Count = 1;
+
+    private void OnClick()
+    {
+        Count++;
+    }
+
+}

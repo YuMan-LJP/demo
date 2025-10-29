@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 Electron 应用</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #667eea;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .message-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #28a745;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚡</div>
+            <h1>我的 Electron 应用</h1>
+            <p class="subtitle">基于 Electron 构建的跨平台桌面应用</p>
+        </div>
+
+        <div class="card">
+            <h2>应用信息</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Electron 版本</strong>
+                    <span id="electron-version">加载中...</span>
+                </div>
+                <div class="info-item">
+                    <strong>Node.js 版本</strong>
+                    <span id="node-version">加载中...</span>
+                </div>
+                <div class="info-item">
+                    <strong>Chromium 版本</strong>
+                    <span id="chrome-version">加载中...</span>
+                </div>
+                <div class="info-item">
+                    <strong>运行平台</strong>
+                    <span id="platform">加载中...</span>
+                </div>
+            </div>
+
+            <div class="feature-list">
+                <h3>功能特性</h3>
+                <ul>
+                    <li>跨平台支持 (Windows, macOS, Linux)</li>
+                    <li>原生菜单和系统集成</li>
+                    <li>安全的进程间通信</li>
+                    <li>现代化的用户界面</li>
+                    <li>可扩展的架构设计</li>
+                </ul>
+            </div>
+
+            <div>
+                <button class="button" id="test-btn">测试 IPC 通信</button>
+                <button class="button" id="reload-btn">重新加载</button>
+            </div>
+
+            <div class="message-box" id="message-box">
+                消息将显示在这里...
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
